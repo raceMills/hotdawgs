@@ -549,6 +549,7 @@
     <div class="card">
       <h2>Set week ${w} result</h2>`;
   }
+
   // ---------- Payments ----------
   function renderPayments() {
     const wrap = $("#paymentsWrap");
@@ -1116,7 +1117,7 @@
     const t = currentTourney();
     const fieldList = golfers;
     const worldList = rankingsFile
-      ? rankingsFile.players.slice(0, 100)
+      ? rankingsFile.players.slice(0, 200)
       : parseFieldAny(config.fieldText);
     const updated = rankingsFile
       ? `Official World Golf Ranking, updated ${fmtDate(rankingsFile.updated)}.`
@@ -1124,7 +1125,7 @@
     el.innerHTML = `<div class="card"><h2>Rankings</h2>
       <div class="chips">
         <button class="chip ${tab === "field" ? "on" : ""}" data-view="field">This week's field</button>
-        <button class="chip ${tab === "world" ? "on" : ""}" data-view="world">World top 100</button>
+        <button class="chip ${tab === "world" ? "on" : ""}" data-view="world">World top 200</button>
       </div>
       <p class="hint">${updated}</p>
       ${tab === "field" ? `
@@ -1236,4 +1237,3 @@
 </script>
 </body>
 </html>
-
