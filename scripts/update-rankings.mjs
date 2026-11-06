@@ -1,11 +1,12 @@
-// Fetches the Official World Golf Ranking and saves the top 300 to rankings.json.
+// Fetches the Official World Golf Ranking (up to 1,000 players) and saves it to rankings.json.
 // If anything goes wrong, it exits with an error and leaves the old file alone.
 import { writeFileSync } from "node:fs";
 
-const COUNT = 300;
-const URL =
+const PAGE_SIZE = 250;
+const MAX_PAGES = 4; // 4 x 250 = top 1,000
+const pageUrl = (page) =>
   "https://apiweb.owgr.com/api/owgr/rankings/getRankings" +
-  `?regionId=0&pageSize=${COUNT}&pageNumber=1&countryId=0&sortString=Rank+ASC`;
+  `?regionId=0&pageSize=${PAGE_SIZE}&pageNumber=${page}&countryId=0&sortString=Rank+ASC`;
 
 // Find the first array of objects anywhere in the response
 function findList(obj, depth = 0) {
@@ -20,12 +21,11 @@ function findList(obj, depth = 0) {
 
 function nameOf(row) {
   const p = row.player || row.Player || row;
-  if (p.fullName) return p.fullName;
-  if (p.FullName) return p.FullName;
-  if (p.name) return p.name;
   const first = p.firstName || p.FirstName || "";
   const last = p.lastName || p.LastName || "";
-  return `${first} ${last}`.trim();
+  // Prefer "First Last" built from parts, since full-name fields are sometimes "Last, First"
+  if (first && last) return `${first} ${last}`.trim();
+  return p.fullName || p.FullName || p.name || `${first} ${last}`.trim();
 }
 
 function rankOf(row, i) {
@@ -34,28 +34,40 @@ function rankOf(row, i) {
   return Number.isFinite(n) ? n : i + 1;
 }
 
-const res = await fetch(URL, {
-  headers: { Accept: "application/json", "User-Agent": "hotdawgs-golf-pool" }
-});
-if (!res.ok) {
-  console.error(`OWGR request failed: HTTP ${res.status}`);
-  process.exit(1);
+const byName = new Map();
+for (let page = 1; page <= MAX_PAGES; page++) {
+  const res = await fetch(pageUrl(page), {
+    headers: { Accept: "application/json", "User-Agent": "hotdawgs-golf-pool" }
+  });
+  if (!res.ok) {
+    if (page === 1) {
+      console.error(`OWGR request failed: HTTP ${res.status}`);
+      process.exit(1);
+    }
+    console.log(`Page ${page} failed (HTTP ${res.status}); keeping what we have.`);
+    break;
+  }
+  const data = await res.json();
+  const list = findList(data);
+  if (!list) {
+    if (page === 1) {
+      console.error("Couldn't find a rankings list. Top-level keys:", Object.keys(data || {}));
+      process.exit(1);
+    }
+    break;
+  }
+  const before = byName.size;
+  list.forEach((row, i) => {
+    const name = nameOf(row);
+    if (name && !byName.has(name)) byName.set(name, rankOf(row, (page - 1) * PAGE_SIZE + i));
+  });
+  console.log(`Page ${page}: ${list.length} rows, ${byName.size - before} new players.`);
+  if (byName.size === before || list.length < PAGE_SIZE) break; // no more pages
 }
 
-const data = await res.json();
-const list = findList(data);
-if (!list) {
-  console.error("Couldn't find a rankings list. Top-level keys:", Object.keys(data || {}));
-  process.exit(1);
-}
-
-const players = list
-  .map((row, i) => ({ name: nameOf(row), rank: rankOf(row, i) }))
-  .filter((p) => p.name)
-  .sort((a, b) => a.rank - b.rank);
-
+const players = [...byName].map(([name, rank]) => ({ name, rank })).sort((a, b) => a.rank - b.rank);
 if (players.length < 50) {
-  console.error(`Only got ${players.length} players. Sample row:`, JSON.stringify(list[0]).slice(0, 500));
+  console.error(`Only got ${players.length} players.`);
   process.exit(1);
 }
 
