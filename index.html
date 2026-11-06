@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#D92B2B">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Hotdawgs">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.json">
+<title>Hotdawgs Golf Pool</title>
+<style>
+  :root {
+    --cream: #FFF6E3; --paper: #FFFFFF; --red: #D92B2B; --red-dark: #9E1B1B;
+    --mustard: #FFC233; --teal: #1E7F7A; --green: #2E8B57; --bun: #E9A24A;
+    --ink: #2B1B10; --shadow: #2B1B10; --radius: 14px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; }
+  body {
+    font-family: "Avenir Next", "Trebuchet MS", system-ui, sans-serif;
+    color: var(--ink);
+    background:
+      radial-gradient(circle at 10% 0%, rgba(255,194,51,.35), transparent 40%),
+      repeating-linear-gradient(0deg, var(--cream) 0 22px, #F6E7C8 22px 23px);
+    padding: env(safe-area-inset-top, 0px) 14px calc(40px + env(safe-area-inset-bottom, 0px));
+    overflow-x: hidden;
+  }
+  [hidden] { display: none !important; }
+  .awning {
+    margin: 0 -14px; height: 26px;
+    background: repeating-linear-gradient(90deg, var(--red) 0 36px, #FFF 36px 72px);
+    border-bottom: 4px solid var(--shadow); border-radius: 0
