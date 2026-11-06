@@ -30,4 +30,845 @@
   .awning {
     margin: 0 -14px; height: 26px;
     background: repeating-linear-gradient(90deg, var(--red) 0 36px, #FFF 36px 72px);
-    border-bottom: 4px solid var(--shadow); border-radius: 0
+    border-bottom: 4px solid var(--shadow); border-radius: 0 0 18px 18px;
+    box-shadow: 0 4px 0 rgba(43,27,16,.2); animation: awningIn .6s ease-out both;
+  }
+  header { text-align: center; padding: 12px 0 4px; }
+  .mascot { width: 84px; height: 96px; display: block; margin: 0 auto; }
+  h1 {
+    margin: 2px 0 0; font-family: "Rockwell", Georgia, serif; font-size: 28px; font-weight: 900;
+    color: var(--red-dark); text-shadow: 2px 2px 0 var(--mustard);
+  }
+  .sub {
+    display: inline-block; margin-top: 6px; font-size: 12px; font-weight: 800;
+    letter-spacing: .06em; text-transform: uppercase; background: var(--teal); color: #fff;
+    padding: 4px 10px; border-radius: 999px;
+  }
+  nav {
+    display: flex; gap: 4px; background: var(--paper); border: 3px solid var(--shadow);
+    padding: 4px; border-radius: 999px; margin: 14px 0; box-shadow: 0 4px 0 var(--shadow);
+  }
+  nav button {
+    flex: 1; border: 0; padding: 9px 2px; border-radius: 999px; background: transparent;
+    font: inherit; font-weight: 800; font-size: 13px; color: var(--ink); cursor: pointer;
+  }
+  nav button.active { background: var(--red); color: #fff; }
+  section { display: none; }
+  section.active { display: block; animation: slideUp .35s ease-out; }
+  .card {
+    background: var(--paper); border: 3px solid var(--shadow); border-radius: var(--radius);
+    padding: 16px; margin-bottom: 16px; box-shadow: 5px 5px 0 var(--shadow); position: relative; overflow: hidden;
+  }
+  .card h2 { margin: 0 0 12px; font-family: "Rockwell", Georgia, serif; font-size: 19px; color: var(--red-dark); }
+  .hint { font-size: 13px; opacity: .8; margin: 0 0 10px; }
+  .lane { display: flex; gap: 10px; }
+  .slot {
+    flex: 1; border: 3px dashed var(--bun); border-radius: 12px; padding: 10px 6px; text-align: center;
+    min-height: 78px; display: flex; flex-direction: column; justify-content: center; font-size: 13px; background: var(--cream);
+  }
+  .slot.filled { border: 3px solid var(--shadow); background: #FFF; box-shadow: 3px 3px 0 var(--mustard); animation: pop .4s cubic-bezier(.3,1.6,.5,1); }
+  .slot .name { font-weight: 900; font-size: 15px; }
+  .slot .tag { font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: .08em; color: var(--red); margin-bottom: 2px; }
+  .chips { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+  .chip {
+    flex: 1; text-align: center; padding: 9px 12px; border-radius: 999px; font: inherit; font-weight: 900; font-size: 13px;
+    background: var(--cream); border: 2px solid var(--shadow); color: var(--ink); cursor: pointer; box-shadow: 2px 2px 0 var(--shadow);
+  }
+  .chip.on { background: var(--mustard); }
+  .golfer {
+    display: flex; align-items: center; justify-content: space-between; padding: 11px 12px;
+    background: var(--cream); border: 2px solid var(--shadow); border-radius: 12px; margin-bottom: 8px; cursor: pointer; transition: transform .12s;
+  }
+  .golfer:active { transform: scale(.97); }
+  .golfer.selected { background: var(--mustard); }
+  .golfer.taken { opacity: .45; cursor: not-allowed; text-decoration: line-through; }
+  .golfer .rank { font-size: 12px; opacity: .65; }
+  .golfer .owner { font-size: 12px; font-weight: 900; color: var(--red); }
+  .btn {
+    display: block; width: 100%; text-align: center; border: 3px solid var(--shadow); padding: 12px; border-radius: 999px;
+    background: var(--red); color: #fff; font: inherit; font-size: 16px; font-weight: 900; cursor: pointer;
+    box-shadow: 0 5px 0 var(--shadow); text-decoration: none; margin-top: 12px;
+  }
+  .btn:active { transform: translateY(4px); box-shadow: 0 1px 0 var(--shadow); }
+  .btn:disabled { background: #B9AA9A; cursor: default; }
+  .btn.green { background: var(--green); }
+  .btn.small { display: inline-block; width: auto; padding: 7px 12px; font-size: 13px; margin-top: 0; box-shadow: 0 3px 0 var(--shadow); }
+  .btn.ghost { background: var(--paper); color: var(--ink); }
+  .weekbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .weekbar .title { font-family: "Rockwell", Georgia, serif; font-weight: 900; font-size: 18px; color: var(--red-dark); text-align: center; }
+  .weekbar .title small { display: block; font-family: inherit; font-size: 12px; color: var(--teal); font-weight: 800; text-transform: uppercase; letter-spacing: .06em; }
+  .progress { height: 16px; border-radius: 999px; background: var(--cream); border: 2px solid var(--shadow); overflow: hidden; margin: 10px 0 4px; }
+  .progress > span { display: block; height: 100%; width: 0; background: repeating-linear-gradient(90deg, var(--green) 0 10px, #3FA56B 10px 20px); transition: width .8s ease; }
+  .big { font-family: "Rockwell", Georgia, serif; font-size: 22px; font-weight: 900; color: var(--red-dark); }
+  .payer { display: flex; align-items: center; gap: 10px; padding: 12px 0; border-bottom: 2px dashed var(--bun); }
+  .payer:last-child { border-bottom: 0; }
+  .avatar {
+    width: 42px; height: 42px; border-radius: 50%; border: 2px solid var(--shadow); display: grid; place-items: center;
+    background: var(--mustard); font-weight: 900; font-size: 17px; flex: none;
+  }
+  .payer .info { flex: 1; min-width: 0; }
+  .payer .label { font-weight: 900; }
+  .payer .sub2 { font-size: 12px; opacity: .75; }
+  .pill { display: inline-block; font-size: 12px; font-weight: 900; padding: 4px 9px; border-radius: 999px; border: 2px solid var(--shadow); white-space: nowrap; }
+  .pill.paid { background: var(--green); color: #fff; }
+  .pill.owes { background: var(--mustard); }
+  .actions { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+  .rule { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px dashed var(--bun); font-size: 14px; font-weight: 700; }
+  .rule input[type=checkbox] { width: 20px; height: 20px; accent-color: var(--red); }
+  .rule .amt { margin-left: auto; font-weight: 900; color: var(--red); }
+  select, input[type=text], input[type=password], textarea {
+    font: inherit; font-weight: 700; padding: 10px; border-radius: 10px; border: 2px solid var(--shadow); background: #FFF; color: var(--ink); width: 100%;
+  }
+  .field { margin-bottom: 12px; }
+  .field label { display: block; font-weight: 900; font-size: 13px; margin-bottom: 6px; }
+  .pay-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 2px dashed var(--bun); }
+  .pay-row:last-child { border-bottom: 0; }
+  .pay-label { flex: 1; font-weight: 800; font-size: 14px; min-width: 0; }
+  .pay-input { display: flex; align-items: center; background: #FFF; border: 2px solid var(--shadow); border-radius: 10px; padding: 3px 8px; }
+  .pay-input input { width: 56px; border: 0; background: transparent; font: inherit; font-weight: 900; font-size: 16px; color: var(--ink); text-align: right; outline: none; }
+  .pay-total { width: 76px; text-align: right; font-weight: 900; color: var(--red); font-size: 15px; }
+  .blink { transform-box: fill-box; transform-origin: center; animation: blink 4s infinite; }
+  .arm-l { transform-box: fill-box; transform-origin: top center; animation: waveL 2.2s ease-in-out infinite; }
+  .arm-r { transform-box: fill-box; transform-origin: top center; animation: waveR 2.2s ease-in-out infinite; }
+  .bounce { animation: bounce 1.6s ease-in-out infinite; }
+  .hop { animation: hop .5s ease-in-out 3; }
+  .dog-run { position: absolute; left: -90px; bottom: 6px; width: 70px; pointer-events: none; animation: run 1.5s ease-in forwards; z-index: 5; }
+  .confetti { position: fixed; top: -24px; font-size: 18px; pointer-events: none; animation: fall linear forwards; z-index: 50; }
+  .squirt { position: absolute; width: 20px; height: 20px; border-radius: 50%; background: var(--red); pointer-events: none; animation: squirt .6s ease-out forwards; }
+  .toast {
+    position: fixed; left: 50%; bottom: 30px; transform: translateX(-50%) translateY(120px); background: var(--shadow); color: #fff;
+    padding: 12px 18px; border-radius: 999px; font-weight: 800; transition: transform .4s cubic-bezier(.3,1.5,.5,1); z-index: 60; max-width: 90%; text-align: center;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  @keyframes awningIn { from { transform: translateY(-30px); opacity: 0; } to { transform: none; opacity: 1; } }
+  @keyframes slideUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+  @keyframes pop { from { transform: scale(.6); } to { transform: scale(1); } }
+  @keyframes blink { 0%, 92%, 100% { transform: scaleY(1); } 95% { transform: scaleY(.1); } }
+  @keyframes waveL { 0%, 100% { transform: rotate(-20deg); } 50% { transform: rotate(30deg); } }
+  @keyframes waveR { 0%, 100% { transform: rotate(20deg); } 50% { transform: rotate(-30deg); } }
+  @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+  @keyframes hop { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-16px) rotate(-6deg); } }
+  @keyframes run { from { left: -90px; } to { left: 110%; } }
+  @keyframes squirt { 0% { transform: scale(.2); opacity: 1; } 100% { transform: scale(3); opacity: 0; } }
+  @keyframes fall { to { transform: translateY(110vh) rotate(720deg); } }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Password gate -->
+<div id="gate" class="card" hidden style="margin-top:40px">
+  <h2>Enter the pool password</h2>
+  <p class="hint">Ask the pool organizer for the password.</p>
+  <div class="field"><input type="password" id="passIn" placeholder="Password" autocomplete="off"></div>
+  <button class="btn" id="passBtn">Enter</button>
+  <p class="hint" id="passMsg" style="color:var(--red);margin-top:8px"></p>
+</div>
+
+<div id="appArea" hidden>
+  <div class="awning"></div>
+  <header>
+    <svg class="mascot bounce" id="mascot" viewBox="0 0 120 130" aria-label="Hot dog mascot">
+      <line x1="48" y1="100" x2="42" y2="124" stroke="#2B1B10" stroke-width="5" stroke-linecap="round"/>
+      <line x1="72" y1="100" x2="78" y2="124" stroke="#2B1B10" stroke-width="5" stroke-linecap="round"/>
+      <ellipse cx="38" cy="126" rx="10" ry="5" fill="#2B1B10"/>
+      <ellipse cx="82" cy="126" rx="10" ry="5" fill="#2B1B10"/>
+      <g class="arm-l"><line x1="26" y1="62" x2="8" y2="44" stroke="#2B1B10" stroke-width="5" stroke-linecap="round"/></g>
+      <g class="arm-r"><line x1="94" y1="62" x2="112" y2="44" stroke="#2B1B10" stroke-width="5" stroke-linecap="round"/></g>
+      <rect x="34" y="14" width="52" height="84" rx="26" fill="#D92B2B" stroke="#2B1B10" stroke-width="3"/>
+      <ellipse class="blink" cx="50" cy="44" rx="4.5" ry="6" fill="#2B1B10"/>
+      <ellipse class="blink" cx="70" cy="44" rx="4.5" ry="6" fill="#2B1B10"/>
+      <circle cx="44" cy="58" r="4" fill="#FF8A7A" opacity=".7"/>
+      <circle cx="76" cy="58" r="4" fill="#FF8A7A" opacity=".7"/>
+      <path d="M50 58 Q60 68 70 58" fill="none" stroke="#2B1B10" stroke-width="3" stroke-linecap="round"/>
+      <path d="M12 82 Q12 66 36 66 L84 66 Q108 66 108 82 Q108 100 84 100 L36 100 Q12 100 12 82 Z" fill="#E9A24A" stroke="#2B1B10" stroke-width="3"/>
+      <path d="M20 84 Q30 76 40 84 T60 84 T80 84 T100 84" fill="none" stroke="#FFC233" stroke-width="5" stroke-linecap="round"/>
+    </svg>
+    <h1>Hotdawgs Golf Pool</h1>
+    <span class="sub" id="subline">Loading…</span>
+  </header>
+
+  <nav>
+    <button class="active" data-tab="draft">Draft</button>
+    <button data-tab="payments">Payments</button>
+    <button data-tab="payouts">Payouts</button>
+    <button data-tab="settings">Me</button>
+  </nav>
+
+  <section id="draft" class="active">
+    <div class="card" id="setupCard" hidden></div>
+    <div id="draftCard" hidden>
+      <div class="card">
+        <div class="weekbar"><div class="title" id="draftTitle"></div></div>
+        <div class="lane">
+          <div class="slot" id="slotHot"></div>
+          <div class="slot" id="slotDawg"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="chips">
+          <button class="chip on" data-filter="hot">🔥 Hots</button>
+          <button class="chip" data-filter="dawg">🐶 Dawgs</button>
+        </div>
+        <div id="golferList"></div>
+        <button class="btn" id="submitBtn" disabled>Serve it up</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="payments"><div id="paymentsWrap"></div></section>
+  <section id="payouts"><div id="payoutEditor"></div></section>
+  <section id="settings"><div id="settingsWrap"></div></section>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+  // ===== SETUP: paste your three values here =====
+  const SUPABASE_URL = "https://ecvjuminsfjszwgzfqte.supabase.co";
+  const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVjdmp1bWluc2Zqc3p3Z3pmcXRlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM5NzA0NTAsImV4cCI6MjEwOTU0NjQ1MH0.iDyN7v21oFkEbJobjbr-u3WCpRO-tgJ7efkd0bBwtVE";
+  const POOL_PASSWORD = "Hotdawgs";
+  // ===============================================
+
+  const $ = (s) => document.querySelector(s);
+  const MEMBERS = ["Jacob", "Michael", "Pat", "Ryan", "Zach", "Race"];
+  const OTHERS = MEMBERS.length - 1;
+
+  const RULES = {
+    weekly: [
+      { id: "hotTourney", label: "Hot tourney winner", amount: 10 },
+      { id: "dawgTourney", label: "Dawg tourney winner", amount: 15 },
+      { id: "hotGroup", label: "Hot group winner", amount: 5 },
+      { id: "dawgGroup", label: "Dawg group winner", amount: 10 },
+      { id: "top2None", label: "Top two in group, no winner", amount: 15 },
+      { id: "top2Hot", label: "Top two in group and hot wins", amount: 20 },
+      { id: "top2Dawg", label: "Top two in group and dawg wins", amount: 25 },
+      { id: "trueTop2", label: "True top 2, either order", amount: 30 }
+    ],
+    majors: [
+      { id: "mHotLeader", label: "Hot group leader", amount: 15 },
+      { id: "mDawgLeader", label: "Dawg group leader", amount: 20 },
+      { id: "mHotWin", label: "Hot tourney winner", amount: 25 },
+      { id: "mDawgWin", label: "Dawg winner", amount: 30 },
+      { id: "mTop2None", label: "Top two, no winner", amount: 25 },
+      { id: "mTop2Hot", label: "Top two and hot wins", amount: 30 },
+      { id: "mTop2Dawg", label: "Top two and dawg wins", amount: 35 },
+      { id: "mTrueTop2", label: "True top 2", amount: 40 }
+    ]
+  };
+
+  const DEFAULT_FIELD_TEXT = "Scottie Scheffler, 1\nRory McIlroy, 2\nMatt Fitzpatrick, 3\nCameron Young, 4\nWyndham Clark, 5\nChris Gotterup, 6\nXander Schauffele, 7\nTommy Fleetwood, 8\nSam Burns, 9\nRussell Henley, 10\nCollin Morikawa, 11\nJ.J. Spaun, 12\nViktor Hovland, 13\nSi Woo Kim, 14\nJon Rahm, 15\nJacob Bridgeman, 16\nAaron Rai, 17\nMichael Brennan, 18\nRobert MacIntyre, 19\nLudvig Åberg, 20\nJustin Rose, 21\nRyan Fox, 22\nRyan Gerard, 23\nAlex Noren, 24\nBen Griffin, 25";
+  function parseField(text) {
+    const src = (text && text.trim()) ? text : DEFAULT_FIELD_TEXT;
+    return src.split("\n").map(l => l.trim()).filter(Boolean).map(l => {
+      const parts = l.split(",").map(s => s.trim());
+      const rank = Number(parts[1]) || 999;
+      return { name: parts[0], rank, hot: rank <= 10 };
+    });
+  }
+
+  // ---------- State ----------
+  let sb = null;
+  let me = null;
+  try { me = localStorage.getItem("hotdawgs-me"); } catch (e) {}
+  let config = { currentWeek: 1, venmo: {}, amounts: {} };
+  let golfers = parseField(DEFAULT_FIELD_TEXT);
+  let weekDocs = {};
+  let viewWeek = 1, viewInit = false;
+  let pending = { hot: null, dawg: null }, pendingWeek = null;
+  let filter = "hot";
+  let settleDraft = null, settleKey = null;
+  let calcResult = null;
+
+  // ---------- Helpers ----------
+  const clone = (o) => JSON.parse(JSON.stringify(o));
+  const isObj = (o) => o && typeof o === "object" && !Array.isArray(o);
+  function deepMerge(t, s) {
+    for (const k of Object.keys(s)) {
+      if (isObj(s[k]) && isObj(t[k])) deepMerge(t[k], s[k]);
+      else t[k] = clone(s[k]);
+    }
+    return t;
+  }
+  const findRule = (id) => [...RULES.weekly, ...RULES.majors].find(r => r.id === id);
+  const amountOf = (id) => (config.amounts && config.amounts[id] != null) ? config.amounts[id] : findRule(id).amount;
+  const weekOf = (n) => weekDocs[n] || {};
+  const initial = (n) => n.charAt(0).toUpperCase();
+  const money = (n) => "$" + n;
+  const currentWeek = () => config.currentWeek || 1;
+
+  function toast(msg) {
+    const t = $("#toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    clearTimeout(toast._t);
+    toast._t = setTimeout(() => t.classList.remove("show"), 2400);
+  }
+
+  // ---------- Shared data ----------
+  async function loadAll() {
+    const { data: cfg } = await sb.from("pool_config").select("data").eq("id", "main").maybeSingle();
+    applyConfig(cfg ? cfg.data : {});
+    for (let i = 1; i <= currentWeek(); i++) await loadWeek(i);
+  }
+  function applyConfig(d) {
+    config = Object.assign({ currentWeek: 1, venmo: {}, amounts: {} }, d || {});
+    golfers = parseField(config.fieldText);
+    if (!viewInit) { viewWeek = Math.max(1, currentWeek() - 1); viewInit = true; }
+  }
+  async function loadWeek(n) {
+    const { data } = await sb.from("pool_weeks").select("data").eq("week", n).maybeSingle();
+    weekDocs[n] = data ? data.data : {};
+  }
+
+  // Read the latest copy, merge the change, save it back
+  async function write(kind, week, patch) {
+    const table = kind === "config" ? "pool_config" : "pool_weeks";
+    const key = kind === "config" ? { id: "main" } : { week };
+    const { data } = await sb.from(table).select("data").match(key).maybeSingle();
+    const next = deepMerge(clone(data ? data.data : {}), patch);
+    const { error } = await sb.from(table).upsert({ ...key, data: next });
+    if (error) { toast("Couldn't save. Check your connection and try again."); return; }
+    if (kind === "config") applyConfig(next);
+    else weekDocs[week] = next;
+    renderActive();
+  }
+
+  function startRealtime() {
+    sb.channel("pool")
+      .on("postgres_changes", { event: "*", schema: "public", table: "pool_weeks" }, (p) => {
+        if (p.new && p.new.week) { weekDocs[p.new.week] = p.new.data; renderActive(); }
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "pool_config" }, (p) => {
+        if (p.new && p.new.data) { applyConfig(p.new.data); renderActive(); }
+      })
+      .subscribe();
+  }
+
+  function claimedMap(week) {
+    const m = {};
+    const picks = weekOf(week).picks || {};
+    for (const [who, p] of Object.entries(picks)) {
+      if (p && p.hot) m[p.hot] = who;
+      if (p && p.dawg) m[p.dawg] = who;
+    }
+    return m;
+  }
+
+  function venmoLink(handle, amount, note) {
+    return `venmo://paycharge?txn=pay&recipient=${encodeURIComponent(handle)}&amount=${amount}&note=${encodeURIComponent(note)}`;
+  }
+
+  // ---------- Setup ----------
+  function renderSetup() {
+    const setup = $("#setupCard");
+    if (me) { setup.hidden = true; return; }
+    setup.hidden = false;
+    setup.innerHTML = `<h2>Who are you?</h2>
+      <p class="hint"><strong>Welcome to the Hotdawgs Golf Pool!</strong> Three quick steps: pick your name, add your Venmo name, then make your picks each week. Your name is saved on this phone after you choose it.</p>
+      <div class="chips">${MEMBERS.map(m => `<button class="chip" data-me="${m}">${m}</button>`).join("")}</div>`;
+    setup.querySelectorAll("[data-me]").forEach(b => b.onclick = () => {
+      me = b.dataset.me;
+      try { localStorage.setItem("hotdawgs-me", me); } catch (e) {}
+      renderActive();
+    });
+  }
+
+  // ---------- Draft ----------
+  function renderDraft() {
+    renderSetup();
+    if (!me) { $("#draftCard").hidden = true; return; }
+    $("#draftCard").hidden = false;
+    const week = currentWeek();
+    if (pendingWeek !== week) { pending = { hot: null, dawg: null }; pendingWeek = week; }
+    const saved = (weekOf(week).picks || {})[me] || {};
+    const locked = !!(saved.hot && saved.dawg);
+    const sel = locked ? saved : pending;
+    const taken = claimedMap(week);
+
+    $("#draftTitle").innerHTML = `Week ${week}<small>${locked ? "Picks locked" : "Draft open"}</small>`;
+    fillSlot($("#slotHot"), sel.hot, "Hot", "Pick a top 10");
+    fillSlot($("#slotDawg"), sel.dawg, "Dawg", "Pick a field golfer");
+
+    const list = $("#golferList");
+    list.innerHTML = "";
+    golfers.filter(g => (filter === "hot") === g.hot).forEach(g => {
+      const owner = taken[g.name];
+      const mine = sel.hot === g.name || sel.dawg === g.name;
+      const el = document.createElement("div");
+      el.className = "golfer" + (mine ? " selected" : "") + (owner && owner !== me ? " taken" : "");
+      el.innerHTML = `<div><div>${g.name}</div><div class="rank">World #${g.rank}</div></div>`
+        + (owner ? `<span class="owner">${owner === me ? "You ✓" : owner}</span>` : (mine ? "✓" : ""));
+      el.onclick = (e) => pick(g, el, e, locked, taken);
+      list.appendChild(el);
+    });
+
+    const btn = $("#submitBtn");
+    btn.disabled = locked || !(pending.hot && pending.dawg);
+    btn.textContent = locked ? "Locked in ✓" : "Serve it up";
+  }
+
+  function fillSlot(slot, name, tag, hint) {
+    slot.className = name ? "slot filled" : "slot";
+    slot.innerHTML = `<span class="tag">${tag}</span><span class="${name ? "name" : ""}">${name || hint}</span>`;
+  }
+
+  function pick(g, el, e, locked, taken) {
+    if (locked) { toast("Your picks are locked for this week."); return; }
+    if (taken[g.name] && taken[g.name] !== me) {
+      toast(`${g.name} is already taken by ${taken[g.name]}`);
+      el.animate([{ transform: "translateX(0)" }, { transform: "translateX(-6px)" }, { transform: "translateX(6px)" }, { transform: "translateX(0)" }], { duration: 300 });
+      return;
+    }
+    const kind = g.hot ? "hot" : "dawg";
+    if (pending[kind] === g.name) pending[kind] = null;
+    else {
+      pending[kind] = g.name;
+      if (e) {
+        const r = el.getBoundingClientRect();
+        const s = document.createElement("div");
+        s.className = "squirt";
+        s.style.left = (e.clientX - r.left - 10) + "px";
+        s.style.top = (e.clientY - r.top - 10) + "px";
+        el.appendChild(s);
+        setTimeout(() => s.remove(), 700);
+      }
+    }
+    renderDraft();
+  }
+
+  async function submitPicks() {
+    const week = currentWeek();
+    await write("week", week, { picks: { [me]: { hot: pending.hot, dawg: pending.dawg } } });
+    celebrate();
+  }
+
+  function celebrate() {
+    const card = $("#draftCard .card");
+    const dog = document.createElement("div");
+    dog.className = "dog-run";
+    dog.innerHTML = `<svg viewBox="0 0 120 130"><rect x="34" y="14" width="52" height="84" rx="26" fill="#D92B2B" stroke="#2B1B10" stroke-width="3"/><path d="M12 82 Q12 66 36 66 L84 66 Q108 66 108 82 Q108 100 84 100 L36 100 Q12 100 12 82 Z" fill="#E9A24A" stroke="#2B1B10" stroke-width="3"/></svg>`;
+    card.appendChild(dog);
+    setTimeout(() => dog.remove(), 1600);
+    const bits = ["🌭", "🟡", "🔴", "🥒", "🍞", "⭐"];
+    for (let i = 0; i < 40; i++) {
+      const c = document.createElement("div");
+      c.className = "confetti";
+      c.textContent = bits[i % bits.length];
+      c.style.left = Math.random() * 100 + "vw";
+      c.style.animationDuration = (1.6 + Math.random() * 1.6) + "s";
+      c.style.animationDelay = Math.random() * 0.5 + "s";
+      document.body.appendChild(c);
+      setTimeout(() => c.remove(), 3500);
+    }
+    const m = $("#mascot");
+    m.classList.add("hop");
+    setTimeout(() => m.classList.remove("hop"), 1600);
+    toast("Picks locked. Let's get dogs! 🌭");
+  }
+
+  // ---------- Results to payouts ----------
+  function entriesFor(w) {
+    const out = [];
+    for (const [who, p] of Object.entries(weekOf(w).picks || {})) {
+      if (p && p.hot) out.push({ who, name: p.hot, kind: "hot" });
+      if (p && p.dawg) out.push({ who, name: p.dawg, kind: "dawg" });
+    }
+    return out;
+  }
+  function derive(w) {
+    const doc = weekOf(w), fin = doc.finishes || {}, entries = entriesFor(w);
+    const rankOf = (n) => (golfers.find(g => g.name === n) || { rank: 999 }).rank;
+    const posOf = (n) => (fin[n] != null ? Number(fin[n]) : 999);
+    const group = (k) => entries.filter(e => !k || e.kind === k)
+      .sort((a, b) => posOf(a.name) - posOf(b.name) || rankOf(b.name) - rankOf(a.name));
+    const W = doc.resultWinner, R = doc.resultRunner;
+    const hits = {};
+    const add = (who, id) => { (hits[who] ||= []).push(id); };
+    const all = group(null);
+    const we = entries.find(e => e.name === W);
+    if (we) add(we.who, we.kind === "hot" ? "hotTourney" : "dawgTourney");
+    if (all[0] && posOf(all[0].name) < 999 && all[0].name !== W) add(all[0].who, all[0].kind === "hot" ? "hotGroup" : "dawgGroup");
+    const t2 = [W, R].map(n => entries.find(e => e.name === n)).filter(Boolean);
+    const t2Owners = [...new Set(t2.map(e => e.who))];
+    const flags = [];
+    if (t2.length === 2 && t2Owners.length === 1) hits[t2Owners[0]] = ["trueTop2"];
+    if (t2.length === 2 && t2Owners.length === 2) flags.push("The two top finishers were picked by different members, so set the true top 2 payout by hand.");
+    if (all.length > 1 && all[0].who === all[1].who && posOf(all[1].name) < 999 && !all.some(e => e.name === W)) {
+      hits[all[0].who] = [all[0].kind === "hot" ? "top2Hot" : "top2Dawg"];
+      flags.push("Top two payout set by the top pick's type. If the top two are a hot and a dawg, confirm the amount.");
+    }
+    const totals = Object.entries(hits)
+      .map(([who, ids]) => ({ who, ids, total: ids.reduce((s, id) => s + amountOf(id), 0) }))
+      .sort((a, b) => b.total - a.total);
+    flags.push("Top two in group payouts ($15, $20, $25) are not auto-detected. Check them by hand.");
+    if (totals.length > 1) flags.push("More than one member triggered a payout. Confirm the winner.");
+    return { totals, winner: totals[0] ? totals[0].who : "", rules: totals[0] ? totals[0].ids : [], flags, week: w };
+  }
+  function calcHtml(w) {
+    if (!calcResult || calcResult.week !== w) return "";
+    const lines = calcResult.totals.length
+      ? calcResult.totals.map(t => `<div class="sub2" style="margin:4px 0">${t.who}: ${money(t.total)} from ${t.ids.map(id => findRule(id).label).join(", ")}</div>`).join("")
+      : `<p class="hint">No payouts triggered by these results.</p>`;
+    return `<div style="border:2px solid var(--shadow);border-radius:12px;padding:12px;margin-top:12px;background:var(--cream)"><strong>Calculated</strong>${lines}${calcResult.flags.map(f => `<p class="hint" style="margin:6px 0 0">⚠️ ${f}</p>`).join("")}</div>`;
+  }
+  function resultsHtml(w) {
+    const doc = weekOf(w), fin = doc.finishes || {}, entries = entriesFor(w);
+    const opts = (sel) => `<option value="">—</option>` + golfers.map(g => `<option value="${g.name}" ${sel === g.name ? "selected" : ""}>${g.name}</option>`).join("");
+    const rows = entries.length ? entries.map(e => {
+      const p = fin[e.name];
+      const shown = p && p !== 999 ? p : "";
+      return `<div class="rule"><span style="flex:1">${e.name} <span class="hint" style="margin:0">(${e.who}, ${e.kind})</span></span>
+        <input type="number" min="1" max="200" value="${shown}" placeholder="finish" data-fin="${e.name}" style="width:72px;padding:6px;border:2px solid var(--shadow);border-radius:8px;font:inherit"></div>`;
+    }).join("") : `<p class="hint">No picks for this week yet.</p>`;
+    return `<h2>Week ${w} results</h2>
+      <p class="hint">Enter where each picked golfer finished. Leave blank for a missed cut. Then name the tournament winner and runner-up.</p>
+      ${rows}
+      <div class="field" style="margin-top:12px"><label>Tournament winner</label><select data-res="resultWinner">${opts(doc.resultWinner)}</select></div>
+      <div class="field"><label>Runner-up</label><select data-res="resultRunner">${opts(doc.resultRunner)}</select></div>
+      <button class="btn ghost" id="calcBtn">Calculate payouts from results</button>
+      ${calcHtml(w)}
+    </div>
+    <div class="card">
+      <h2>Set week ${w} result</h2>`;
+  }
+
+  // ---------- Payments ----------
+  function renderPayments() {
+    const wrap = $("#paymentsWrap");
+    const w = viewWeek;
+    const doc = weekOf(w);
+    if (settleKey !== w || !settleDraft) {
+      settleDraft = clone(doc.settle || { winner: "", kind: "weekly", rules: [] });
+      settleKey = w;
+    }
+    const isPrev = w === currentWeek() - 1;
+    const winner = doc.settle && doc.settle.winner;
+    const rules = (doc.settle && doc.settle.rules) || [];
+    const perPayer = rules.reduce((s, id) => s + amountOf(id), 0);
+    const payers = MEMBERS.filter(m => m !== winner);
+    const paid = doc.paid || {};
+    const paidCount = payers.filter(p => paid[p]).length;
+    const owedTotal = winner ? perPayer * payers.length : 0;
+    const collected = winner ? perPayer * paidCount : 0;
+    const pct = owedTotal ? Math.round(collected / owedTotal * 100) : 0;
+    const weekLabel = isPrev ? "Last week" : (w === currentWeek() ? "This week" : `Week ${w}`);
+    const note = `Hotdawgs Week ${w}`;
+
+    wrap.innerHTML = `
+      <div class="card">
+        <div class="weekbar">
+          <button class="btn small ghost" id="prevWeek" ${w <= 1 ? "disabled" : ""}>‹ Prev</button>
+          <div class="title">Week ${w}<small>${weekLabel}</small></div>
+          <button class="btn small ghost" id="nextWeek" ${w >= currentWeek() ? "disabled" : ""}>Next ›</button>
+        </div>
+        ${winner ? `
+          <div class="big">${winner} collects ${money(owedTotal)}</div>
+          <div class="hint">${money(collected)} of ${money(owedTotal)} received · ${paidCount} of ${payers.length} paid</div>
+          <div class="progress"><span style="width:${pct}%"></span></div>
+          ${rules.length ? `<p class="hint" style="margin-top:8px">Each payer owes ${money(perPayer)}: ${rules.map(id => findRule(id).label).join(", ")}</p>` : ""}
+        ` : `<p class="hint">No winner set for this week yet. Set one below to start payments.</p>`}
+      </div>
+
+      ${winner ? `
+      <div class="card">
+        <h2>${paidCount === payers.length ? "Everyone has paid 🎉" : "Who still owes"}</h2>
+        ${payers.map(p => {
+          const isPaid = !!paid[p];
+          const handle = (config.venmo || {})[winner];
+          return `
+          <div class="payer">
+            <div class="avatar">${initial(p)}</div>
+            <div class="info">
+              <div class="label">${p}</div>
+              <div class="sub2">${isPaid ? `Paid ${money(perPayer)} to ${winner}` : `Owes ${money(perPayer)} to ${winner}`}</div>
+              <div class="actions">
+                ${isPaid ? "" : (handle
+                  ? `<a class="btn small" href="${venmoLink(handle, perPayer, note)}">Pay on Venmo</a>`
+                  : `<span class="sub2">${winner} hasn't added a Venmo name yet</span>`)}
+                <button class="btn small ${isPaid ? "ghost" : "green"}" data-paid="${p}" data-now="${isPaid ? "0" : "1"}">${isPaid ? "Undo" : "Mark paid"}</button>
+              </div>
+            </div>
+            <span class="pill ${isPaid ? "paid" : "owes"}">${isPaid ? "Paid ✓" : "Owes " + money(perPayer)}</span>
+          </div>`;
+        }).join("")}
+        <button class="btn ghost" id="shareBtn">Share week summary 🌭</button>
+      </div>` : ""}
+
+      <div class="card">
+        ${resultsHtml(w)}
+        <div class="field">
+          <label for="winnerSel">Winner</label>
+          <select id="winnerSel">
+            <option value="">Choose a winner</option>
+            ${MEMBERS.map(m => `<option value="${m}" ${settleDraft.winner === m ? "selected" : ""}>${m}</option>`).join("")}
+          </select>
+        </div>
+        <div class="field">
+          <label for="kindSel">Type</label>
+          <select id="kindSel">
+            <option value="weekly" ${settleDraft.kind === "weekly" ? "selected" : ""}>Weekly</option>
+            <option value="majors" ${settleDraft.kind === "majors" ? "selected" : ""}>Major</option>
+          </select>
+        </div>
+        <label style="font-weight:900;font-size:13px">Rules this winner triggered</label>
+        ${RULES[settleDraft.kind].map(r => `
+          <label class="rule">
+            <input type="checkbox" data-rule="${r.id}" ${settleDraft.rules.includes(r.id) ? "checked" : ""}>
+            <span>${r.label}</span>
+            <span class="amt">${money(amountOf(r.id))}</span>
+          </label>`).join("")}
+        <button class="btn" id="saveSettle">Save result</button>
+      </div>`;
+
+    $("#prevWeek").onclick = () => { viewWeek = Math.max(1, w - 1); loadWeek(viewWeek).then(renderActive); };
+    $("#nextWeek").onclick = () => { viewWeek = Math.min(currentWeek(), w + 1); loadWeek(viewWeek).then(renderActive); };
+    $("#winnerSel").onchange = (e) => { settleDraft.winner = e.target.value; };
+    $("#kindSel").onchange = (e) => { settleDraft.kind = e.target.value; settleDraft.rules = []; renderPayments(); };
+    wrap.querySelectorAll("[data-rule]").forEach(cb => cb.onchange = () => {
+      const id = cb.dataset.rule;
+      settleDraft.rules = cb.checked ? [...settleDraft.rules, id] : settleDraft.rules.filter(x => x !== id);
+    });
+    wrap.querySelectorAll("[data-fin]").forEach(inp => inp.onchange = () => {
+      const v = inp.value === "" ? 999 : Math.max(1, Math.round(Number(inp.value)));
+      write("week", w, { finishes: { [inp.dataset.fin]: v } });
+    });
+    wrap.querySelectorAll("[data-res]").forEach(sel => sel.onchange = () => {
+      write("week", w, { [sel.dataset.res]: sel.value || null });
+    });
+    const calc = $("#calcBtn");
+    if (calc) calc.onclick = () => {
+      calcResult = derive(w);
+      settleDraft = { winner: calcResult.winner, kind: "weekly", rules: calcResult.rules };
+      settleKey = w;
+      renderPayments();
+    };
+    $("#saveSettle").onclick = async () => {
+      if (!settleDraft.winner) { toast("Pick a winner first"); return; }
+      await write("week", w, { settle: { winner: settleDraft.winner, kind: settleDraft.kind, rules: settleDraft.rules } });
+      toast("Result saved");
+    };
+    wrap.querySelectorAll("[data-paid]").forEach(b => b.onclick = () => {
+      write("week", w, { paid: { [b.dataset.paid]: b.dataset.now === "1" } });
+    });
+    const sh = $("#shareBtn");
+    if (sh) sh.onclick = () => shareSummary(w, winner, rules, perPayer, payers, paid);
+  }
+
+  async function shareSummary(w, winner, rules, perPayer, payers, paid) {
+    const names = rules.map(id => findRule(id).label).join(", ");
+    const paidList = payers.filter(p => paid[p]);
+    const owing = payers.filter(p => !paid[p]);
+    const text = `🌭 Hotdawgs Week ${w}\nWinner: ${winner} collects ${money(perPayer * payers.length)}\nRules: ${names}\nPaid: ${paidList.join(", ") || "none yet"}\nStill owes ${money(perPayer)}: ${owing.join(", ") || "nobody"}`;
+    if (navigator.share) {
+      try { await navigator.share({ text }); return; } catch (e) {}
+    }
+    try { await navigator.clipboard.writeText(text); toast("Summary copied 🌭"); }
+    catch (e) { toast("Couldn't copy. Try again."); }
+  }
+
+  // ---------- Payouts ----------
+  function renderPayouts() {
+    const el = $("#payoutEditor");
+    if (el.contains(document.activeElement) && document.activeElement.tagName === "INPUT") return;
+    const tab = el.dataset.tab || "weekly";
+    const rows = RULES[tab];
+    el.innerHTML = `
+      <div class="card">
+        <h2>Payout rules</h2>
+        <div class="chips">
+          <button class="chip ${tab === "weekly" ? "on" : ""}" data-pt="weekly">Weekly</button>
+          <button class="chip ${tab === "majors" ? "on" : ""}" data-pt="majors">Majors</button>
+        </div>
+        <p class="hint">Each value is what every other member (${OTHERS}) pays the winner. The winner collects the right-hand total. Changes are shared with everyone.</p>
+        ${rows.map(r => `
+          <div class="pay-row">
+            <div class="pay-label">${r.label}</div>
+            <div class="pay-input"><span>$</span>
+              <input type="number" min="0" step="1" inputmode="numeric" value="${amountOf(r.id)}" data-id="${r.id}">
+            </div>
+            <div class="pay-total">${money(amountOf(r.id) * OTHERS)}</div>
+          </div>`).join("")}
+        <button class="btn ghost" id="resetPay">Reset to sheet amounts</button>
+      </div>`;
+    el.querySelectorAll("[data-pt]").forEach(b => b.onclick = () => { el.dataset.tab = b.dataset.pt; renderPayouts(); });
+    el.querySelectorAll("input[data-id]").forEach(inp => inp.onchange = () => {
+      const v = Math.max(0, Math.round(Number(inp.value) || 0));
+      write("config", 0, { amounts: { [inp.dataset.id]: v } });
+    });
+    $("#resetPay").onclick = () => {
+      const amounts = {};
+      [...RULES.weekly, ...RULES.majors].forEach(r => amounts[r.id] = r.amount);
+      write("config", 0, { amounts });
+      toast("Reset to sheet amounts");
+    };
+  }
+
+  // ---------- Me ----------
+  function renderSettings() {
+    const wrap = $("#settingsWrap");
+    if (wrap.contains(document.activeElement) && /INPUT|TEXTAREA/.test(document.activeElement.tagName)) return;
+    const myHandle = me ? ((config.venmo || {})[me] || "") : "";
+    const myPicked = !!(me && (weekOf(currentWeek()).picks || {})[me] && weekOf(currentWeek()).picks[me].hot && weekOf(currentWeek()).picks[me].dawg);
+    wrap.innerHTML = `
+      <div class="card">
+        <h2>Who are you?</h2>
+        <div class="chips">${MEMBERS.map(m => `<button class="chip ${m === me ? "on" : ""}" data-me="${m}">${m}</button>`).join("")}</div>
+      </div>
+      ${me ? `
+      <div class="card">
+        <h2>Your Venmo name</h2>
+        <p class="hint">Payers send to this name. Use the part after venmo.com/ (no @).</p>
+        <div class="field"><input type="text" id="handleIn" value="${myHandle}" placeholder="e.g. race-smith" autocomplete="off" autocapitalize="off"></div>
+        <button class="btn" id="saveHandle">Save Venmo name</button>
+      </div>` : ""}
+      <div class="card">
+        <h2>Your checklist</h2>
+        <div class="payer"><span class="pill ${me ? "paid" : "owes"}">${me ? "Done" : "To do"}</span><span>&nbsp; Pick your name above</span></div>
+        <div class="payer"><span class="pill ${myHandle ? "paid" : "owes"}">${myHandle ? "Done" : "To do"}</span><span>&nbsp; Add your Venmo name</span></div>
+        <div class="payer"><span class="pill ${myPicked ? "paid" : "owes"}">${myPicked ? "Done" : "To do"}</span><span>&nbsp; Make this week's picks (one hot, one dawg)</span></div>
+      </div>
+      <div class="card">
+        <h2>Pool members</h2>
+        ${MEMBERS.map(m => `
+          <div class="payer">
+            <div class="avatar">${initial(m)}</div>
+            <div class="info"><div class="label">${m}</div>
+              <div class="sub2">${(config.venmo || {})[m] ? "@" + config.venmo[m] : "No Venmo name yet"}</div></div>
+          </div>`).join("")}
+      </div>
+      <div class="card">
+        <h2>How it works</h2>
+        <ul class="hint" style="padding-left:18px;margin:0">
+          <li style="margin:6px 0">Draft: each week pick one hot and one dawg. A golfer can only be picked by one member.</li>
+          <li style="margin:6px 0">Results: after the tournament, enter finishes on the Payments tab and tap Calculate.</li>
+          <li style="margin:6px 0">Pay: each member pays the winner through Venmo, then taps Mark paid.</li>
+        </ul>
+        <button class="btn ghost" id="inviteBtn">Copy invite text for the group</button>
+        <button class="btn ghost" id="backupBtn" style="margin-top:10px">Download backup</button>
+      </div>
+      <div class="card">
+        <h2>Season</h2>
+        <p class="hint">Currently on week ${currentWeek()}. Start the next week once the previous one is settled.</p>
+        <button class="btn green" id="nextWeekBtn">Start week ${currentWeek() + 1}</button>
+        <h2 style="margin-top:18px">Tournament field</h2>
+        <p class="hint">One golfer per line as "Name, world ranking". Top 10 are hot, the rest are dawgs.</p>
+        <textarea id="fieldIn" rows="8" style="width:100%">${config.fieldText || DEFAULT_FIELD_TEXT}</textarea>
+        <button class="btn" id="saveField">Save field</button>
+      </div>`;
+    wrap.querySelectorAll("[data-me]").forEach(b => b.onclick = () => {
+      me = b.dataset.me;
+      try { localStorage.setItem("hotdawgs-me", me); } catch (e) {}
+      renderActive();
+    });
+    const save = $("#saveHandle");
+    if (save) save.onclick = () => {
+      const h = $("#handleIn").value.trim().replace(/^@/, "");
+      write("config", 0, { venmo: { [me]: h } });
+      toast("Venmo name saved");
+    };
+    $("#saveField").onclick = () => {
+      const txt = $("#fieldIn").value;
+      write("config", 0, { fieldText: txt });
+      toast("Field saved");
+    };
+    $("#backupBtn").onclick = () => {
+      const data = JSON.stringify({ exportedAt: new Date().toISOString(), config, weeks: weekDocs }, null, 2);
+      const url = URL.createObjectURL(new Blob([data], { type: "application/json" }));
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "hotdawgs-backup.json";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      toast("Backup downloaded");
+    };
+    $("#inviteBtn").onclick = async () => {
+      const text = [
+        "Join the Hotdawgs Golf Pool 🌭",
+        "1. Open the pool link and enter the pool password.",
+        "2. Pick your name under 'Who are you?'",
+        "3. Add your Venmo name (the part after venmo.com/).",
+        "4. Make your weekly picks: one hot and one dawg."
+      ].join("\n");
+      try { await navigator.clipboard.writeText(text); toast("Invite copied. Paste it in the group chat 🌭"); }
+      catch (e) { toast("Couldn't copy. Try again."); }
+    };
+    $("#nextWeekBtn").onclick = () => {
+      write("config", 0, { currentWeek: currentWeek() + 1 });
+      toast(`Week ${currentWeek() + 1} is open`);
+    };
+  }
+
+  // ---------- Render ----------
+  function renderActive() {
+    const active = document.querySelector("section.active").id;
+    $("#subline").textContent = `Week ${currentWeek()} · Draft open · Lock Thu 7am`;
+    if (active === "draft") renderDraft();
+    if (active === "payments") renderPayments();
+    if (active === "payouts") renderPayouts();
+    if (active === "settings") renderSettings();
+  }
+
+  // ---------- Start ----------
+  function showApp() {
+    $("#gate").hidden = true;
+    $("#appArea").hidden = false;
+  }
+  async function start() {
+    if (localStorage.getItem("hotdawgs-pass") !== POOL_PASSWORD) {
+      $("#gate").hidden = false;
+      $("#appArea").hidden = true;
+      return;
+    }
+    showApp();
+    if (SUPABASE_URL.startsWith("PASTE")) {
+      $("#subline").textContent = "Setup needed: add your keys to index.html";
+      renderActive();
+      return;
+    }
+    sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    renderActive();
+    try {
+      await loadAll();
+      startRealtime();
+    } catch (e) {
+      toast("Couldn't connect. Check your internet and reload.");
+    }
+    renderActive();
+  }
+
+  // ---------- Events ----------
+  $("#passBtn").onclick = () => {
+    if ($("#passIn").value === POOL_PASSWORD) {
+      localStorage.setItem("hotdawgs-pass", POOL_PASSWORD);
+      start();
+    } else {
+      $("#passMsg").textContent = "That password isn't right. Try again.";
+    }
+  };
+  document.querySelectorAll("nav button").forEach(btn => btn.onclick = () => {
+    document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    document.querySelectorAll("section").forEach(s => s.classList.remove("active"));
+    const id = btn.dataset.tab;
+    document.getElementById(id).classList.add("active");
+    if (id === "payments") loadWeek(viewWeek).then(renderActive);
+    renderActive();
+  });
+  document.querySelectorAll(".chip[data-filter]").forEach(c => c.onclick = () => {
+    document.querySelectorAll(".chip[data-filter]").forEach(x => x.classList.remove("on"));
+    c.classList.add("on");
+    filter = c.dataset.filter;
+    renderDraft();
+  });
+  $("#submitBtn").onclick = submitPicks;
+
+  start();
+</script>
+</body>
+</html>
