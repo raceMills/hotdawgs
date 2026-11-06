@@ -192,12 +192,15 @@
 
   <nav>
     <button class="active" data-tab="draft">Draft</button>
+    <button data-tab="schedule">Schedule</button>
+    <button data-tab="rankings">Ranks</button>
     <button data-tab="payments">Payments</button>
     <button data-tab="payouts">Payouts</button>
     <button data-tab="settings">Me</button>
   </nav>
 
   <section id="draft" class="active">
+    <div class="card" id="tourneyCard"></div>
     <div class="card" id="setupCard" hidden></div>
     <div id="draftCard" hidden>
       <div class="card">
@@ -218,10 +221,14 @@
     </div>
   </section>
 
+  <section id="schedule"><div id="scheduleWrap"></div></section>
+  <section id="rankings"><div id="rankingsWrap"></div></section>
   <section id="payments"><div id="paymentsWrap"></div></section>
   <section id="payouts"><div id="payoutEditor"></div></section>
   <section id="settings"><div id="settingsWrap"></div></section>
+  <p class="hint" id="joke" style="text-align:center;margin:18px 8px 0"></p>
 </div>
+
 
 <div class="toast" id="toast"></div>
 
@@ -316,7 +323,7 @@
   }
   function applyConfig(d) {
     config = Object.assign({ currentWeek: 1, venmo: {}, amounts: {} }, d || {});
-    golfers = parseField(config.fieldText);
+    rebuildGolfers();
     if (!viewInit) { viewWeek = Math.max(1, currentWeek() - 1); viewInit = true; }
   }
   async function loadWeek(n) {
@@ -467,7 +474,7 @@
     const m = $("#mascot");
     m.classList.add("hop");
     setTimeout(() => m.classList.remove("hop"), 1600);
-    toast("Picks locked. Let's get dogs! 🌭");
+    toast(pickJoke(JOKES.lock));
   }
 
   // ---------- Results to payouts ----------
@@ -517,7 +524,13 @@
   }
   function resultsHtml(w) {
     const doc = weekOf(w), fin = doc.finishes || {}, entries = entriesFor(w);
-    const opts = (sel) => `<option value="">—</option>` + golfers.map(g => `<option value="${g.name}" ${sel === g.name ? "selected" : ""}>${g.name}</option>`).join("");
+    // Winner/runner-up choices: ranked field, plus anyone on the live leaderboard or already saved
+    const names = [...new Set([
+      ...golfers.map(g => g.name),
+      ...live.players.filter(p => p.pos < 999).slice(0, 30).map(p => p.name),
+      doc.resultWinner, doc.resultRunner
+    ].filter(Boolean))];
+    const opts = (sel) => `<option value="">—</option>` + names.map(n => `<option value="${n}" ${sel === n ? "selected" : ""}>${n}</option>`).join("");
     const rows = entries.length ? entries.map(e => {
       const p = fin[e.name];
       const shown = p && p !== 999 ? p : "";
@@ -525,7 +538,8 @@
         <input type="number" min="1" max="200" value="${shown}" placeholder="finish" data-fin="${e.name}" style="width:72px;padding:6px;border:2px solid var(--shadow);border-radius:8px;font:inherit"></div>`;
     }).join("") : `<p class="hint">No picks for this week yet.</p>`;
     return `<h2>Week ${w} results</h2>
-      <p class="hint">Enter where each picked golfer finished. Leave blank for a missed cut. Then name the tournament winner and runner-up.</p>
+      <p class="hint">Tap the button to copy positions from the live leaderboard, or type them in. Blank means missed cut. Check the numbers before you calculate.</p>
+      <button class="btn green" id="fillLiveBtn" style="margin-bottom:10px" ${live.ok ? "" : "disabled"}>${live.ok ? "Fill in from live leaderboard" : "Live leaderboard unavailable"}</button>
       ${rows}
       <div class="field" style="margin-top:12px"><label>Tournament winner</label><select data-res="resultWinner">${opts(doc.resultWinner)}</select></div>
       <div class="field"><label>Runner-up</label><select data-res="resultRunner">${opts(doc.resultRunner)}</select></div>
@@ -535,10 +549,10 @@
     <div class="card">
       <h2>Set week ${w} result</h2>`;
   }
-
   // ---------- Payments ----------
   function renderPayments() {
     const wrap = $("#paymentsWrap");
+    if (wrap.contains(document.activeElement) && /INPUT|SELECT/.test(document.activeElement.tagName)) return;
     const w = viewWeek;
     const doc = weekOf(w);
     if (settleKey !== w || !settleDraft) {
@@ -639,6 +653,8 @@
     wrap.querySelectorAll("[data-res]").forEach(sel => sel.onchange = () => {
       write("week", w, { [sel.dataset.res]: sel.value || null });
     });
+    const fillBtn = $("#fillLiveBtn");
+    if (fillBtn) fillBtn.onclick = () => fillFromLive(w);
     const calc = $("#calcBtn");
     if (calc) calc.onclick = () => {
       calcResult = derive(w);
@@ -653,6 +669,7 @@
     };
     wrap.querySelectorAll("[data-paid]").forEach(b => b.onclick = () => {
       write("week", w, { paid: { [b.dataset.paid]: b.dataset.now === "1" } });
+      if (b.dataset.now === "1") toast(pickJoke(JOKES.paid));
     });
     const sh = $("#shareBtn");
     if (sh) sh.onclick = () => shareSummary(w, winner, rules, perPayer, payers, paid);
@@ -755,9 +772,16 @@
         <p class="hint">Currently on week ${currentWeek()}. Start the next week once the previous one is settled.</p>
         <button class="btn green" id="nextWeekBtn">Start week ${currentWeek() + 1}</button>
         <h2 style="margin-top:18px">Tournament field</h2>
-        <p class="hint">One golfer per line as "Name, world ranking". Top 10 are hot, the rest are dawgs.</p>
+        <p class="hint">${rankingsFile ? "Rankings now update automatically every Monday, so this list is only a backup." : "Backup list, used until the automatic rankings file exists."} One golfer per line as "Name, world ranking".</p>
         <textarea id="fieldIn" rows="8" style="width:100%">${config.fieldText || DEFAULT_FIELD_TEXT}</textarea>
         <button class="btn" id="saveField">Save field</button>
+        <h2 style="margin-top:18px">Tournament schedule</h2>
+        <p class="hint">One tournament per line: Name | start date | end date | location. Example: Sample Open | 2027-01-14 | 2027-01-17 | Honolulu, HI</p>
+        <textarea id="schedIn" rows="6" style="width:100%">${config.scheduleText || ""}</textarea>
+        <div class="field" style="margin-top:10px"><label>Current tournament</label><select id="curSel"><option value="">None</option>${parseSchedule(config.scheduleText).map(t => `<option value="${t.name}" ${t.name === config.currentTournament ? "selected" : ""}>${t.name}</option>`).join("")}</select></div>
+        <div class="field"><label>Official leaderboard link (optional)</label><input type="text" id="lbIn" value="${config.leaderboardUrl || ""}" placeholder="https://"></div>
+        <div class="field"><label>Rankings updated (optional)</label><input type="text" id="rkIn" value="${config.rankingsDate || ""}" placeholder="e.g. Nov 6, 2026"></div>
+        <button class="btn" id="saveTourney">Save tournament info</button>
       </div>`;
     wrap.querySelectorAll("[data-me]").forEach(b => b.onclick = () => {
       me = b.dataset.me;
@@ -769,6 +793,15 @@
       const h = $("#handleIn").value.trim().replace(/^@/, "");
       write("config", 0, { venmo: { [me]: h } });
       toast("Venmo name saved");
+    };
+    $("#saveTourney").onclick = () => {
+      write("config", 0, {
+        scheduleText: $("#schedIn").value,
+        currentTournament: $("#curSel").value,
+        leaderboardUrl: $("#lbIn").value.trim(),
+        rankingsDate: $("#rkIn").value.trim()
+      });
+      toast("Tournament info saved");
     };
     $("#saveField").onclick = () => {
       const txt = $("#fieldIn").value;
@@ -804,6 +837,241 @@
     };
   }
 
+  // ---------- Jokes (original lines in the spirit of the movie) ----------
+  const JOKES = {
+    lock: [
+      "Picks locked. Grandma's proud, and she doesn't even know who's playing.",
+      "Locked in tighter than a Shooter McGavin wardrobe.",
+      "Picks are in. Now go tell everyone you're the best golfer in the pool.",
+      "Locked. The hot dogs are ready, and so are you.",
+      "Picks locked. That's a whole lot of pressure for one hot dog."
+    ],
+    paid: [
+      "Paid. Your wallet got lighter, but your conscience got lighter too.",
+      "Money's moving, just like a golf ball that finally goes where you aimed it.",
+      "Paid up. Shooter would be furious that you're on time.",
+      "Paid. Somewhere, a grandma just relaxed a little."
+    ],
+    empty: [
+      "Nothing here yet. Like a first swing, it's a little messy.",
+      "All quiet on the course. Give it a few holes.",
+      "Empty for now. The fun hasn't teed off yet."
+    ],
+    wrongPass: [
+      "Wrong password. Hint: it's the team name on the sign outside.",
+      "Nope. Check with the organizer, and don't try the bratwurst."
+    ],
+    footer: [
+      "Hot dogs for everyone, eventually.",
+      "Stay out of the rough, and out of your wallet's way.",
+      "Grandma says the bratwurst is better. Grandma is wrong.",
+      "Nobody golfs like you. Okay, maybe a little bit like you.",
+      "The price is right, but the picks are final.",
+      "Pool rules: no crying in the clubhouse, only at the payout."
+    ]
+  };
+  const pickJoke = (list) => list[Math.floor(Math.random() * list.length)];
+  const joke = () => pickJoke(JOKES.footer);
+
+  // ---------- Tournament, schedule, rankings, live results ----------
+  function parseSchedule(text) {
+    return (text || "").split("\n").map(l => l.trim()).filter(Boolean).map(l => {
+      const [name, start, end, where] = l.split("|").map(s => (s || "").trim());
+      return { name, start, end, where };
+    }).filter(t => t.name);
+  }
+  function fmtDate(s) {
+    return new Date(s + "T12:00:00").toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  }
+  function fmtDates(t) {
+    if (!t.start) return "";
+    return t.end && t.end !== t.start ? `${fmtDate(t.start)} – ${fmtDate(t.end)}` : fmtDate(t.start);
+  }
+  // ---------- Live data from ESPN's public golf feed ----------
+  // Unofficial feed: no key needed, but ESPN can change it without notice.
+  const LIVE_URL = "https://site.api.espn.com/apis/site/v2/sports/golf/pga/scoreboard";
+  let live = { ok: false, loading: false, error: "", event: null, players: [], calendar: [], fetchedAt: null };
+
+  const norm = (s) => (s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase().replace(/[^a-z ]/g, "").replace(/\s+/g, " ").trim();
+  const isoDay = (s) => (s || "").slice(0, 10);
+
+  async function fetchLive() {
+    if (live.loading) return;
+    live.loading = true;
+    try {
+      const res = await fetch(LIVE_URL, { cache: "no-store" });
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      const data = await res.json();
+      const ev = (data.events || [])[0];
+      const comp = ev && (ev.competitions || [])[0];
+      const players = ((comp && comp.competitors) || []).map((c, i) => {
+        const st = c.status || {};
+        const posText = (st.position && st.position.displayName) || (c.order != null ? String(c.order) : "");
+        const cut = /cut|wd|dq|mdf/i.test(posText) || /cut|wd|dq/i.test((st.type && st.type.name) || "");
+        const posNum = parseInt(String(posText).replace(/\D/g, ""), 10);
+        return {
+          name: (c.athlete && (c.athlete.displayName || c.athlete.fullName)) || "",
+          pos: cut ? 999 : (Number.isFinite(posNum) ? posNum : (c.order || i + 1)),
+          posText: cut ? (posText || "CUT") : (posText || String(c.order || i + 1)),
+          toPar: typeof c.score === "object" ? (c.score.displayValue || "") : (c.score || ""),
+          thru: (st.thru != null ? st.thru : "") || (st.displayValue || "")
+        };
+      }).filter(p => p.name);
+      const cal = (((data.leagues || [])[0] || {}).calendar || []).map(e => ({
+        name: e.label || e.name || "",
+        start: isoDay(e.startDate),
+        end: isoDay(e.endDate),
+        where: ""
+      })).filter(e => e.name);
+      live = {
+        ok: true, loading: false, error: "", players, calendar: cal, fetchedAt: new Date(),
+        event: ev ? {
+          name: ev.name || ev.shortName || "",
+          start: isoDay(ev.date),
+          end: isoDay(ev.endDate),
+          where: (comp && comp.venue && comp.venue.fullName) || "",
+          status: (ev.status && ev.status.type && (ev.status.type.shortDetail || ev.status.type.description)) || "",
+          final: !!(ev.status && ev.status.type && ev.status.type.completed)
+        } : null
+      };
+    } catch (e) {
+      live.loading = false;
+      live.ok = false;
+      live.error = "Live scores couldn't load. Showing the organizer's entries instead.";
+    }
+    rebuildGolfers();
+    renderActive();
+  }
+  const livePlayer = (name) => live.players.find(p => norm(p.name) === norm(name));
+
+  // ---------- Rankings file (updated every Monday by the GitHub task) ----------
+  let rankingsFile = null;
+  async function loadRankings() {
+    try {
+      const r = await fetch("rankings.json?v=" + Date.now(), { cache: "no-store" });
+      if (!r.ok) return;
+      const data = await r.json();
+      if (data && Array.isArray(data.players) && data.players.length) {
+        rankingsFile = data;
+        rebuildGolfers();
+        renderActive();
+      }
+    } catch (e) { /* no file yet: fall back to the manual list */ }
+  }
+
+  // Draft list: this week's tournament field, ranked by world ranking.
+  // Hot = the 10 best-ranked golfers in the field. Everyone else is a dawg.
+  function rebuildGolfers() {
+    const ranked = rankingsFile
+      ? rankingsFile.players.map(p => ({ name: p.name, rank: p.rank }))
+      : parseField(config.fieldText).map(g => ({ name: g.name, rank: g.rank }));
+    const rankByName = new Map(ranked.map(p => [norm(p.name), p.rank]));
+    const field = (typeof live !== "undefined" && live.players && live.players.length)
+      ? live.players.map(p => ({ name: p.name, rank: rankByName.get(norm(p.name)) || 999 }))
+      : ranked;
+    field.sort((a, b) => a.rank - b.rank || a.name.localeCompare(b.name));
+    golfers = field.map((g, i) => ({ name: g.name, rank: g.rank, hot: i < 10 && g.rank < 999 }));
+  }
+  const fieldIsLive = () => live.players.length > 0;
+
+  function currentTourney() {
+    if (live.event && live.event.name) return live.event;
+    return parseSchedule(config.scheduleText).find(t => t.name === config.currentTournament) || null;
+  }
+
+  // Organizer button on Payments: copy live finishes into the week's results
+  async function fillFromLive(w) {
+    if (!live.ok || !live.players.length) { toast("No live leaderboard right now."); return; }
+    const finishes = {};
+    for (const e of entriesFor(w)) {
+      const p = livePlayer(e.name);
+      finishes[e.name] = p ? p.pos : 999;
+    }
+    const ranked = live.players.filter(p => p.pos < 999).sort((a, b) => a.pos - b.pos);
+    await write("week", w, {
+      finishes,
+      resultWinner: ranked[0] ? ranked[0].name : null,
+      resultRunner: ranked[1] ? ranked[1].name : null
+    });
+    toast(live.event && live.event.final ? "Final results filled in" : "Filled in with current positions. Not final yet.");
+  }
+
+  function renderTourney() {
+    const el = $("#tourneyCard");
+    if (!el) return;
+    const t = currentTourney();
+    const w = currentWeek();
+    const fin = weekOf(w).finishes || {};
+    const entries = entriesFor(w).map(e => {
+      const lp = livePlayer(e.name);
+      return { ...e, pos: lp ? lp.pos : (fin[e.name] || 999), posText: lp ? lp.posText : (fin[e.name] && fin[e.name] !== 999 ? String(fin[e.name]) : "—"), toPar: lp ? lp.toPar : "", thru: lp ? lp.thru : "" };
+    }).sort((a, b) => a.pos - b.pos);
+    const stamp = live.fetchedAt ? `Live from ESPN · updated ${live.fetchedAt.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}` : (live.error || "Loading live scores…");
+    if (!t) {
+      el.innerHTML = `<h2>Tournament</h2><p class="hint">No tournament found. ${live.error || "Check back closer to the next event."}</p>`;
+      return;
+    }
+    const leaders = live.players.filter(p => p.pos < 999).slice(0, 5);
+    el.innerHTML = `
+      <span class="sub">${live.event && live.event.final ? "Final" : "Now playing"}</span>
+      <div class="big" style="margin-top:8px">${t.name}</div>
+      <div class="hint">${fmtDates(t)}${t.where ? " · " + t.where : ""}${t.status ? " · " + t.status : ""}</div>
+      ${config.leaderboardUrl ? `<a class="btn small" href="${config.leaderboardUrl}" target="_blank" rel="noopener">Official leaderboard ↗</a>` : ""}
+
+      <h2 style="margin-top:14px">Live results: pool picks</h2>
+      <p class="hint">${stamp}</p>
+      ${entries.length ? entries.map(e => `
+        <div class="rule">
+          <span style="flex:1">${e.name} <span class="hint" style="margin:0">(${e.who}, ${e.kind})</span></span>
+          <span class="hint" style="margin:0 6px 0 0">${e.toPar}${e.thru ? " · " + e.thru : ""}</span>
+          <span class="amt">${e.posText}</span>
+        </div>`).join("") : `<p class="hint">No picks this week yet.</p>`}
+
+      ${leaders.length ? `<h2 style="margin-top:14px">Tournament leaders</h2>
+        ${leaders.map(p => `<div class="rule"><span style="flex:1">${p.name}</span><span class="hint" style="margin:0 6px 0 0">${p.toPar}</span><span class="amt">${p.posText}</span></div>`).join("")}` : ""}
+      <button class="btn small ghost" id="refreshLive" style="margin-top:10px">Refresh scores</button>`;
+    const r = $("#refreshLive");
+    if (r) r.onclick = fetchLive;
+  }
+  function renderSchedule() {
+    const list = live.calendar.length ? live.calendar : parseSchedule(config.scheduleText);
+    const cur = currentTourney() ? currentTourney().name : config.currentTournament;
+    $("#scheduleWrap").innerHTML = `<div class="card"><h2>Tournament schedule</h2>${list.length
+      ? list.map(t => `
+        <div class="payer">
+          <div class="avatar" style="font-size:11px">${t.start ? new Date(t.start + "T12:00:00").toLocaleDateString(undefined, { month: "short" }) : "—"}</div>
+          <div class="info"><div class="label">${t.name}</div><div class="sub2">${fmtDates(t)}${t.where ? " · " + t.where : ""}</div></div>
+          ${norm(t.name) === norm(cur) ? `<span class="pill paid">Current</span>` : ""}
+        </div>`).join("")
+      : `<p class="hint">${live.error || "Loading the schedule…"} You can also add tournaments under Me.</p>`}
+      ${live.calendar.length ? `<p class="hint" style="margin-top:8px">Schedule from ESPN's PGA Tour calendar.</p>` : ""}</div>`;
+  }
+  function renderRankings() {
+    const el = $("#rankingsWrap");
+    const tab = el.dataset.view || "field";
+    const t = currentTourney();
+    const fieldList = golfers;
+    const worldList = rankingsFile
+      ? rankingsFile.players.slice(0, 100)
+      : parseField(config.fieldText);
+    const updated = rankingsFile
+      ? `Official World Golf Ranking, updated ${fmtDate(rankingsFile.updated)}.`
+      : "No automatic rankings yet. Using the manual list under Me.";
+    el.innerHTML = `<div class="card"><h2>Rankings</h2>
+      <div class="chips">
+        <button class="chip ${tab === "field" ? "on" : ""}" data-view="field">This week's field</button>
+        <button class="chip ${tab === "world" ? "on" : ""}" data-view="world">World top 100</button>
+      </div>
+      <p class="hint">${updated}</p>
+      ${tab === "field" ? `
+        <p class="hint">${fieldIsLive() && t ? `${t.name} field, ranked. The 10 best-ranked are hot.` : "Tournament field not posted yet. Showing world rankings; top 10 are hot."}</p>
+        ${fieldList.map(g => `<div class="golfer"><div><div>${g.name}</div><div class="rank">${g.rank < 999 ? "World #" + g.rank : "Unranked"}</div></div><span class="pill ${g.hot ? "owes" : ""}">${g.hot ? "Hot" : "Dawg"}</span></div>`).join("")}
+      ` : worldList.map(g => `<div class="golfer"><div><div>${g.name}</div><div class="rank">World #${g.rank}</div></div></div>`).join("")}
+    </div>`;
+    el.querySelectorAll("[data-view]").forEach(b => b.onclick = () => { el.dataset.view = b.dataset.view; renderRankings(); });
+  }
+
   // ---------- Render ----------
   function renderActive() {
     const active = document.querySelector("section.active").id;
@@ -812,6 +1080,9 @@
     if (active === "payments") renderPayments();
     if (active === "payouts") renderPayouts();
     if (active === "settings") renderSettings();
+    if (active === "schedule") renderSchedule();
+    if (active === "rankings") renderRankings();
+    renderTourney();
   }
 
   // ---------- Start ----------
@@ -833,6 +1104,11 @@
     }
     sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     renderActive();
+    // Live scores: load now, then every 2 minutes while the app is open
+    loadRankings();
+    fetchLive();
+    setInterval(() => { if (!document.hidden) fetchLive(); }, 120000);
+    document.addEventListener("visibilitychange", () => { if (!document.hidden) fetchLive(); });
     try {
       await loadAll();
       startRealtime();
@@ -848,7 +1124,7 @@
       localStorage.setItem("hotdawgs-pass", POOL_PASSWORD);
       start();
     } else {
-      $("#passMsg").textContent = "That password isn't right. Try again.";
+      $("#passMsg").textContent = pickJoke(JOKES.wrongPass);
     }
   };
   document.querySelectorAll("nav button").forEach(btn => btn.onclick = () => {
@@ -857,6 +1133,7 @@
     document.querySelectorAll("section").forEach(s => s.classList.remove("active"));
     const id = btn.dataset.tab;
     document.getElementById(id).classList.add("active");
+    $("#joke").textContent = joke();
     if (id === "payments") loadWeek(viewWeek).then(renderActive);
     renderActive();
   });
@@ -867,6 +1144,7 @@
     renderDraft();
   });
   $("#submitBtn").onclick = submitPicks;
+  $("#joke").textContent = joke();
 
   start();
 </script>
