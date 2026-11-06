@@ -772,7 +772,7 @@
         <p class="hint">Currently on week ${currentWeek()}. Start the next week once the previous one is settled.</p>
         <button class="btn green" id="nextWeekBtn">Start week ${currentWeek() + 1}</button>
         <h2 style="margin-top:18px">Tournament field</h2>
-        <p class="hint">${rankingsFile ? "Rankings now update automatically every Monday, so this list is only a backup." : "Backup list, used until the automatic rankings file exists."} One golfer per line as "Name, world ranking".</p>
+        <p class="hint">${rankingsFile ? "Rankings now update automatically every Monday, so this list is only a backup." : "Backup list, used until the automatic rankings file exists."} One golfer per line, as "12, Scottie Scheffler" or "Scottie Scheffler, 12". Either order works.</p>
         <textarea id="fieldIn" rows="8" style="width:100%">${config.fieldText || DEFAULT_FIELD_TEXT}</textarea>
         <button class="btn" id="saveField">Save field</button>
         <h2 style="margin-top:18px">Tournament schedule</h2>
@@ -791,8 +791,17 @@
     const save = $("#saveHandle");
     if (save) save.onclick = () => {
       const h = $("#handleIn").value.trim().replace(/^@/, "");
+      if (!h) { toast("Type your Venmo name first"); return; }
+      const firstTime = !(config.venmo || {})[me];
+      $("#handleIn").blur();
       write("config", 0, { venmo: { [me]: h } });
-      toast("Venmo name saved");
+      if (firstTime) {
+        goToTab("draft");
+        toast("You're all set. Step 3: make your picks, one hot and one dawg. 🌭");
+        renderActive();
+      } else {
+        toast("Venmo name saved");
+      }
     };
     $("#saveTourney").onclick = () => {
       write("config", 0, {
@@ -960,17 +969,71 @@
     } catch (e) { /* no file yet: fall back to the manual list */ }
   }
 
+  // ---------- Name matching between ESPN and the world rankings ----------
+  // Handles accents, "Last, First" order, hyphens, initials (J.J.), and Jr./III.
+  function nameKey(s) {
+    let n = (s || "").trim();
+    if (n.includes(",")) {
+      const [last, ...rest] = n.split(",").map(x => x.trim());
+      if (rest.length && rest.join(" ")) n = rest.join(" ") + " " + last;
+    }
+    return n.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase()
+      .replace(/[-]/g, " ").replace(/[.']/g, "").replace(/[^a-z ]/g, "")
+      .replace(/\b(jr|sr|ii|iii|iv)\b/g, "").replace(/\s+/g, " ").trim();
+  }
+  // "Scheffler, Scottie" -> "Scottie Scheffler" for display
+  function displayName(s) {
+    const n = (s || "").trim();
+    if (!n.includes(",")) return n;
+    const [last, ...rest] = n.split(",").map(x => x.trim());
+    return rest.join(" ") ? `${rest.join(" ")} ${last}` : last;
+  }
+  function rankLookup(ranked) {
+    const byFull = new Map(), byLastInitial = new Map();
+    for (const p of ranked) {
+      const k = nameKey(p.name);
+      if (!k) continue;
+      const full = k.replace(/ /g, "");
+      if (!byFull.has(full)) byFull.set(full, p.rank);
+      const parts = k.split(" ");
+      const li = parts[parts.length - 1] + "|" + parts[0][0];
+      byLastInitial.set(li, byLastInitial.has(li) ? -1 : p.rank); // -1 = two players share it
+    }
+    return (name) => {
+      const k = nameKey(name);
+      if (!k) return 999;
+      const full = k.replace(/ /g, "");
+      if (byFull.has(full)) return byFull.get(full);
+      const parts = k.split(" ");
+      const r = byLastInitial.get(parts[parts.length - 1] + "|" + parts[0][0]);
+      return r && r > 0 ? r : 999;
+    };
+  }
+
+  // Backup list: accepts "12, Scottie Scheffler" or "Scottie Scheffler, 12"
+  function parseFieldAny(text) {
+    const src = (text && text.trim()) ? text : DEFAULT_FIELD_TEXT;
+    return src.split("\n").map(l => l.trim()).filter(Boolean).map(l => {
+      const parts = l.split(",").map(s => s.trim());
+      if (/^\d+$/.test(parts[0])) return { name: parts.slice(1).join(", "), rank: Number(parts[0]) };
+      if (/^\d+$/.test(parts[parts.length - 1])) return { name: parts.slice(0, -1).join(", "), rank: Number(parts[parts.length - 1]) };
+      return { name: l, rank: 999 };
+    }).filter(g => g.name);
+  }
+
   // Draft list: this week's tournament field, ranked by world ranking.
   // Hot = the 10 best-ranked golfers in the field. Everyone else is a dawg.
+  let matchStats = { matched: 0, total: 0 };
   function rebuildGolfers() {
     const ranked = rankingsFile
       ? rankingsFile.players.map(p => ({ name: p.name, rank: p.rank }))
-      : parseField(config.fieldText).map(g => ({ name: g.name, rank: g.rank }));
-    const rankByName = new Map(ranked.map(p => [norm(p.name), p.rank]));
+      : parseFieldAny(config.fieldText);
+    const rankOfName = rankLookup(ranked);
     const field = (typeof live !== "undefined" && live.players && live.players.length)
-      ? live.players.map(p => ({ name: p.name, rank: rankByName.get(norm(p.name)) || 999 }))
-      : ranked;
+      ? live.players.map(p => ({ name: p.name, rank: rankOfName(p.name) }))
+      : ranked.map(p => ({ name: displayName(p.name), rank: p.rank }));
     field.sort((a, b) => a.rank - b.rank || a.name.localeCompare(b.name));
+    matchStats = { matched: field.filter(g => g.rank < 999).length, total: field.length };
     golfers = field.map((g, i) => ({ name: g.name, rank: g.rank, hot: i < 10 && g.rank < 999 }));
   }
   const fieldIsLive = () => live.players.length > 0;
@@ -1054,7 +1117,7 @@
     const fieldList = golfers;
     const worldList = rankingsFile
       ? rankingsFile.players.slice(0, 100)
-      : parseField(config.fieldText);
+      : parseFieldAny(config.fieldText);
     const updated = rankingsFile
       ? `Official World Golf Ranking, updated ${fmtDate(rankingsFile.updated)}.`
       : "No automatic rankings yet. Using the manual list under Me.";
@@ -1065,15 +1128,38 @@
       </div>
       <p class="hint">${updated}</p>
       ${tab === "field" ? `
-        <p class="hint">${fieldIsLive() && t ? `${t.name} field, ranked. The 10 best-ranked are hot.` : "Tournament field not posted yet. Showing world rankings; top 10 are hot."}</p>
+        <p class="hint">${fieldIsLive() && t ? `${t.name} field, ranked. The 10 best-ranked are hot. ${matchStats.matched} of ${matchStats.total} golfers have a world ranking.` : "Tournament field not posted yet. Showing world rankings; top 10 are hot."}</p>
         ${fieldList.map(g => `<div class="golfer"><div><div>${g.name}</div><div class="rank">${g.rank < 999 ? "World #" + g.rank : "Unranked"}</div></div><span class="pill ${g.hot ? "owes" : ""}">${g.hot ? "Hot" : "Dawg"}</span></div>`).join("")}
-      ` : worldList.map(g => `<div class="golfer"><div><div>${g.name}</div><div class="rank">World #${g.rank}</div></div></div>`).join("")}
+      ` : worldList.map(g => `<div class="golfer"><div><div>${displayName(g.name)}</div><div class="rank">World #${g.rank}</div></div></div>`).join("")}
     </div>`;
     el.querySelectorAll("[data-view]").forEach(b => b.onclick = () => { el.dataset.view = b.dataset.view; renderRankings(); });
   }
 
+  // ---------- Tab switching and first-time setup flow ----------
+  function goToTab(id) {
+    document.querySelectorAll("nav button").forEach(b => b.classList.toggle("active", b.dataset.tab === id));
+    document.querySelectorAll("section").forEach(s => s.classList.toggle("active", s.id === id));
+    $("#joke").textContent = joke();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+  let lastMe = me;
+  function setupFlow() {
+    if (me && me !== lastMe) {
+      lastMe = me;
+      // Just picked a name: if there's no Venmo name yet, go straight to that step
+      if (!(config.venmo || {})[me]) {
+        goToTab("settings");
+        toast(`Hi ${me}! Step 2: add your Venmo name so winners get paid.`);
+        setTimeout(() => { const i = $("#handleIn"); if (i) i.focus(); }, 300);
+        return true;
+      }
+    }
+    return false;
+  }
+
   // ---------- Render ----------
   function renderActive() {
+    setupFlow();
     const active = document.querySelector("section.active").id;
     $("#subline").textContent = `Week ${currentWeek()} · Draft open · Lock Thu 7am`;
     if (active === "draft") renderDraft();
@@ -1150,3 +1236,4 @@
 </script>
 </body>
 </html>
+
