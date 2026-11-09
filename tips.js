@@ -246,6 +246,10 @@
     { key: "fillLive", sel: "#fillLiveBtn:not([disabled])", title: "Skip the typing", text: "This copies every pick's finish straight from the live leaderboard. Check it, then tap Calculate." },
     { key: "trophy", sel: "[data-trophy]", title: "Trophy card unlocked 🏆", text: "Make a shareable champion card for the group chat. Frame it for Grandma." },
     { key: "cam", sel: "#camIn", title: "Ketchup Cam 📸", text: "Snap your hot dog setup. Everyone votes, best dog wins the week." },
+    { key: "react", sel: "[data-react]", title: "Talk some trash 🤡", text: "Tap any pick on the board to drop a reaction. Clown emoji encouraged for bad picks." },
+    { key: "herald", sel: "[data-fun=herald]", title: "Extra! Extra! 📰", text: "Every finished week gets a front page in the Hotdawg Herald. Screenshot it for the group chat." },
+    { key: "wrapped", sel: "[data-fun=wrapped]", title: "Your season, the movie 🎁", text: "Hotdawgs Wrapped tells the story of your season. Spoiler: you have a nemesis." },
+    { key: "court", sel: "#eggCourt", title: "Egg Beer Court is in session ⚖️", text: "Finish last and you owe the group an egg beer. Photo proof required. I don't make the rules. Okay, I do." },
     { key: "focus", sel: "[data-focus]", title: "Tap a name", text: "See who that person has paid the most, and who's paid them. Great for grudges." }
   ];
   let coach = null;

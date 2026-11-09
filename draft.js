@@ -42,6 +42,37 @@
 
   window.HD = Object.assign(window.HD || {}, { draftState, draftOrder, draftOpen, clock, fmtLeft, clockLine });
 
+  // ----- Emoji reactions on picks (tap a pick on the board) -----
+  const EMOJI = ["🔥", "🤡", "🥚", "🌭", "💀", "🐐"];
+  let openReact = null;
+  const rStyle = document.createElement("style");
+  rStyle.textContent = `
+    .hd-reactable { cursor: pointer; }
+    .hd-reacts { flex-basis: 100%; display: flex; gap: 5px; flex-wrap: wrap; padding-left: 26px; margin-top: 4px; }
+    .hd-reacts:empty { display: none; }
+    .hd-rx { font-size: 13px; background: var(--cream); border: 2px solid var(--shadow); border-radius: 999px; padding: 1px 7px; font-weight: 800; }
+    .hd-rx.mine { background: var(--mustard); }
+    .hd-rpick { font-size: 22px; background: var(--paper); border: 2px solid var(--shadow); border-radius: 12px; padding: 3px 8px; cursor: pointer;
+      box-shadow: 2px 2px 0 var(--shadow); animation: hdPop .25s ease-out; }
+    .hd-rpick.on { background: var(--mustard); }
+    @keyframes hdPop { from { transform: scale(.4); } }
+  `;
+  document.head.appendChild(rStyle);
+  function reactionsHtml(week, name) {
+    const r = ((weekOf(week).reactions || {})[name]) || {};
+    if (openReact === name) {
+      return `<div class="hd-reacts">${EMOJI.map(e => `<span class="hd-rpick ${r[me] === e ? "on" : ""}" data-emo="${e}">${e}</span>`).join("")}</div>`;
+    }
+    const count = {};
+    Object.entries(r).forEach(([m, e]) => { if (e) (count[e] = count[e] || []).push(m); });
+    return `<div class="hd-reacts">${Object.entries(count).map(([e, ms]) => `<span class="hd-rx ${ms.includes(me) ? "mine" : ""}" title="${ms.join(", ")}">${e} ${ms.length}</span>`).join("")}</div>`;
+  }
+  async function react(week, name, emo) {
+    const cur = (((weekOf(week).reactions || {})[name]) || {})[me];
+    openReact = null;
+    await write("week", week, { reactions: { [name]: { [me]: cur === emo ? null : emo } } });
+  }
+
   async function nudge(who, week, st) {
     const ci = clock(week);
     const text = who === null
@@ -255,10 +286,12 @@
       const p = s.done ? slotPick(week, s.m, s.nth) : null;
       const now = open && s.i === st.clock;
       const log = ((weekOf(week).pickLog || {})[s.i]) || {};
-      return `<div class="rule" style="${now ? "background:var(--mustard);border-radius:10px;padding:8px;" : ""}">
+      const wd = p && HD.isWD && HD.isWD(week, p.name);
+      return `<div class="rule ${p ? "hd-reactable" : ""}" ${p ? `data-react="${p.name.replace(/"/g, "&quot;")}"` : ""} style="flex-wrap:wrap;${now ? "background:var(--mustard);border-radius:10px;padding:8px;" : ""}">
         <span style="width:26px;font-weight:900">${s.i + 1}</span>
         <span style="flex:1">${s.m}${s.m === me ? " (you)" : ""}</span>
-        <span class="hint" style="margin:0">${p ? `${p.name} · ${p.kind === "hot" ? "🔥" : "🐶"}${log.auto ? " ⏱" : ""}` : (now ? "On the clock" : "")}</span>
+        <span class="hint" style="margin:0">${p ? `${p.name} · ${p.kind === "hot" ? "🔥" : "🐶"}${log.auto ? " ⏱" : ""}${wd ? ` <b style="color:var(--red)">⚠️ WD</b>` : ""}` : (now ? "On the clock" : "")}</span>
+        ${p ? reactionsHtml(week, p.name) : ""}
       </div>`;
     };
     const cl = clockLine(week, st);
@@ -291,7 +324,13 @@
       ${st.board.filter(s => s.round === 1).map(row).join("")}
       <p class="hint" style="margin-top:12px">Round 2 (reverse order)</p>
       ${st.board.filter(s => s.round === 2).map(row).join("")}
-      <p class="hint" style="margin-top:10px">First pick rotates each week. Next week ${draftOrder(week + 1)[0]} picks first.${Object.values(weekOf(week).pickLog || {}).some(l => l.auto) ? " ⏱ = auto-picked." : ""}</p>`;
+      <p class="hint" style="margin-top:10px">Tap any pick to react. First pick rotates each week. Next week ${draftOrder(week + 1)[0]} picks first.${Object.values(weekOf(week).pickLog || {}).some(l => l.auto) ? " ⏱ = auto-picked." : ""}</p>`;
+    board.querySelectorAll("[data-react]").forEach(el => el.onclick = (e) => {
+      const emo = e.target.closest("[data-emo]");
+      if (emo) { e.stopPropagation(); return react(week, el.dataset.react, emo.dataset.emo); }
+      openReact = openReact === el.dataset.react ? null : el.dataset.react;
+      renderDraft();
+    });
     const nb = document.getElementById("nudgeBtn");
     if (nb) nb.onclick = () => { justPickedWeek = null; nudge(st.complete ? null : st.onClock, week, st); renderDraft(); };
     const pc = document.getElementById("proxyCancel");

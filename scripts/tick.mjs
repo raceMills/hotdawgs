@@ -165,6 +165,96 @@ async function draftTick(w) {
   if (Object.keys(patch).length) await saveWeek(w, patch);
 }
 
+// Chicago calendar day and hour for a moment
+function chicago(ms) {
+  const parts = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Chicago", year: "numeric", month: "2-digit", day: "2-digit", hour: "numeric", hourCycle: "h23" }).formatToParts(new Date(ms));
+  const g = (t) => parts.find(p => p.type === t).value;
+  return { day: `${g("year")}-${g("month")}-${g("day")}`, hour: Number(g("hour")) % 24 };
+}
+const dayBefore = (iso) => { const d = new Date(iso + "T12:00:00Z"); d.setUTCDate(d.getUTCDate() - 1); return d.toISOString().slice(0, 10); };
+const ordinal = (n) => { const s = ["th", "st", "nd", "rd"], v = n % 100; return n + (s[(v - 20) % 10] || s[v] || s[0]); };
+const where = (posText) => { const n = parseInt(String(posText).replace("T", ""), 10); if (!n) return posText;
+  return n === 1 && !/^T/.test(posText) ? "leading the tournament" : /^T/.test(posText) ? `tied for ${ordinal(n)}` : `in ${ordinal(n)}`; };
+const thruNum = (t) => t === "F" ? 18 : (parseInt(t, 10) || 0);
+
+// Before the tournament: withdrawals and the night-before reminder.
+// During it: lead changes on Sunday and eagles by pool golfers.
+async function liveTick(w) {
+  const doc = await loadWeek(w);
+  const t = doc.tournament;
+  const entries = C.entriesOf(doc.picks);
+  if (!t || !entries.length) return;
+  const b = await board(t.start);
+  const sameEvent = b && b.event && b.event.start === t.start;
+  const started = sameEvent && b.players.some(p => p.posText && p.posText !== "—");
+  const sent = doc.notified || {};
+  const mark = {}, patch = {};
+  const once = (key, fn) => { if (!QUIET && !sent[key] && !mark[key]) { fn(); mark[key] = NOW; } };
+  const ev = shortName(t.name);
+  const commish = config.commissioner || "Race";
+
+  if (!started && !(sameEvent && b.event.final)) {
+    // Withdrawals: a picked golfer is no longer in a full field
+    let players = sameEvent ? b.players.map(p => ({ name: p.name })) : [];
+    if (players.length < 60) { const saved = savedField(t.start); players = saved ? saved.players.map(p => ({ name: p.name })) : []; }
+    if (players.length >= 60) {
+      C.matchPickNames(players, entries.map(e => e.name));
+      for (const e of entries) {
+        if (players.some(p => p.name === e.name)) continue;
+        log(`Week ${w}: ${e.name} (${e.who}) is no longer in the field.`);
+        once(`wd-${e.name}`, () => {
+          notify(e.who, "⚠️ Your golfer withdrew", `${e.name} is out of the ${ev}. Open the app to pick a replacement (anyone who hasn't teed off).`, `wd-${w}`);
+          if (commish !== e.who) notify(commish, "⚠️ Withdrawal", `${e.name} (${e.who}'s ${e.kind}) is out of the ${ev}. They can pick a replacement in the app.`, `wd-${w}`);
+        });
+      }
+    }
+    // Night before: anyone with an empty slot
+    const c = chicago(NOW);
+    const st = C.draftState(w, doc.picks || {});
+    if (!st.complete && c.day === dayBefore(t.start) && c.hour >= 19) {
+      const empty = C.MEMBERS.filter(m => { const p = (doc.picks || {})[m] || {}; return !p.hot || !p.dawg; });
+      once("lockremind", () => empty.forEach(m => {
+        const p = (doc.picks || {})[m] || {};
+        const slot = !p.hot && !p.dawg ? "hot and dawg slots are" : !p.hot ? "hot slot is" : "dawg slot is";
+        notify(m, "⏰ Tee off is tomorrow", `Your ${slot} still empty for the ${ev}. ${st.onClock === m ? "You're on the clock right now." : `${st.onClock} is on the clock.`}`, `lock-${w}`);
+      }));
+    }
+  } else if (started && !b.event.final) {
+    C.matchPickNames(b.players, entries.map(e => e.name));
+    const find = (n) => b.players.find(p => p.name === n);
+    const finishes = {};
+    entries.forEach(e => { const p = find(e.name); finishes[e.name] = p ? p.pos : 999; });
+    const ranked = b.players.filter(p => p.pos < 999).sort((x, y) => x.pos - y.pos);
+    const r = C.computeWeek(entries, finishes, ranked[0] && ranked[0].name, ranked[1] && ranked[1].name, rankOf, config.amounts, t.name);
+    // Lead changes: tracked all week, announced in the final round
+    if (r.winner && r.winner !== doc.liveLeader) {
+      patch.liveLeader = r.winner;
+      if (doc.liveLeader && b.event.round >= 4 && !QUIET) {
+        const best = entries.filter(e => e.who === r.winner).map(e => ({ e, p: find(e.name) })).filter(x => x.p).sort((x, y) => x.p.pos - y.p.pos)[0];
+        const amt = r.rules.reduce((sum, id) => sum + C.amountFor(id, config.amounts), 0);
+        notify(C.MEMBERS, `🔄 ${r.winner} takes the lead!`, `${best ? `${best.e.name} is ${where(best.p.posText)} (${best.p.toPar}${best.p.thru ? ", thru " + best.p.thru : ""}). ` : ""}${doc.liveLeader} drops out of the money. $${amt} each on the line.`, `lead-${w}`);
+      }
+    }
+    // Eagles: a pool golfer's score drops 2+ on a single hole
+    const snap = {};
+    for (const e of entries) {
+      const p = find(e.name);
+      if (!p) continue;
+      const score = C.parsePar(p.toPar), thru = thruNum(p.thru);
+      snap[e.name] = [score, thru];
+      const prev = (doc.liveSnap || {})[e.name];
+      if (prev && thru === prev[1] + 1 && prev[0] - score >= 2 && prev[0] - score <= 3) {
+        const big = prev[0] - score >= 3;
+        once(`eagle-${e.name}-${b.event.round}-${thru}`, () => notify(C.MEMBERS, big ? "🤯 ALBATROSS (or an ace)!" : "🦅 EAGLE!",
+          `${e.name} (${e.who}'s ${e.kind}) just made ${big ? "a 3-under" : "eagle"} on hole ${thru}. Now ${p.toPar}, ${where(p.posText)}.`, `eagle-${w}`));
+      }
+    }
+    patch.liveSnap = snap;
+  }
+  if (Object.keys(mark).length) patch.notified = mark;
+  if (Object.keys(patch).length) await saveWeek(w, patch);
+}
+
 async function settleTick(w) {
   const doc = await loadWeek(w);
   const t = doc.tournament;
@@ -195,4 +285,5 @@ for (const w of [cur - 1, cur]) {
   try { await settleTick(w); } catch (e) { log(`Week ${w} settle: ${e.message}`); }
 }
 try { await draftTick(cur); } catch (e) { log(`Week ${cur} draft: ${e.message}`); }
+try { await liveTick(cur); } catch (e) { log(`Week ${cur} live: ${e.message}`); }
 await flush();

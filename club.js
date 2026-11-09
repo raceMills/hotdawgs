@@ -121,13 +121,13 @@
       </div>
 
       ${C.entriesOf(picks).length ? `
-      <div class="field" style="margin-top:14px"><label>Fix a pick</label>
+      <div class="field" style="margin-top:14px"><label>Fix a pick (withdrawals: anyone who hasn't teed off)</label>
         <div style="display:flex;gap:6px;flex-wrap:wrap">
           <select id="fixWho">${MEMBERS.filter(m => picks[m] && (picks[m].hot || picks[m].dawg)).map(m => `<option>${m}</option>`).join("")}</select>
           <select id="fixKind"><option value="hot">Hot</option><option value="dawg">Dawg</option></select>
         </div>
         <input id="fixName" list="fixList" placeholder="Replacement golfer" style="margin-top:6px">
-        <datalist id="fixList">${golfers.filter(g => !taken.has(g.name)).map(g => `<option value="${esc(g.name)}">`).join("")}</datalist>
+        <datalist id="fixList">${golfers.filter(g => !taken.has(g.name) && (!HD.notTeedOff || HD.notTeedOff(g.name))).map(g => `<option value="${esc(g.name)}">`).join("")}</datalist>
         <button class="btn ghost" data-club="fix" style="margin-top:6px">Save fix</button></div>` : ""}
 
       <div class="field" style="margin-top:14px"><label>Reset a password</label>
