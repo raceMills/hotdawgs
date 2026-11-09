@@ -1,0 +1,41 @@
+name: Pool admin
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "What to do"
+        type: choice
+        options: [status, start-week, pin]
+        default: status
+      week:
+        description: "Week number (start-week: blank = next week; pin: required)"
+        required: false
+        default: ""
+      name:
+        description: "Tournament name (start-week: blank = ESPN's current event)"
+        required: false
+        default: ""
+      start:
+        description: "Tournament start date, YYYY-MM-DD"
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+
+jobs:
+  admin:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Run
+        env:
+          MODE: ${{ inputs.mode }}
+          WEEK: ${{ inputs.week }}
+          NAME: ${{ inputs.name }}
+          START: ${{ inputs.start }}
+        run: node scripts/pool-admin.mjs "$MODE" "$WEEK" "$NAME" "$START"
