@@ -158,6 +158,33 @@ async function fieldProbe() {
   }
 }
 
+
+// Diagnostics: fetch a page and look for lists of players in its embedded data
+async function urlProbe() {
+  const u = nameArg;
+  const r = await fetch(u, { headers: { "User-Agent": "Mozilla/5.0 (hotdawgs golf pool)", Accept: "text/html,application/json" } });
+  const text = await r.text();
+  console.log(`${r.status} ${r.headers.get("content-type")} ${text.length} bytes`);
+  const m = /<script id="__NEXT_DATA__" type="application\/json">([\s\S]*?)<\/script>/.exec(text);
+  if (!m) { console.log("No __NEXT_DATA__. Start:", text.slice(0, 300).replace(/\s+/g, " ")); return; }
+  const data = JSON.parse(m[1]);
+  const hits = [];
+  const walk = (o, path, depth) => {
+    if (!o || typeof o !== "object" || depth > 14) return;
+    if (Array.isArray(o)) {
+      const f = o[0];
+      if (f && typeof f === "object" && ("firstName" in f || "lastName" in f || "displayName" in f || "playerName" in f || "player" in f))
+        hits.push({ path, n: o.length, keys: Object.keys(f).slice(0, 14), sample: JSON.stringify(f).slice(0, 300) });
+      o.slice(0, 3).forEach((x, i) => walk(x, path + "[" + i + "]", depth + 1));
+      return;
+    }
+    for (const [k, v] of Object.entries(o)) walk(v, path + "." + k, depth + 1);
+  };
+  walk(data, "$", 0);
+  console.log("player-like lists:", hits.length);
+  hits.slice(0, 8).forEach(h => console.log(`\n${h.path} (${h.n})\n keys=${h.keys.join(",")}\n ${h.sample}`));
+}
+
 async function startWeek() {
   const cfg = (await getRow("pool_config", "id", "main")) || { data: {} };
   const cur = cfg.data.currentWeek || 1;
@@ -177,6 +204,6 @@ async function pin() {
   console.log(`Pinned week ${week} to ${nameArg} (${startArg}).`);
 }
 
-const run = { status, "start-week": startWeek, pin, field: fieldProbe }[mode];
+const run = { status, "start-week": startWeek, pin, field: fieldProbe, url: urlProbe }[mode];
 if (!run) { console.error(`Unknown mode "${mode}"`); process.exit(1); }
 run().catch(e => { console.error(e.message); process.exit(1); });

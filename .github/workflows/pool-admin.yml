@@ -6,7 +6,7 @@ on:
       mode:
         description: "What to do"
         type: choice
-        options: [status, start-week, pin, field]
+        options: [status, start-week, pin, field, url]
         default: status
       week:
         description: "Week number (start-week: blank = next week; pin: required)"
