@@ -240,6 +240,20 @@
   const POOL_PASSWORD = "Hotdawgs";
   // ===============================================
 
+  // App version. Bump it on every release: the feature files are loaded with it, and
+  // open phones notice the new number and reload themselves.
+  const APP_VERSION = "2026-11-09.1";
+  async function checkForUpdate() {
+    try {
+      const r = await fetch(location.pathname + "?check=" + Date.now(), { cache: "no-store" });
+      const m = /APP_VERSION = "([^"]+)"/.exec(await r.text());
+      if (m && m[1] !== APP_VERSION) location.replace(location.pathname + "?v=" + encodeURIComponent(m[1]));
+    } catch (e) { /* offline: try again later */ }
+  }
+  checkForUpdate();
+  setInterval(() => { if (!document.hidden) checkForUpdate(); }, 300000);
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) checkForUpdate(); });
+
   const $ = (s) => document.querySelector(s);
   const MEMBERS = ["Jacob", "Michael", "Pat", "Ryan", "Zach", "Race"];
   const OTHERS = MEMBERS.length - 1;
@@ -1321,11 +1335,11 @@
 
   start();
 </script>
-<script src="draft.js"></script>
-<script src="stats.js"></script>
-<script src="extras.js"></script>
-<script src="history.js"></script>
-<script src="home.js"></script>
-<script src="tips.js"></script>
+<script>
+  // Load the feature files in order, tagged with the app version so they're never stale
+  ["draft", "stats", "extras", "history", "home", "tips"].forEach(name => {
+    document.write(`<script src="${name}.js?v=${encodeURIComponent(APP_VERSION)}"><\/script>`);
+  });
+</script>
 </body>
 </html>
