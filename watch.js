@@ -42,7 +42,7 @@
     if (!fieldFile) return [];
     const t = weekTourney(currentWeek()) || (live.event ? { start: live.event.start } : null);
     const e = t && (fieldFile.events || []).find(x => x.start === t.start);
-    return (e && e.watch) || [];
+    return ((e && e.watch) || []).slice().sort((a, b) => a.start - b.start);
   }
   function state() {
     const ws = windows(), now = Date.now();
