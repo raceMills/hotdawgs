@@ -97,6 +97,7 @@
     document.body.appendChild(bubble);
     bubble.querySelectorAll("[data-i]").forEach(el => el.onclick = () => buttons[Number(el.dataset.i)].onClick());
     placeBubble(target);
+    bubble._at = Date.now();
     return bubble;
   }
   function placeBubble(target) {
@@ -262,10 +263,16 @@
       shown.push(c.key); store.set("coach", shown);
       el.classList.add("hd-ring");
       showBubble({ title: c.title, text: c.text, target: el, buttons: [{ label: "Got it", onClick: closeCoach }] });
-      coach = { el, timer: setTimeout(closeCoach, 9000) };
+      coach = { el, timer: null }; // stays until you tap "Got it" or tap elsewhere
       return;
     }
   }
+  // Tips stay put until you dismiss them: "Got it", or a tap anywhere else
+  // (ignored for the first moment so the tap that opened it doesn't close it)
+  document.addEventListener("pointerdown", (e) => {
+    if (!bubble || tour || bubble.contains(e.target) || Date.now() - (bubble._at || 0) < 800) return;
+    if (coach) closeCoach(); else closeBubble();
+  }, true);
   let pending = false;
   new MutationObserver(() => {
     if (pending) return;
@@ -300,7 +307,6 @@
     const i = (store.get("tipIdx") || 0) % TIPS.length;
     store.set("tipIdx", i + 1);
     showBubble({ title: "Coach Frank says…", text: TIPS[i], target, buttons: [{ label: "Thanks, Coach", onClick: closeBubble }] });
-    setTimeout(() => { if (bubble && !tour) closeBubble(); }, 8000);
   }
   const mascot = document.getElementById("mascot");
   if (mascot) mascot.addEventListener("click", () => {
