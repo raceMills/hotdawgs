@@ -242,7 +242,7 @@
 
   // App version. Bump it on every release: the feature files are loaded with it, and
   // open phones notice the new number and reload themselves.
-  const APP_VERSION = "2026-11-09.1";
+  const APP_VERSION = "2026-11-09.2";
   async function checkForUpdate() {
     try {
       const r = await fetch(location.pathname + "?check=" + Date.now(), { cache: "no-store" });
@@ -1004,6 +1004,30 @@
       .sort((x, y) => x.start.localeCompare(y.start))[0] || null;
   }
 
+  // Fields saved by the "Update field" task. They come from the PGA Tour, which posts
+  // fields days before ESPN does, so the draft can start as soon as the field is set.
+  async function savedField(start) {
+    try {
+      const r = await fetch("field.json?v=" + Date.now(), { cache: "no-store" });
+      if (!r.ok) return null;
+      const e = ((await r.json()).events || []).find(x => x.start === start);
+      return e && e.players.length ? e : null;
+    } catch (e) { return null; }
+  }
+  // When two sites spell a drafted golfer differently ("Min Woo Lee" vs "Min-Woo Lee"),
+  // rename the leaderboard entry to the exact name the pool drafted
+  function matchPickNames(players, picked) {
+    const key = (n) => nameKey(n).replace(/ /g, "");
+    const lastInitial = (n) => { const p = nameKey(n).split(" "); return p[p.length - 1] + "|" + (p[0] || "").charAt(0); };
+    for (const name of picked) {
+      if (!name || players.some(p => p.name === name)) continue;
+      let hit = players.find(p => key(p.name) === key(name));
+      if (!hit) { const c = players.filter(p => lastInitial(p.name) === lastInitial(name)); if (c.length === 1) hit = c[0]; }
+      if (hit) hit.name = name;
+    }
+    return players;
+  }
+
   let dataReady = false; // true once the pool's weeks have loaded
   async function fetchLive() {
     if (live.loading) return;
@@ -1030,7 +1054,17 @@
             : { name: pin.name, start: pin.start, end: "", where: "", round: 0, status: `Starts ${fmtDate(pin.start)}`, final: false }
         };
       }
-      live = { ok: true, loading: false, error: "", players: board.players, calendar: board.calendar, fetchedAt: new Date(), event: board.event };
+      // ESPN hasn't posted the field yet: use the PGA Tour's, saved by the field task
+      let fieldSource = board.players.length ? "ESPN" : "";
+      if (!board.players.length && board.event) {
+        const saved = await savedField(board.event.start);
+        if (saved) {
+          board.players = saved.players.map((p, i) => ({ name: p.name, owgr: p.owgr, pos: i + 1, posText: "—", toPar: "", thru: "" }));
+          fieldSource = "PGA Tour";
+        }
+      }
+      if (dataReady) matchPickNames(board.players, entriesFor(currentWeek()).map(e => e.name));
+      live = { ok: true, loading: false, error: "", players: board.players, calendar: board.calendar, fetchedAt: new Date(), event: board.event, fieldSource };
     } catch (e) {
       live.loading = false;
       live.ok = false;
@@ -1117,7 +1151,7 @@
       : parseFieldAny(config.fieldText);
     const rankOfName = rankLookup(ranked);
     const field = (typeof live !== "undefined" && live.players && live.players.length)
-      ? live.players.map(p => ({ name: p.name, rank: rankOfName(p.name) }))
+      ? live.players.map(p => { const r = rankOfName(p.name); return { name: p.name, rank: r < 999 ? r : (p.owgr || 999) }; })
       : ranked.slice(0, 200).map(p => ({ name: displayName(p.name), rank: p.rank }));
     field.sort((a, b) => a.rank - b.rank || a.name.localeCompare(b.name));
     matchStats = { matched: field.filter(g => g.rank < 999).length, total: field.length };
@@ -1145,6 +1179,7 @@
       catch (e) { toast("Couldn't load that week's leaderboard. Try again."); return; }
     }
     if (!board.players.length) { toast("No leaderboard for that week yet."); return; }
+    matchPickNames(board.players, entriesFor(w).map(e => e.name));
     const find = (name) => board.players.find(p => norm(p.name) === norm(name));
     const finishes = {};
     for (const e of entriesFor(w)) {

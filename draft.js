@@ -103,7 +103,7 @@
         <div class="meta">
           ${t.where ? `<span>📍 ${t.where}</span>` : ""}
           ${when ? `<span>⏰ ${when}</span>` : ""}
-          ${fieldIsLive() ? `<span class="ok">✓ Field posted · ${live.players.length} golfers</span>` : `<span class="warn">⏳ Field not posted yet</span>`}
+          ${fieldIsLive() ? `<span class="ok">✓ Field posted · ${live.players.length} golfers${live.fieldSource === "PGA Tour" ? " (PGA Tour)" : ""}</span>` : `<span class="warn">⏳ Field not posted yet</span>`}
         </div>
       </div>`;
   }
