@@ -1,0 +1,36 @@
+name: Update field
+
+on:
+  schedule:
+    # Every 3 hours, Monday through Thursday (draft days and the first round)
+    - cron: "23 */3 * * 1-4"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Fetch fields
+        run: node scripts/update-field.mjs
+
+      - name: Save if changed
+        run: |
+          git add field.json
+          if git diff --cached --quiet; then
+            echo "Field unchanged."
+            exit 0
+          fi
+          git config user.name "hotdawgs-bot"
+          git config user.email "hotdawgs-bot@users.noreply.github.com"
+          git commit -m "Update tournament field"
+          git pull --rebase origin main
+          git push
