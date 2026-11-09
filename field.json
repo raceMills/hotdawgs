@@ -1,0 +1,486 @@
+{
+  "source": "PGA Tour",
+  "events": [
+    {
+      "pgaTourId": "R2026558",
+      "name": "Austin Championship presented by Compliance Solutions",
+      "start": "2026-11-12",
+      "updated": "2026-11-09T18:11:12.693Z",
+      "players": [
+        {
+          "name": "Zach Bauchou",
+          "owgr": 135
+        },
+        {
+          "name": "Daniel Berger",
+          "owgr": 72
+        },
+        {
+          "name": "Christiaan Bezuidenhout",
+          "owgr": 109
+        },
+        {
+          "name": "Zac Blair",
+          "owgr": 136
+        },
+        {
+          "name": "Chandler Blanchet",
+          "owgr": 140
+        },
+        {
+          "name": "Blades Brown",
+          "owgr": 62
+        },
+        {
+          "name": "Rafael Campos",
+          "owgr": 621
+        },
+        {
+          "name": "Ricky Castillo",
+          "owgr": 88
+        },
+        {
+          "name": "Davis Chatfield",
+          "owgr": 298
+        },
+        {
+          "name": "Luke Clanton",
+          "owgr": 263
+        },
+        {
+          "name": "Eric Cole",
+          "owgr": 83
+        },
+        {
+          "name": "Pierceson Coody",
+          "owgr": 74
+        },
+        {
+          "name": "Trace Crowe",
+          "owgr": 162
+        },
+        {
+          "name": "Joel Dahmen",
+          "owgr": 264
+        },
+        {
+          "name": "Cam Davis",
+          "owgr": 405
+        },
+        {
+          "name": "Zecheng Dou",
+          "owgr": 197
+        },
+        {
+          "name": "Adrien Dumont de Chassart",
+          "owgr": 219
+        },
+        {
+          "name": "Tyler Duncan",
+          "owgr": 412
+        },
+        {
+          "name": "Nick Dunlap",
+          "owgr": 471
+        },
+        {
+          "name": "Austin Eckroat",
+          "owgr": 235
+        },
+        {
+          "name": "A.J. Ewart",
+          "owgr": 206
+        },
+        {
+          "name": "Patrick Fishburn",
+          "owgr": 286
+        },
+        {
+          "name": "David Ford",
+          "owgr": 177
+        },
+        {
+          "name": "Brice Garnett",
+          "owgr": 313
+        },
+        {
+          "name": "Doug Ghim",
+          "owgr": 91
+        },
+        {
+          "name": "Lucas Glover",
+          "owgr": 143
+        },
+        {
+          "name": "Emilio Gonzalez",
+          "owgr": 331
+        },
+        {
+          "name": "Max Greyserman",
+          "owgr": 99
+        },
+        {
+          "name": "Emiliano Grillo",
+          "owgr": 126
+        },
+        {
+          "name": "Brian Harman",
+          "owgr": 70
+        },
+        {
+          "name": "Joe Highsmith",
+          "owgr": 308
+        },
+        {
+          "name": "Kensei Hirata",
+          "owgr": 281
+        },
+        {
+          "name": "Lee Hodges",
+          "owgr": 154
+        },
+        {
+          "name": "Rico Hoey",
+          "owgr": 106
+        },
+        {
+          "name": "Rasmus Højgaard",
+          "owgr": 84
+        },
+        {
+          "name": "Max Homa",
+          "owgr": 81
+        },
+        {
+          "name": "Billy Horschel",
+          "owgr": 173
+        },
+        {
+          "name": "Rikuya Hoshino",
+          "owgr": 583
+        },
+        {
+          "name": "Mark Hubbard",
+          "owgr": 187
+        },
+        {
+          "name": "Mackenzie Hughes",
+          "owgr": 159
+        },
+        {
+          "name": "Stephan Jaeger",
+          "owgr": 110
+        },
+        {
+          "name": "Takumi Kanaya",
+          "owgr": 200
+        },
+        {
+          "name": "Jeffrey Kang",
+          "owgr": 361
+        },
+        {
+          "name": "Johnny Keefer",
+          "owgr": 73
+        },
+        {
+          "name": "Chris Kirk",
+          "owgr": 105
+        },
+        {
+          "name": "Patton Kizzire",
+          "owgr": 507
+        },
+        {
+          "name": "Ben Kohles",
+          "owgr": 92
+        },
+        {
+          "name": "Jackson Koivun",
+          "owgr": 60
+        },
+        {
+          "name": "Matt Kuchar",
+          "owgr": 254
+        },
+        {
+          "name": "Christo Lamprecht",
+          "owgr": 441
+        },
+        {
+          "name": "Hank Lebioda",
+          "owgr": 345
+        },
+        {
+          "name": "Haotong Li",
+          "owgr": 133
+        },
+        {
+          "name": "Nicholas Lindheim",
+          "owgr": null
+        },
+        {
+          "name": "David Lipsky",
+          "owgr": 147
+        },
+        {
+          "name": "Justin Lower",
+          "owgr": 367
+        },
+        {
+          "name": "Christiaan Maas",
+          "owgr": 578
+        },
+        {
+          "name": "Peter Malnati",
+          "owgr": 460
+        },
+        {
+          "name": "Ben Martin",
+          "owgr": 496
+        },
+        {
+          "name": "Matt McCarty",
+          "owgr": 85
+        },
+        {
+          "name": "Max McGreevy",
+          "owgr": 146
+        },
+        {
+          "name": "Mac Meissner",
+          "owgr": 98
+        },
+        {
+          "name": "Taylor Moore",
+          "owgr": 179
+        },
+        {
+          "name": "Tommy Morrison",
+          "owgr": 161
+        },
+        {
+          "name": "William Mouw",
+          "owgr": 170
+        },
+        {
+          "name": "Rasmus Neergaard-Petersen",
+          "owgr": 82
+        },
+        {
+          "name": "Andrew Novak",
+          "owgr": 61
+        },
+        {
+          "name": "Pontus Nyholm",
+          "owgr": 337
+        },
+        {
+          "name": "Alvaro Ortiz",
+          "owgr": 117
+        },
+        {
+          "name": "C.T. Pan",
+          "owgr": null
+        },
+        {
+          "name": "John Parry",
+          "owgr": 112
+        },
+        {
+          "name": "Matthieu Pavon",
+          "owgr": 243
+        },
+        {
+          "name": "Taylor Pendrith",
+          "owgr": 134
+        },
+        {
+          "name": "Marco Penge",
+          "owgr": 57
+        },
+        {
+          "name": "Paul Peterson",
+          "owgr": 307
+        },
+        {
+          "name": "Chandler Phillips",
+          "owgr": 149
+        },
+        {
+          "name": "Seamus Power",
+          "owgr": 137
+        },
+        {
+          "name": "Andrew Putnam",
+          "owgr": 120
+        },
+        {
+          "name": "Chad Ramey",
+          "owgr": 211
+        },
+        {
+          "name": "Davis Riley",
+          "owgr": 150
+        },
+        {
+          "name": "Patrick Rodgers",
+          "owgr": 132
+        },
+        {
+          "name": "Kevin Roy",
+          "owgr": 122
+        },
+        {
+          "name": "Marcelo Rozo",
+          "owgr": 681
+        },
+        {
+          "name": "Casey Russell",
+          "owgr": null
+        },
+        {
+          "name": "Miles Russell",
+          "owgr": 831
+        },
+        {
+          "name": "Adrien Saddier",
+          "owgr": 174
+        },
+        {
+          "name": "Isaiah Salinda",
+          "owgr": 356
+        },
+        {
+          "name": "Gordon Sargent",
+          "owgr": 312
+        },
+        {
+          "name": "Adam Schenk",
+          "owgr": 256
+        },
+        {
+          "name": "Cole Sherwood",
+          "owgr": 176
+        },
+        {
+          "name": "Neal Shipley",
+          "owgr": 163
+        },
+        {
+          "name": "David Skinns",
+          "owgr": 297
+        },
+        {
+          "name": "Jordan Smith",
+          "owgr": 67
+        },
+        {
+          "name": "Austin Smotherman",
+          "owgr": 51
+        },
+        {
+          "name": "Hayden Springer",
+          "owgr": 295
+        },
+        {
+          "name": "Jimmy Stanger",
+          "owgr": 391
+        },
+        {
+          "name": "Sam Stevens",
+          "owgr": 76
+        },
+        {
+          "name": "Kevin Streelman",
+          "owgr": 327
+        },
+        {
+          "name": "Jackson Suber",
+          "owgr": 107
+        },
+        {
+          "name": "Adam Svensson",
+          "owgr": 548
+        },
+        {
+          "name": "Jesper Svensson",
+          "owgr": 202
+        },
+        {
+          "name": "Nick Taylor",
+          "owgr": 97
+        },
+        {
+          "name": "Davis Thompson",
+          "owgr": 138
+        },
+        {
+          "name": "Michael Thompson",
+          "owgr": null
+        },
+        {
+          "name": "Brendon Todd",
+          "owgr": null
+        },
+        {
+          "name": "Alejandro Tosti",
+          "owgr": 449
+        },
+        {
+          "name": "Sami Valimaki",
+          "owgr": 89
+        },
+        {
+          "name": "Erik van Rooyen",
+          "owgr": 220
+        },
+        {
+          "name": "John VanDerLaan",
+          "owgr": 319
+        },
+        {
+          "name": "Kristoffer Ventura",
+          "owgr": 142
+        },
+        {
+          "name": "Karl Vilips",
+          "owgr": 241
+        },
+        {
+          "name": "Danny Walker",
+          "owgr": 334
+        },
+        {
+          "name": "Vince Whaley",
+          "owgr": 248
+        },
+        {
+          "name": "Aaron Wise",
+          "owgr": 506
+        },
+        {
+          "name": "Dylan Wu",
+          "owgr": 430
+        },
+        {
+          "name": "Sudarshan Yellamaraju",
+          "owgr": 116
+        },
+        {
+          "name": "Kevin Yu",
+          "owgr": 115
+        }
+      ],
+      "alternates": []
+    },
+    {
+      "pgaTourId": "R2026493",
+      "name": "The RSM Classic",
+      "start": "2026-11-19",
+      "updated": "2026-11-05T00:00:57.455Z",
+      "players": [],
+      "alternates": []
+    }
+  ]
+}
