@@ -181,6 +181,16 @@ async function urlProbe() {
     for (const [k, v] of Object.entries(o)) walk(v, path + "." + k, depth + 1);
   };
   walk(data, "$", 0);
+  const pp = (data.props || {}).pageProps || {};
+  console.log("pageProps keys:", Object.keys(pp).join(","));
+  const q = (pp.dehydratedState || {}).queries || [];
+  q.forEach(x => console.log("query:", JSON.stringify(x.queryKey).slice(0, 160), "| data keys:", x.state && x.state.data && typeof x.state.data === "object" ? Object.keys(x.state.data).slice(0, 10).join(",") : typeof (x.state && x.state.data)));
+  for (const n of ["Smotherman", "Blades Brown", "Koivun"]) {
+    const i = text.indexOf(n);
+    console.log(`"${n}" at ${i}:`, i < 0 ? "" : text.slice(Math.max(0, i - 200), i + 120).replace(/\s+/g, " "));
+  }
+  const js = [...text.matchAll(/https:\/\/[a-z0-9.-]*pgatour\.com\/graphql|x-api-key|"apiKey":"[^"]+"|orchestrator[a-z0-9.\/-]*/gi)].map(x => x[0]);
+  console.log("api hints:", [...new Set(js)].slice(0, 10).join(" | "));
   console.log("player-like lists:", hits.length);
   hits.slice(0, 8).forEach(h => console.log(`\n${h.path} (${h.n})\n keys=${h.keys.join(",")}\n ${h.sample}`));
 }
