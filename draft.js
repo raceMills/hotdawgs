@@ -55,6 +55,59 @@
     location.href = "sms:&body=" + encodeURIComponent(text);
   }
 
+  // Split "Austin Championship pres. by Compliance Solutions" into name + sponsor
+  function splitName(n) {
+    const m = /^(.*?)\s+(pres\.? by|presented by)\s+(.*)$/i.exec(n || "");
+    return m ? { main: m[1], sponsor: "presented by " + m[3] } : { main: n || "", sponsor: "" };
+  }
+  const tourneyStyle = document.createElement("style");
+  tourneyStyle.textContent = `
+    #draftForCard { padding: 0; border-width: 4px; }
+    #draftForCard .stub { background: var(--teal); color: #fff; font-size: 12px; font-weight: 900; letter-spacing: .1em;
+      text-transform: uppercase; padding: 8px 14px; display: flex; justify-content: space-between; gap: 8px; }
+    #draftForCard .body { padding: 12px 14px 14px; background: repeating-linear-gradient(135deg, #fff 0 14px, #FFFBF0 14px 28px); }
+    #draftForCard .tname { font-family: "Rockwell", Georgia, serif; font-size: 27px; font-weight: 900; line-height: 1.05; color: var(--red-dark); }
+    #draftForCard .spons { font-size: 12px; opacity: .7; margin-top: 2px; }
+    #draftForCard .meta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+    #draftForCard .meta span { font-size: 12px; font-weight: 800; background: var(--cream); border: 2px solid var(--shadow);
+      border-radius: 999px; padding: 3px 9px; }
+    #draftForCard .meta .warn { background: var(--mustard); }
+    #draftForCard .meta .ok { background: var(--green); color: #fff; }
+  `;
+  document.head.appendChild(tourneyStyle);
+  function renderDraftFor(week) {
+    let card = document.getElementById("draftForCard");
+    if (!card) {
+      card = document.createElement("div");
+      card.className = "card";
+      card.id = "draftForCard";
+      const dc = document.getElementById("draftCard");
+      dc.insertBefore(card, dc.firstChild);
+    }
+    const t = currentTourney();
+    if (!t) {
+      card.innerHTML = `<div class="stub"><span>Week ${week} draft</span></div>
+        <div class="body"><div class="tname">Tournament TBA</div><p class="hint" style="margin:6px 0 0">Waiting on ESPN's schedule.</p></div>`;
+      return;
+    }
+    const n = splitName(t.name);
+    const days = t.start ? Math.round((new Date(t.start + "T12:00:00") - new Date(new Date().toDateString() + " 12:00:00")) / 86400000) : null;
+    const when = t.final ? "Final" : t.round ? (t.status || `Round ${t.round}`)
+      : days === null ? "" : days <= 0 ? "Tees off today" : days === 1 ? "Tees off tomorrow"
+      : `Tees off ${new Date(t.start + "T12:00:00").toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })}`;
+    card.innerHTML = `
+      <div class="stub"><span>🏌️ Drafting for week ${week}</span><span>${fmtDates(t)}</span></div>
+      <div class="body">
+        <div class="tname">${n.main}</div>
+        ${n.sponsor ? `<div class="spons">${n.sponsor}</div>` : ""}
+        <div class="meta">
+          ${t.where ? `<span>📍 ${t.where}</span>` : ""}
+          ${when ? `<span>⏰ ${when}</span>` : ""}
+          ${fieldIsLive() ? `<span class="ok">✓ Field posted · ${live.players.length} golfers</span>` : `<span class="warn">⏳ Field not posted yet</span>`}
+        </div>
+      </div>`;
+  }
+
   function ensureBoard() {
     let b = document.getElementById("boardCard");
     if (!b) {
@@ -70,7 +123,8 @@
   async function draftPick(g) {
     const week = currentWeek();
     const kind = g.hot ? "hot" : "dawg";
-    if (!confirm(`Draft ${g.name} as your ${kind}?`)) return;
+    const t = currentTourney();
+    if (!confirm(`Draft ${g.name} as your ${kind}${t ? ` for the ${splitName(t.name).main}` : ""}?`)) return;
     // Re-read the latest picks so two people can't grab the same golfer
     try {
       const { data } = await sb.from("pool_weeks").select("data").eq("week", week).maybeSingle();
@@ -109,6 +163,7 @@
 
     // ----- Draft board -----
     const board = ensureBoard();
+    renderDraftFor(week);
     const row = (s) => {
       const p = s.done ? slotPick(week, s.m, s.nth) : null;
       const now = s.i === st.clock;
@@ -134,7 +189,7 @@
       ? `<button class="btn ghost" id="nudgeBtn">Tell the group the draft is done 💬</button>`
       : (!myTurn ? `<button class="btn ${justPicked ? "" : "ghost"}" id="nudgeBtn">${justPicked ? `Your pick is in. Text ${st.onClock} they're up 💬` : `Nudge ${st.onClock} in the group chat 💬`}</button>` : "");
     board.innerHTML = `
-      <h2>Week ${week} draft order</h2>
+      <h2>Draft order${currentTourney() ? ` · ${splitName(currentTourney().name).main}` : ""}</h2>
       ${banner}
       ${nudgeBtn}
       <p class="hint" style="margin-top:14px">Round 1</p>
@@ -157,9 +212,11 @@
     }
     const taken = claimedMap(week);
     const list = $("#golferList");
-    list.innerHTML = myTurn
+    const t = currentTourney();
+    list.innerHTML = (fieldIsLive() ? "" : `<p class="hint" style="background:var(--cream);border:2px dashed var(--bun);border-radius:10px;padding:8px">⏳ ESPN hasn't posted the ${t ? t.name : "tournament"} field yet, so this is the world top 200. Some of them may not be playing.</p>`)
+      + (myTurn
       ? `<p class="hint">Tap a golfer to draft them.</p>`
-      : `<p class="hint">${need ? `Browse while you wait. You can pick when it's your turn.` : "You're done this week. Browse the field below."}</p>`;
+      : `<p class="hint">${need ? `Browse while you wait. You can pick when it's your turn.` : "You're done this week. Browse the field below."}</p>`);
     golfers.filter(g => (filter === "hot") === g.hot).forEach(g => {
       const owner = taken[g.name];
       const isMine = mine.hot === g.name || mine.dawg === g.name;

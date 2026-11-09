@@ -57,6 +57,19 @@
     .hd-quick button { padding: 14px 8px; border-radius: 14px; border: 2px solid var(--shadow); background: var(--cream);
       font: inherit; font-weight: 900; font-size: 14px; color: var(--ink); box-shadow: 2px 2px 0 var(--shadow); cursor: pointer; }
     .hd-quick button .e { display: block; font-size: 24px; margin-bottom: 2px; }
+    .hd-cam-main { position: relative; border: 3px solid var(--shadow); border-radius: 14px; overflow: hidden; cursor: pointer; }
+    .hd-cam-main img { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; }
+    .hd-cam-main .cap { position: absolute; left: 0; right: 0; bottom: 0; padding: 22px 12px 10px; color: #fff; font-weight: 900;
+      background: linear-gradient(transparent, rgba(43,27,16,.85)); display: flex; justify-content: space-between; align-items: flex-end; }
+    .hd-cam-row { display: flex; gap: 8px; margin-top: 8px; overflow-x: auto; }
+    .hd-cam-thumb { position: relative; flex: none; width: 74px; border: 2px solid var(--shadow); border-radius: 10px; overflow: hidden; cursor: pointer; background: var(--cream); }
+    .hd-cam-thumb img { display: block; width: 100%; aspect-ratio: 1; object-fit: cover; }
+    .hd-cam-thumb span { display: block; font-size: 11px; font-weight: 900; text-align: center; padding: 2px; }
+    .hd-new { position: absolute; top: 6px; left: 6px; background: var(--mustard); color: var(--ink); border: 2px solid var(--shadow);
+      border-radius: 999px; font-size: 10px; font-weight: 900; padding: 1px 6px; animation: hdBadgePop 1.4s ease-in-out infinite; }
+    @keyframes hdBadgePop { 50% { transform: scale(1.15) rotate(-6deg); } }
+    .hd-cam-pop { animation: hdCamPop .6s cubic-bezier(.3,1.6,.5,1); }
+    @keyframes hdCamPop { from { transform: scale(.85) rotate(-2deg); opacity: 0; } to { transform: none; opacity: 1; } }
   `;
   document.head.appendChild(style);
 
@@ -157,6 +170,7 @@
     const owe = !!(s && s.winner && me && s.winner !== me && !(d.paid || {})[me]);
     dot("draft", !!(st && st.onClock === me) && id !== "draft");
     dot("money", owe && !["payments", "payouts", "stats"].includes(id));
+    dot("home", id !== "home" && unseen(w).length > 0);
   }
   function dot(tab, on) {
     const b = bar.querySelector(`[data-tab="${tab}"]`);
@@ -174,10 +188,13 @@
     "A dawg in the hand beats two hots in the bush.",
     "Pay your Venmo on time. Shooter never did.",
     "Find your happy place. Then find a sleeper.",
-    "Forty years of coaching taught me one thing: long shots win pools."
+    "Forty years of coaching taught me one thing: long shots win pools.",
+    "Winners buy the egg beers. Losers drink them faster.",
+    "An egg beer won't fix your swing. It will fix your Sunday."
   ];
   const greeting = () => { const h = new Date().getHours(); return h < 12 ? "Morning" : h < 18 ? "Afternoon" : "Evening"; };
   const dayLine = () => COACH_LINES[Math.floor(Date.now() / 86400000) % COACH_LINES.length];
+  const shortName = (n) => (n || "").replace(/\s+(pres\.? by|presented by)\s+.*$/i, "");
   const money$ = (n) => (n < 0 ? "−" : n > 0 ? "+" : "") + "$" + Math.abs(n);
 
   function heroCard(w) {
@@ -211,7 +228,7 @@
 
     // 2. Tournament over, waiting on the payout
     if (live.event && live.event.final && st && st.complete) {
-      return { cls: "gold", html: `<div class="hd-kicker">${t ? t.name : "Tournament"} is final</div>
+      return { cls: "gold", html: `<div class="hd-kicker">${t ? shortName(t.name) : "Tournament"} is final</div>
         <div class="hd-headline">🏁 Who's getting paid?</div>
         <p class="hint" style="margin:0">Results need to be confirmed on the Money tab.</p>
         <button class="btn" data-go="payments">Settle the week</button>` };
@@ -223,7 +240,7 @@
         const need = !mine.hot && !mine.dawg ? "hot or dawg" : (!mine.hot ? "hot" : "dawg");
         return { cls: "hot", html: `<div class="hd-kicker">Week ${w} draft · pick ${st.clock + 1} of ${st.total}</div>
           <div class="hd-headline">You're on the clock! 🌭</div>
-          <p class="hint" style="margin:0">Time to draft your ${need}${t ? ` for ${t.name}` : ""}.</p>
+          <p class="hint" style="margin:0">Time to draft your ${need}${t ? ` for the ${shortName(t.name)}` : ""}.</p>
           <button class="btn" style="background:#fff;color:var(--ink)" data-go="draft">Draft now</button>` };
       }
       const myNext = st.board.findIndex((x, i) => i >= st.clock && x.m === me && !x.done);
@@ -244,7 +261,7 @@
     const sw = HD.sweat ? HD.sweat(w) : null;
     const myOdds = sw ? (sw.odds.find(o => o.m === me) || { pct: 0 }).pct : null;
     const started = live.players.some(p => p.toPar && p.toPar !== "E" && p.toPar !== "");
-    return { cls: myOdds !== null && myOdds >= 40 ? "gold" : "", html: `<div class="hd-kicker">${t ? t.name : `Week ${w}`}${t && t.status ? " · " + t.status : ""}</div>
+    return { cls: myOdds !== null && myOdds >= 40 ? "gold" : "", html: `<div class="hd-kicker">${t ? shortName(t.name) : `Week ${w}`}${t && t.status ? " · " + t.status : ""}</div>
       <div class="hd-headline">${myOdds !== null ? `${myOdds}% to win the week ${myOdds >= 40 ? "😎" : myOdds >= 15 ? "😰" : "🥶"}` : started ? "Your picks are live" : "Picks locked. Now we wait."}</div>
       ${sw && sw.now.winner ? `<p class="hint" style="margin:0">If it ended now: <b>${sw.now.winner === me ? "you" : sw.now.winner}</b> ${sw.now.winner === me ? "win" : "wins"} ${money(sw.now.total * (MEMBERS.length - 1))}.</p>` : ""}
       ${row(mine.hot, "hot")}${row(mine.dawg, "dawg")}
@@ -302,6 +319,7 @@
       ${needsVenmo ? `<div class="card hd-hero hot" style="padding:12px"><b>Add your Venmo name</b> so winners can get paid.
         <button class="btn" style="background:#fff;color:var(--ink)" data-go="settings">Set it up</button></div>` : ""}
       <div class="card hd-hero ${hero.cls}">${hero.html}</div>
+      ${camCard(w)}
 
       <div class="card">
         <h2>Your season</h2>
@@ -337,6 +355,71 @@
     if (p) p.onclick = () => { write("week", w, { paid: { [me]: true } }); toast(pickJoke(JOKES.paid)); };
   }
 
+  // ===================== Ketchup Cam on Home =====================
+  // Photos live in week -N (see extras.js). Each phone remembers which photos it has
+  // already shown and announced, so a new one gets a NEW sticker and a pop-up once.
+  const camStore = {
+    get(k) { try { return JSON.parse(localStorage.getItem("hd-cam-" + k)) || null; } catch (e) { return null; } },
+    set(k, v) { try { localStorage.setItem("hd-cam-" + k, JSON.stringify(v)); } catch (e) {} }
+  };
+  let camLoadedFor = null;
+  function camPhotos(w) {
+    const d = weekOf(-w), photos = d.photos || {}, times = d.photoTimes || {};
+    return Object.keys(photos).map(m => ({ m, src: photos[m], t: times[m] || 0 })).sort((a, b) => b.t - a.t || a.m.localeCompare(b.m));
+  }
+  const unseen = (w) => { const seen = camStore.get("seen") || {}; return camPhotos(w).filter(p => p.m !== me && p.t > (seen[p.m] || 0)); };
+  function camCard(w) {
+    const list = camPhotos(w);
+    if (!list.length) return `<div class="card"><h2>Ketchup Cam 📸</h2>
+      <p class="hint">No hot dogs posted this week. Be the first, and set the bar low.</p>
+      <button class="btn ghost" data-go="clubhouse">Post your hot dog</button></div>`;
+    const seen = camStore.get("seen") || {};
+    const isNew = (p) => p.m !== me && p.t > (seen[p.m] || 0);
+    const votes = weekOf(-w).votes || {}, count = {};
+    Object.values(votes).forEach(m => count[m] = (count[m] || 0) + 1);
+    const leader = Object.entries(count).sort((a, b) => b[1] - a[1])[0];
+    const top = list[0];
+    const ago = (t) => { if (!t) return ""; const m = Math.round((Date.now() - t) / 60000); return m < 1 ? "just now" : m < 60 ? `${m}m ago` : m < 1440 ? `${Math.round(m / 60)}h ago` : `${Math.round(m / 1440)}d ago`; };
+    return `<div class="card">
+      <h2>Ketchup Cam 📸</h2>
+      <div class="hd-cam-main ${isNew(top) ? "hd-cam-pop" : ""}" data-go="clubhouse">
+        <img src="${top.src}" alt="${top.m}'s hot dog">
+        ${isNew(top) ? `<span class="hd-new">NEW</span>` : ""}
+        <div class="cap"><span>${top.m === me ? "Your dog" : `${top.m}'s dog`}</span><span style="font-size:12px;opacity:.85">${ago(top.t)}</span></div>
+      </div>
+      ${list.length > 1 ? `<div class="hd-cam-row">${list.slice(1).map(p => `
+        <div class="hd-cam-thumb" data-go="clubhouse"><img src="${p.src}" alt="${p.m}'s hot dog">
+          ${isNew(p) ? `<span class="hd-new" style="top:3px;left:3px">NEW</span>` : ""}<span>${p.m}</span></div>`).join("")}</div>` : ""}
+      <p class="hint" style="margin:10px 0 0">${list.length} dog${list.length === 1 ? "" : "s"} posted${leader ? ` · ${leader[0]} leads the vote with ${leader[1]}` : ""}. Tap to vote.</p>
+      ${!list.some(p => p.m === me) ? `<button class="btn ghost" data-go="clubhouse">Post yours</button>` : ""}
+    </div>`;
+  }
+  // Load this week's photos, and pop up a message when someone posts a new one
+  function watchCam() {
+    if (typeof dataReady === "undefined" || !dataReady || !me) return;
+    const w = currentWeek();
+    if (camLoadedFor !== w) {
+      camLoadedFor = w;
+      loadWeek(-w).then(renderActive);
+      return;
+    }
+    const list = camPhotos(w).filter(p => p.m !== me && p.t);
+    let told = camStore.get("told");
+    if (!told) { told = {}; list.forEach(p => told[p.m] = p.t); camStore.set("told", told); return; } // first run: don't announce old photos
+    const fresh = list.filter(p => p.t > (told[p.m] || 0));
+    if (fresh.length) {
+      fresh.forEach(p => told[p.m] = p.t);
+      camStore.set("told", told);
+      toast(fresh.length === 1 ? `📸 ${fresh[0].m} just posted a hot dog. Go judge it.` : `📸 ${fresh.length} new hot dogs just dropped`);
+    }
+  }
+  // After Home shows the photos, count them as seen (the NEW sticker stays until the next visit)
+  function markCamSeen() {
+    const seen = camStore.get("seen") || {};
+    camPhotos(currentWeek()).forEach(p => { if (p.t > (seen[p.m] || 0)) seen[p.m] = p.t; });
+    camStore.set("seen", seen);
+  }
+
   // ===================== Hook into the app's redraw =====================
   const baseRender = renderActive;
   renderActive = function () {
@@ -344,6 +427,8 @@
     const active = document.querySelector("section.active");
     if (active && active.id === "home") renderHome();
     syncChrome();
+    watchCam();
+    if (active && active.id === "home") setTimeout(markCamSeen, 1500);
   };
 
   // Open on Home

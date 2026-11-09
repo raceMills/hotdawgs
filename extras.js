@@ -62,6 +62,7 @@
   function roundInfo() {
     if (!live.event) return null;
     if (live.event.final) return { round: 4, final: true };
+    if (live.event.round) return { round: live.event.round, final: false };
     const m = /round\s*(\d)/i.exec(live.event.status || "");
     return m ? { round: Number(m[1]), final: false } : null;
   }
@@ -191,7 +192,7 @@
           <button class="btn small ghost" id="condolenceBtn">Send condolences 💬</button>`;
         el.appendChild(box);
         document.getElementById("condolenceBtn").onclick = () =>
-          shareText(`🌭 Bad beat report, week ${w}: ${beats.map(b => b.text).join(" ")} Thoughts and prayers. ${appLink()}`);
+          shareText(`🌭 Bad beat report, week ${w}: ${beats.map(b => b.text).join(" ")} Thoughts, prayers, and one egg beer. ${appLink()}`);
       }
     }
   };
@@ -202,8 +203,10 @@
     "A−": ["Solid. ${hot} carries the load and ${dawg} has real upside.", "${m} came to play. Grandma approves."],
     "B+": ["Respectable. Nothing flashy, nothing dumb.", "${hot} is a safe hot dog. Ketchup only, no surprises."],
     "B":  ["Fine. Very fine. Aggressively fine.", "${m} drafted like it was a Tuesday. Which it might be."],
-    "C+": ["${dawg}? Brave. Possibly unwell.", "Bold strategy. Let's see if it pays off for ${m}."],
-    "C−": ["This draft needs relish. And possibly a lesson.", "${m} picked with their eyes closed. Hot dog water."]
+    "C+": ["${dawg}? Brave. Possibly unwell.", "Bold strategy. Let's see if it pays off for ${m}.",
+      "${dawg} has egg-beer energy: risky, a little gross, could pay off big."],
+    "C−": ["This draft needs relish. And possibly a lesson.", "${m} picked with their eyes closed. Hot dog water.",
+      "${m} drafted like they'd just finished an egg beer. Possibly two."],
   };
   const GRADES = ["A", "A−", "B+", "B", "C+", "C−"];
   function draftGrades(w) {
@@ -472,7 +475,7 @@
       toast("Uploading your dog…");
       try {
         const src = await compressPhoto(file);
-        await write("week", -w, { photos: { [me]: src } });
+        await write("week", -w, { photos: { [me]: src }, photoTimes: { [me]: Date.now() } });
         toast("Photo posted 📸");
       } catch (e) { toast("Couldn't read that photo. Try another."); }
     };

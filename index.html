@@ -771,7 +771,7 @@
       <div class="card">
         <h2>Season</h2>
         <p class="hint">Currently on week ${currentWeek()}. Start the next week once the previous one is settled.</p>
-        <button class="btn green" id="nextWeekBtn">Start week ${currentWeek() + 1}</button>
+        <button class="btn green" id="nextWeekBtn">Start week ${currentWeek() + 1}${nextTourneyForNewWeek() ? ` · ${nextTourneyForNewWeek().name}` : ""}</button>
         <h2 style="margin-top:18px">Tournament field</h2>
         <p class="hint">${rankingsFile ? "Rankings now update automatically every Monday, so this list is only a backup." : "Backup list, used until the automatic rankings file exists."} One golfer per line, as "12, Scottie Scheffler" or "Scottie Scheffler, 12". Either order works.</p>
         <textarea id="fieldIn" rows="8" style="width:100%">${config.fieldText || DEFAULT_FIELD_TEXT}</textarea>
@@ -841,9 +841,13 @@
       try { await navigator.clipboard.writeText(text); toast("Invite copied. Paste it in the group chat 🌭"); }
       catch (e) { toast("Couldn't copy. Try again."); }
     };
-    $("#nextWeekBtn").onclick = () => {
-      write("config", 0, { currentWeek: currentWeek() + 1 });
-      toast(`Week ${currentWeek() + 1} is open`);
+    $("#nextWeekBtn").onclick = async () => {
+      const next = currentWeek() + 1;
+      const up = nextTourneyForNewWeek();
+      if (up) await write("week", next, { tournament: { name: up.name, start: up.start } });
+      await write("config", 0, { currentWeek: next });
+      toast(`Week ${next} is open${up ? `: ${up.name}` : ""}`);
+      fetchLive();
     };
   }
 
@@ -854,13 +858,17 @@
       "Locked in tighter than a Shooter McGavin wardrobe.",
       "Picks are in. Now go tell everyone you're the best golfer in the pool.",
       "Locked. The hot dogs are ready, and so are you.",
-      "Picks locked. That's a whole lot of pressure for one hot dog."
+      "Picks locked. That's a whole lot of pressure for one hot dog.",
+      "Picks locked. Celebrate with an egg beer. The yolk's on whoever's on the clock next.",
+      "Locked in. No take-backs, like an egg that's already in the beer."
     ],
     paid: [
       "Paid. Your wallet got lighter, but your conscience got lighter too.",
       "Money's moving, just like a golf ball that finally goes where you aimed it.",
       "Paid up. Shooter would be furious that you're on time.",
-      "Paid. Somewhere, a grandma just relaxed a little."
+      "Paid. Somewhere, a grandma just relaxed a little.",
+      "Paid up. Next egg beer's on the winner.",
+      "Debt settled. Crack an egg beer to celebrate. Or don't. Your stomach, your call."
     ],
     empty: [
       "Nothing here yet. Like a first swing, it's a little messy.",
@@ -869,7 +877,8 @@
     ],
     wrongPass: [
       "Wrong password. Hint: it's the team name on the sign outside.",
-      "Nope. Check with the organizer, and don't try the bratwurst."
+      "Nope. Check with the organizer, and don't try the bratwurst.",
+      "Wrong password. How many egg beers deep are we?"
     ],
     footer: [
       "Hot dogs for everyone, eventually.",
@@ -877,7 +886,12 @@
       "Grandma says the bratwurst is better. Grandma is wrong.",
       "Nobody golfs like you. Okay, maybe a little bit like you.",
       "The price is right, but the picks are final.",
-      "Pool rules: no crying in the clubhouse, only at the payout."
+      "Pool rules: no crying in the clubhouse, only at the payout.",
+      "Last place buys the egg beers. Crack responsibly.",
+      "An egg beer is just breakfast with ambition.",
+      "Shooter never finished an egg beer. Draw your own conclusions.",
+      "Pool rule 7: no drafting within ten minutes of an egg beer.",
+      "Hot dogs, cold beer, raw egg. A balanced breakfast."
     ]
   };
   const pickJoke = (list) => list[Math.floor(Math.random() * list.length)];
@@ -906,45 +920,103 @@
     .toLowerCase().replace(/[^a-z ]/g, "").replace(/\s+/g, " ").trim();
   const isoDay = (s) => (s || "").slice(0, 10);
 
+  // Turn one ESPN scoreboard response into { event, players, calendar }.
+  // ESPN's scoreboard gives each golfer an order and round-by-round scores but no
+  // printed position, so ties, missed cuts and holes played are worked out here.
+  const parsePar = (v) => { const s = String(v == null ? "" : v).trim(); if (!s || /^e$/i.test(s)) return 0; const n = parseInt(s.replace("+", ""), 10); return Number.isFinite(n) ? n : 0; };
+  const todayIso = () => new Date().toISOString().slice(0, 10);
+  function parseScoreboard(data) {
+    const ev = (data.events || [])[0];
+    const comp = ev && (ev.competitions || [])[0];
+    const final = !!(ev && ev.status && ev.status.type && ev.status.type.completed);
+    const raw = ((comp && comp.competitors) || []).map((c, i) => {
+      const rounds = (c.linescores || []).filter(l => l.period >= 1 && l.period <= 4 && ((l.linescores || []).length || l.value != null));
+      const last = rounds[rounds.length - 1];
+      return {
+        name: (c.athlete && (c.athlete.displayName || c.athlete.fullName)) || "",
+        order: c.order || i + 1,
+        toPar: c.score && typeof c.score === "object" ? (c.score.displayValue || "") : String(c.score == null ? "" : c.score),
+        round: last ? last.period : 0,
+        holes: last ? (last.linescores || []).length : 0
+      };
+    }).filter(p => p.name).sort((x, y) => x.order - y.order);
+    const maxRound = raw.reduce((m, p) => Math.max(m, p.round), 0);
+    // Once round 3 starts, anyone who never started it missed the cut. Anyone who
+    // stopped short of 72 holes in a finished event withdrew.
+    const missedCut = (p) => maxRound >= 3 && p.round <= 2;
+    const withdrew = (p) => final && maxRound >= 4 && !missedCut(p) && (p.round < 4 || (p.holes > 0 && p.holes < 18));
+    const inPlay = raw.filter(p => !missedCut(p) && !withdrew(p));
+    const score = (p) => parsePar(p.toPar);
+    const started = maxRound > 0;
+    const players = raw.map(p => {
+      if (missedCut(p) || withdrew(p)) return { name: p.name, pos: 999, posText: missedCut(p) ? "MC" : "WD", toPar: p.toPar, thru: "" };
+      if (!started) return { name: p.name, pos: p.order, posText: "—", toPar: "", thru: "" };
+      const s = score(p);
+      let pos = 1 + inPlay.filter(q => score(q) < s).length;
+      let tied = inPlay.filter(q => score(q) === s).length > 1;
+      // A finished event has one winner, even after a playoff
+      if (final && pos === 1) {
+        if (p === inPlay[0]) tied = false;
+        else { pos = 2; tied = inPlay.filter(q => q !== inPlay[0] && score(q) === s).length > 1; }
+      }
+      return { name: p.name, pos, posText: (tied ? "T" : "") + pos, toPar: p.toPar, thru: final ? "" : (p.holes >= 18 ? "F" : p.holes ? String(p.holes) : "") };
+    });
+    const cal = (((data.leagues || [])[0] || {}).calendar || []).map(e => ({
+      name: e.label || e.name || "", start: isoDay(e.startDate), end: isoDay(e.endDate), where: ""
+    })).filter(e => e.name);
+    const espnStatus = (ev && ev.status && ev.status.type && (ev.status.type.shortDetail || ev.status.type.detail)) || "";
+    const event = ev ? {
+      name: ev.name || ev.shortName || "",
+      start: isoDay(ev.date),
+      end: isoDay(ev.endDate),
+      where: (comp && comp.venue && comp.venue.fullName) || "",
+      round: final ? 4 : maxRound,
+      status: final ? "Final" : started ? (/round/i.test(espnStatus) ? espnStatus : `Round ${maxRound} · in progress`) : (ev.date ? `Starts ${fmtDate(isoDay(ev.date))}` : ""),
+      final
+    } : null;
+    return { event, players, calendar: cal };
+  }
+  async function getBoard(query) {
+    const res = await fetch(LIVE_URL + (query || ""), { cache: "no-store" });
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    return parseScoreboard(await res.json());
+  }
+  const espnDate = (iso) => iso.replace(/-/g, "");
+  // The tournament a pool week is pinned to (saved when the week starts)
+  const weekTourney = (w) => (weekOf(w) || {}).tournament || null;
+  // The first calendar event that hasn't finished, optionally one starting after a date
+  function upcomingEvent(cal, afterStart) {
+    return (cal || []).filter(e => e.start && e.end && e.end >= todayIso() && (!afterStart || e.start > afterStart))
+      .sort((x, y) => x.start.localeCompare(y.start))[0] || null;
+  }
+
+  let dataReady = false; // true once the pool's weeks have loaded
   async function fetchLive() {
     if (live.loading) return;
     live.loading = true;
     try {
-      const res = await fetch(LIVE_URL, { cache: "no-store" });
-      if (!res.ok) throw new Error("HTTP " + res.status);
-      const data = await res.json();
-      const ev = (data.events || [])[0];
-      const comp = ev && (ev.competitions || [])[0];
-      const players = ((comp && comp.competitors) || []).map((c, i) => {
-        const st = c.status || {};
-        const posText = (st.position && st.position.displayName) || (c.order != null ? String(c.order) : "");
-        const cut = /cut|wd|dq|mdf/i.test(posText) || /cut|wd|dq/i.test((st.type && st.type.name) || "");
-        const posNum = parseInt(String(posText).replace(/\D/g, ""), 10);
-        return {
-          name: (c.athlete && (c.athlete.displayName || c.athlete.fullName)) || "",
-          pos: cut ? 999 : (Number.isFinite(posNum) ? posNum : (c.order || i + 1)),
-          posText: cut ? (posText || "CUT") : (posText || String(c.order || i + 1)),
-          toPar: typeof c.score === "object" ? (c.score.displayValue || "") : (c.score || ""),
-          thru: (st.thru != null ? st.thru : "") || (st.displayValue || "")
+      let board = await getBoard();
+      const cal = board.calendar;
+      const w = currentWeek();
+      let pin = dataReady ? weekTourney(w) : null;
+      // ESPN keeps showing last week's event for a day or two after it ends. If this
+      // week hasn't been pinned and nobody has picked yet, pin it to the next event.
+      if (dataReady && !pin && board.event && board.event.final && board.event.end < todayIso()
+          && !Object.keys(weekOf(w).picks || {}).length) {
+        const next = upcomingEvent(cal, board.event.start);
+        if (next) { pin = { name: next.name, start: next.start }; write("week", w, { tournament: pin }); }
+      }
+      // Show this week's own tournament, not whatever ESPN calls current
+      if (pin && (!board.event || board.event.start !== pin.start)) {
+        const pinned = await getBoard("?dates=" + espnDate(pin.start));
+        board = {
+          players: pinned.players,
+          calendar: pinned.calendar.length ? pinned.calendar : cal,
+          event: pinned.event && pinned.event.start === pin.start ? pinned.event
+            : { name: pin.name, start: pin.start, end: "", where: "", round: 0, status: `Starts ${fmtDate(pin.start)}`, final: false }
         };
-      }).filter(p => p.name);
-      const cal = (((data.leagues || [])[0] || {}).calendar || []).map(e => ({
-        name: e.label || e.name || "",
-        start: isoDay(e.startDate),
-        end: isoDay(e.endDate),
-        where: ""
-      })).filter(e => e.name);
-      live = {
-        ok: true, loading: false, error: "", players, calendar: cal, fetchedAt: new Date(),
-        event: ev ? {
-          name: ev.name || ev.shortName || "",
-          start: isoDay(ev.date),
-          end: isoDay(ev.endDate),
-          where: (comp && comp.venue && comp.venue.fullName) || "",
-          status: (ev.status && ev.status.type && (ev.status.type.shortDetail || ev.status.type.description)) || "",
-          final: !!(ev.status && ev.status.type && ev.status.type.completed)
-        } : null
-      };
+      }
+      live = { ok: true, loading: false, error: "", players: board.players, calendar: board.calendar, fetchedAt: new Date(), event: board.event };
     } catch (e) {
       live.loading = false;
       live.ok = false;
@@ -1032,12 +1104,18 @@
     const rankOfName = rankLookup(ranked);
     const field = (typeof live !== "undefined" && live.players && live.players.length)
       ? live.players.map(p => ({ name: p.name, rank: rankOfName(p.name) }))
-      : ranked.map(p => ({ name: displayName(p.name), rank: p.rank }));
+      : ranked.slice(0, 200).map(p => ({ name: displayName(p.name), rank: p.rank }));
     field.sort((a, b) => a.rank - b.rank || a.name.localeCompare(b.name));
     matchStats = { matched: field.filter(g => g.rank < 999).length, total: field.length };
     golfers = field.map((g, i) => ({ name: g.name, rank: g.rank, hot: i < 10 && g.rank < 999 }));
   }
   const fieldIsLive = () => live.players.length > 0;
+  // The tournament a newly started week should be pinned to: the next event after
+  // the current week's tournament
+  function nextTourneyForNewWeek() {
+    const cur = weekTourney(currentWeek()) || (live.event ? { start: live.event.start } : null);
+    return upcomingEvent(live.calendar, cur && cur.start);
+  }
 
   function currentTourney() {
     if (live.event && live.event.name) return live.event;
@@ -1046,19 +1124,26 @@
 
   // Organizer button on Payments: copy live finishes into the week's results
   async function fillFromLive(w) {
-    if (!live.ok || !live.players.length) { toast("No live leaderboard right now."); return; }
+    let board = live;
+    const pin = weekTourney(w);
+    if (pin && (!live.event || live.event.start !== pin.start)) {
+      try { board = await getBoard("?dates=" + espnDate(pin.start)); }
+      catch (e) { toast("Couldn't load that week's leaderboard. Try again."); return; }
+    }
+    if (!board.players.length) { toast("No leaderboard for that week yet."); return; }
+    const find = (name) => board.players.find(p => norm(p.name) === norm(name));
     const finishes = {};
     for (const e of entriesFor(w)) {
-      const p = livePlayer(e.name);
+      const p = find(e.name);
       finishes[e.name] = p ? p.pos : 999;
     }
-    const ranked = live.players.filter(p => p.pos < 999).sort((a, b) => a.pos - b.pos);
+    const ranked = board.players.filter(p => p.pos < 999).sort((a, b) => a.pos - b.pos);
     await write("week", w, {
       finishes,
       resultWinner: ranked[0] ? ranked[0].name : null,
       resultRunner: ranked[1] ? ranked[1].name : null
     });
-    toast(live.event && live.event.final ? "Final results filled in" : "Filled in with current positions. Not final yet.");
+    toast(board.event && board.event.final ? "Final results filled in" : "Filled in with current positions. Not final yet.");
   }
 
   function renderTourney() {
@@ -1076,7 +1161,7 @@
       el.innerHTML = `<h2>Tournament</h2><p class="hint">No tournament found. ${live.error || "Check back closer to the next event."}</p>`;
       return;
     }
-    const leaders = live.players.filter(p => p.pos < 999).slice(0, 5);
+    const leaders = live.players.filter(p => p.pos < 999 && p.posText !== "—").slice(0, 5);
     el.innerHTML = `
       <span class="sub">${live.event && live.event.final ? "Final" : "Now playing"}</span>
       <div class="big" style="margin-top:8px">${t.name}</div>
@@ -1191,18 +1276,19 @@
     }
     sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     renderActive();
-    // Live scores: load now, then every 2 minutes while the app is open
     loadRankings();
-    fetchLive();
-    setInterval(() => { if (!document.hidden) fetchLive(); }, 120000);
-    document.addEventListener("visibilitychange", () => { if (!document.hidden) fetchLive(); });
     try {
       await loadAll();
+      dataReady = true;
       startRealtime();
     } catch (e) {
       toast("Couldn't connect. Check your internet and reload.");
     }
     renderActive();
+    // Live scores: load now, then every 2 minutes while the app is open
+    fetchLive();
+    setInterval(() => { if (!document.hidden) fetchLive(); }, 120000);
+    document.addEventListener("visibilitychange", () => { if (!document.hidden) fetchLive(); });
   }
 
   // ---------- Events ----------

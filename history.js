@@ -19,28 +19,16 @@
   document.head.appendChild(style);
 
   // ----- Fetch and cache one tournament's final leaderboard by date -----
-  const cacheGet = (k) => { try { return JSON.parse(localStorage.getItem("hd-hist-" + k)); } catch (e) { return null; } };
-  const cacheSet = (k, v) => { try { localStorage.setItem("hd-hist-" + k, JSON.stringify(v)); } catch (e) {} };
+  const cacheGet = (k) => { try { return JSON.parse(localStorage.getItem("hd-hist2-" + k)); } catch (e) { return null; } };
+  const cacheSet = (k, v) => { try { localStorage.setItem("hd-hist2-" + k, JSON.stringify(v)); } catch (e) {} };
+  try { Object.keys(localStorage).filter(k => k.startsWith("hd-hist-")).forEach(k => localStorage.removeItem(k)); } catch (e) {}
   const ymd = (d) => d.toISOString().slice(0, 10).replace(/-/g, "");
   const addDays = (iso, n) => { const d = new Date(iso + "T12:00:00Z"); d.setUTCDate(d.getUTCDate() + n); return d; };
 
   function parseEvent(data) {
-    const ev = (data.events || [])[0];
-    const comp = ev && (ev.competitions || [])[0];
-    if (!ev || !comp) return null;
-    const done = !!(ev.status && ev.status.type && ev.status.type.completed);
-    const players = (comp.competitors || []).map((c, i) => {
-      const st = c.status || {};
-      const posText = (st.position && st.position.displayName) || (c.order != null ? String(c.order) : "");
-      const cut = /cut|wd|dq|mdf/i.test(posText) || /cut|wd|dq/i.test((st.type && st.type.name) || "");
-      const n = parseInt(String(posText).replace(/\D/g, ""), 10);
-      return {
-        name: (c.athlete && (c.athlete.displayName || c.athlete.fullName)) || "",
-        pos: cut ? 999 : (Number.isFinite(n) ? n : (c.order || i + 1)),
-        posText: cut ? (/wd/i.test(posText) ? "WD" : "MC") : (posText || String(i + 1))
-      };
-    }).filter(p => p.name);
-    return { name: ev.name || "", start: (ev.date || "").slice(0, 10), venue: (comp.venue && comp.venue.fullName) || "", done, players };
+    const b = parseScoreboard(data);
+    if (!b.event) return null;
+    return { name: b.event.name, start: b.event.start, venue: b.event.where, done: b.event.final, players: b.players };
   }
 
   async function eventOn(date) {

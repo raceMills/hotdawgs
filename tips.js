@@ -290,6 +290,9 @@
     "Want the full lesson again? Tap your initial in the top corner.",
     "Coach Frank's rule one: relish the moment. Rule two: pay your Venmo."
     ,"Mustard up, kid. Nobody ever won a pool playing scared."
+    ,"Forty years on tour and I've never seen anyone chug an egg beer gracefully. Prove me wrong."
+    ,"Never draft right after an egg beer. Your judgment's scrambled."
+    ,"Lose a bad beat on Sunday? Egg beer. Win the pool? Egg beer. See the pattern?"
   ];
   function coachTip(target) {
     if (tour) return;
