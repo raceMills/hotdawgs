@@ -472,7 +472,105 @@
           "owgr": 115
         }
       ],
-      "alternates": []
+      "alternates": [],
+      "watch": [
+        {
+          "round": 1,
+          "start": 1794493800000,
+          "end": 1794510000000,
+          "kind": "Featured groups",
+          "network": "ESPN+",
+          "url": "https://espn.smart.link/88r9d3tmo"
+        },
+        {
+          "round": 1,
+          "start": 1794499200000,
+          "end": 1794520800000,
+          "kind": "Radio",
+          "network": "SiriusXM",
+          "url": "https://sxm.app.link/LB0419510CMPMGfndfdpdd"
+        },
+        {
+          "round": 1,
+          "start": 1794510000000,
+          "end": 1794520800000,
+          "kind": "TV",
+          "network": "GOLF Channel",
+          "url": "https://www.golfchannel.com/watch/live"
+        },
+        {
+          "round": 1,
+          "start": 1794510000000,
+          "end": 1794520800000,
+          "kind": "Featured groups",
+          "network": "ESPN+",
+          "url": "https://espn.smart.link/88r9d3tmo"
+        },
+        {
+          "round": 2,
+          "start": 1794580200000,
+          "end": 1794596400000,
+          "kind": "Featured groups",
+          "network": "ESPN+",
+          "url": "https://espn.smart.link/88r9d3tmo"
+        },
+        {
+          "round": 2,
+          "start": 1794585600000,
+          "end": 1794607200000,
+          "kind": "Radio",
+          "network": "SiriusXM",
+          "url": "https://sxm.app.link/LB0419510CMPMGfndfdpdd"
+        },
+        {
+          "round": 2,
+          "start": 1794596400000,
+          "end": 1794607200000,
+          "kind": "TV",
+          "network": "GOLF Channel",
+          "url": "https://www.golfchannel.com/watch/live"
+        },
+        {
+          "round": 2,
+          "start": 1794596400000,
+          "end": 1794607200000,
+          "kind": "Featured groups",
+          "network": "ESPN+",
+          "url": "https://espn.smart.link/88r9d3tmo"
+        },
+        {
+          "round": 3,
+          "start": 1794675600000,
+          "end": 1794693600000,
+          "kind": "Radio",
+          "network": "SiriusXM",
+          "url": "https://sxm.app.link/LB0419510CMPMGfndfdpdd"
+        },
+        {
+          "round": 3,
+          "start": 1794682800000,
+          "end": 1794693600000,
+          "kind": "TV",
+          "network": "GOLF Channel",
+          "url": "https://www.golfchannel.com/watch/live"
+        },
+        {
+          "round": 4,
+          "start": 1794762000000,
+          "end": 1794780000000,
+          "kind": "Radio",
+          "network": "SiriusXM",
+          "url": "https://sxm.app.link/LB0419510CMPMGfndfdpdd"
+        },
+        {
+          "round": 4,
+          "start": 1794769200000,
+          "end": 1794780000000,
+          "kind": "TV",
+          "network": "GOLF Channel",
+          "url": "https://www.golfchannel.com/watch/live"
+        }
+      ]
     },
     {
       "pgaTourId": "R2026493",
@@ -480,7 +578,105 @@
       "start": "2026-11-19",
       "updated": "2026-11-05T00:00:57.455Z",
       "players": [],
-      "alternates": []
+      "alternates": [],
+      "watch": [
+        {
+          "round": 1,
+          "start": 1795095000000,
+          "end": 1795107600000,
+          "kind": "Featured groups",
+          "network": "ESPN+",
+          "url": "https://espn.smart.link/88r9d3tmo"
+        },
+        {
+          "round": 1,
+          "start": 1795100400000,
+          "end": 1795122000000,
+          "kind": "Radio",
+          "network": "SiriusXM",
+          "url": "https://sxm.app.link/LB0419510CMPMGfndfdpdd"
+        },
+        {
+          "round": 1,
+          "start": 1795107600000,
+          "end": 1795118400000,
+          "kind": "TV",
+          "network": "GOLF Channel",
+          "url": "https://www.golfchannel.com/watch/live"
+        },
+        {
+          "round": 1,
+          "start": 1795107600000,
+          "end": 1795122000000,
+          "kind": "Featured groups",
+          "network": "ESPN+",
+          "url": "https://espn.smart.link/88r9d3tmo"
+        },
+        {
+          "round": 2,
+          "start": 1795181400000,
+          "end": 1795194000000,
+          "kind": "Featured groups",
+          "network": "ESPN+",
+          "url": "https://espn.smart.link/88r9d3tmo"
+        },
+        {
+          "round": 2,
+          "start": 1795186800000,
+          "end": 1795208400000,
+          "kind": "Radio",
+          "network": "SiriusXM",
+          "url": "https://sxm.app.link/LB0419510CMPMGfndfdpdd"
+        },
+        {
+          "round": 2,
+          "start": 1795194000000,
+          "end": 1795204800000,
+          "kind": "TV",
+          "network": "GOLF Channel",
+          "url": "https://www.golfchannel.com/watch/live"
+        },
+        {
+          "round": 2,
+          "start": 1795194000000,
+          "end": 1795208400000,
+          "kind": "Featured groups",
+          "network": "ESPN+",
+          "url": "https://espn.smart.link/88r9d3tmo"
+        },
+        {
+          "round": 3,
+          "start": 1795280400000,
+          "end": 1795298400000,
+          "kind": "Radio",
+          "network": "SiriusXM",
+          "url": "https://sxm.app.link/LB0419510CMPMGfndfdpdd"
+        },
+        {
+          "round": 3,
+          "start": 1795284000000,
+          "end": 1795294800000,
+          "kind": "TV",
+          "network": "GOLF Channel",
+          "url": "https://www.golfchannel.com/watch/live"
+        },
+        {
+          "round": 4,
+          "start": 1795363200000,
+          "end": 1795381200000,
+          "kind": "Radio",
+          "network": "SiriusXM",
+          "url": "https://sxm.app.link/LB0419510CMPMGfndfdpdd"
+        },
+        {
+          "round": 4,
+          "start": 1795370400000,
+          "end": 1795381200000,
+          "kind": "TV",
+          "network": "GOLF Channel",
+          "url": "https://www.golfchannel.com/watch/live"
+        }
+      ]
     }
   ]
 }
