@@ -43,4 +43,5 @@ jobs:
           NAME: ${{ inputs.name }}
           START: ${{ inputs.start }}
           PROBE: ${{ inputs.probe }}
+          PROBE_LEN: "12000"
         run: node scripts/pool-admin.mjs "$MODE" "$WEEK" "$NAME" "$START"

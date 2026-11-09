@@ -186,7 +186,7 @@ async function urlProbe() {
   const q = (pp.dehydratedState || {}).queries || [];
   q.forEach(x => {
     console.log("query:", JSON.stringify(x.queryKey).slice(0, 160), "| data keys:", x.state && x.state.data && typeof x.state.data === "object" ? Object.keys(x.state.data).slice(0, 10).join(",") : typeof (x.state && x.state.data));
-    if (process.env.PROBE && JSON.stringify(x.queryKey).includes(process.env.PROBE)) console.log("   DATA:", JSON.stringify(x.state.data).slice(0, 2500));
+    if (process.env.PROBE && JSON.stringify(x.queryKey).includes(process.env.PROBE)) console.log("   DATA:", JSON.stringify(x.state.data).slice(0, Number(process.env.PROBE_LEN) || 2500));
   });
   const ctx = (process.env.PROBE || "").startsWith("ctx:") ? process.env.PROBE.slice(4) : "";
   if (ctx) { let i = -1, n = 0; while ((i = text.indexOf(ctx, i + 1)) >= 0 && n++ < 3) console.log(`ctx "${ctx}":`, text.slice(Math.max(0, i - 400), i + 400).replace(/\s+/g, " ")); }
