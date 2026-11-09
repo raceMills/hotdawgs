@@ -2,8 +2,8 @@ name: Update field
 
 on:
   schedule:
-    # Every 3 hours, Monday through Thursday (draft days and the first round)
-    - cron: "23 */3 * * 1-4"
+    # Every 3 hours (fields, odds and TV times)
+    - cron: "23 */3 * * *"
   workflow_dispatch: {}
 
 permissions:

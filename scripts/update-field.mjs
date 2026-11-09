@@ -70,8 +70,28 @@ async function oddsFor(t, get) {
   return m;
 }
 
+// TV, streaming and radio windows from the tournament page ("broadcastCoverage")
+const KIND = { BroadcastFullTelecast: "TV", BroadcastFeaturedGroup: "Featured groups", BroadcastFeaturedHole: "Featured holes",
+  BroadcastAudioStream: "Radio", BroadcastLiveStream: "Live stream" };
+async function watchFor(t) {
+  try {
+    const cov = (await pageData(`/tournaments/${t.start.slice(0, 4)}/x/${t.id}`))("broadcastCoverage");
+    const list = (cov && (cov.coverageType || cov.coverage)) || [];
+    const seen = new Set();
+    return list.map(c => ({
+      round: c.roundNumber || null,
+      start: Number(c.startTime) || null, end: Number(c.endTime) || null,
+      kind: KIND[c.__typename] || c.channelTitle || c.streamTitle || "Coverage",
+      network: (c.network && c.network.networkName) || "",
+      url: (c.network && (c.network.iOSLink || c.network.url)) || ""
+    })).filter(x => x.start && x.network && !seen.has(x.network + x.start + x.kind) && seen.add(x.network + x.start + x.kind))
+      .sort((a, b) => a.start - b.start);
+  } catch (e) { console.log(`watch: ${e.message}`); return []; }
+}
+
 const events = [];
 for (const t of targets) {
+  const watch = await watchFor(t);
   try {
     const get = await pageData(`/tournaments/${t.start.slice(0, 4)}/x/${t.id}/field`);
     const field = get("field");
@@ -83,11 +103,11 @@ for (const t of targets) {
     let odds = new Map();
     try { odds = await oddsFor(t, get); } catch (e) { console.log(`odds: ${e.message}`); }
     for (const p of inField.concat(alternates)) { const o = odds.get(p.name.toLowerCase()); if (o) p.odds = o; }
-    events.push({ pgaTourId: t.id, name: t.name, start: t.start, updated: field && field.lastUpdated ? new Date(field.lastUpdated).toISOString() : null, players: inField, alternates });
-    console.log(`${t.name} (${t.start}): ${inField.length} in the field, ${alternates.length} alternates, ${odds.size} odds`);
+    events.push({ pgaTourId: t.id, name: t.name, start: t.start, updated: field && field.lastUpdated ? new Date(field.lastUpdated).toISOString() : null, players: inField, alternates, watch });
+    console.log(`${t.name} (${t.start}): ${inField.length} in the field, ${alternates.length} alternates, ${odds.size} odds, ${watch.length} TV/stream windows`);
   } catch (e) {
     console.log(`${t.name} (${t.start}): field not available (${e.message})`);
-    events.push({ pgaTourId: t.id, name: t.name, start: t.start, updated: null, players: [], alternates: [] });
+    events.push({ pgaTourId: t.id, name: t.name, start: t.start, updated: null, players: [], alternates: [], watch });
   }
 }
 if (!events.some(e => e.players.length)) console.log("No fields posted yet for these events.");
