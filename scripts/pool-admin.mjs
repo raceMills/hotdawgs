@@ -110,6 +110,54 @@ async function status() {
   if (process.env.PROBE) await probe(process.env.PROBE);
 }
 
+
+// Look for this week's field in every ESPN source we know of, and report which
+// ones have players and allow a browser to read them (CORS).
+async function fieldProbe() {
+  let start = startArg;
+  if (!start) {
+    const cfg = (await getRow("pool_config", "id", "main")) || { data: {} };
+    const row = await getRow("pool_weeks", "week", cfg.data.currentWeek || 1);
+    start = row && row.data.tournament ? row.data.tournament.start : "";
+  }
+  const d = await (await fetch(ESPN + "?dates=" + start.replace(/-/g, ""))).json();
+  const ev = d.events[0], comp = ev.competitions[0];
+  console.log(`Event ${ev.id} "${ev.name}" competition ${comp.id}; scoreboard competitors: ${(comp.competitors || []).length}`);
+  const count = (o, depth = 0) => {
+    if (!o || typeof o !== "object" || depth > 6) return [];
+    const found = [];
+    for (const [k, v] of Object.entries(o)) {
+      if (Array.isArray(v) && v.length && typeof v[0] === "object" && (k === "competitors" || k === "items" || k === "athletes" || k === "players"))
+        found.push(`${k}:${v.length}`);
+      else if (typeof v === "object") found.push(...count(v, depth + 1));
+    }
+    return found;
+  };
+  const urls = [
+    `https://site.web.api.espn.com/apis/site/v2/sports/golf/leaderboard?league=pga&event=${ev.id}`,
+    `https://site.api.espn.com/apis/site/v2/sports/golf/pga/leaderboard?event=${ev.id}`,
+    `https://site.web.api.espn.com/apis/site/v2/sports/golf/pga/leaderboard/players?event=${ev.id}`,
+    `https://sports.core.api.espn.com/v2/sports/golf/leagues/pga/events/${ev.id}/competitions/${comp.id}/competitors?limit=300`,
+    `https://sports.core.api.espn.com/v2/sports/golf/leagues/pga/events/${ev.id}`,
+    `https://site.api.espn.com/apis/site/v2/sports/golf/pga/scoreboard/${ev.id}`
+  ];
+  for (const u of urls) {
+    try {
+      const r = await fetch(u, { headers: { Origin: "https://racemills.github.io" } });
+      const text = await r.text();
+      let summary = "";
+      try { const j = JSON.parse(text); summary = `keys=${Object.keys(j).slice(0, 8).join(",")} lists=[${count(j).slice(0, 6).join(" ")}]` + (j.count != null ? ` count=${j.count}` : ""); }
+      catch (e) { summary = "not JSON: " + text.slice(0, 120).replace(/\s+/g, " "); }
+      console.log(`\n${r.status} cors=${r.headers.get("access-control-allow-origin")} ${u}\n   ${summary}`);
+      if (u.includes("/competitors?") && r.ok) {
+        const j = JSON.parse(text);
+        const first = (j.items || [])[0];
+        if (first) console.log("   first item:", JSON.stringify(first).slice(0, 400));
+      }
+    } catch (e) { console.log(`\nERR ${u} ${e.message}`); }
+  }
+}
+
 async function startWeek() {
   const cfg = (await getRow("pool_config", "id", "main")) || { data: {} };
   const cur = cfg.data.currentWeek || 1;
@@ -129,6 +177,6 @@ async function pin() {
   console.log(`Pinned week ${week} to ${nameArg} (${startArg}).`);
 }
 
-const run = { status, "start-week": startWeek, pin }[mode];
+const run = { status, "start-week": startWeek, pin, field: fieldProbe }[mode];
 if (!run) { console.error(`Unknown mode "${mode}"`); process.exit(1); }
 run().catch(e => { console.error(e.message); process.exit(1); });
