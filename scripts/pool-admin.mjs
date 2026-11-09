@@ -65,6 +65,29 @@ async function espn(query = "") {
   };
 }
 
+// The first calendar event that hasn't finished yet
+async function nextEvent() {
+  const d = await (await fetch(ESPN)).json();
+  const cal = ((d.leagues || [])[0] || {}).calendar || [];
+  const today = new Date().toISOString().slice(0, 10);
+  const e = cal.map(x => ({ name: x.label, start: (x.startDate || "").slice(0, 10), end: (x.endDate || "").slice(0, 10) }))
+    .filter(x => x.end >= today).sort((a, b) => a.start.localeCompare(b.start))[0];
+  return e || null;
+}
+// Raw field shapes for a date, to check how cuts and positions are reported
+async function probe(date) {
+  const d = await (await fetch(ESPN + "?dates=" + date)).json();
+  const comp = d.events[0].competitions[0];
+  const cs = comp.competitors;
+  const show = (c) => ({ keys: Object.keys(c), order: c.order, score: c.score, status: c.status,
+    linescores: (c.linescores || []).map(l => ({ period: l.period, value: l.value, displayValue: l.displayValue, holes: (l.linescores || []).length })) });
+  console.log("\nProbe", date, d.events[0].name, "competitor count", cs.length);
+  console.log("first:", JSON.stringify(show(cs[0])));
+  console.log("middle:", JSON.stringify(show(cs[70])));
+  console.log("last:", JSON.stringify(show(cs[cs.length - 1])));
+  console.log("event status:", JSON.stringify(d.events[0].status));
+}
+
 async function status() {
   const cfg = (await getRow("pool_config", "id", "main")) || { data: {} };
   const cur = cfg.data.currentWeek || 1;
@@ -81,8 +104,10 @@ async function status() {
       `settled=${s && s.winner ? `${s.winner} [${(s.rules || []).join(",")}]` : "no"}; paid=${Object.values(d.paid || {}).filter(Boolean).length}`);
   }
   console.log("\nESPN current event:", JSON.stringify(await espn(), null, 1));
-  console.log("\nESPN by date 20261107:", JSON.stringify(await espn("?dates=20261107")));
-  console.log("ESPN by date 20251114:", JSON.stringify(await espn("?dates=20251114")));
+  const next = nextEvent ? await nextEvent() : null;
+  if (next) console.log("\nNext event on ESPN's calendar:", JSON.stringify(next));
+  if (next) console.log("ESPN by that date:", JSON.stringify(await espn("?dates=" + next.start.replace(/-/g, ""))));
+  if (process.env.PROBE) await probe(process.env.PROBE);
 }
 
 async function startWeek() {

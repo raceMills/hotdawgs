@@ -20,6 +20,10 @@ on:
         description: "Tournament start date, YYYY-MM-DD"
         required: false
         default: ""
+      probe:
+        description: "Optional: a YYYYMMDD date to dump raw ESPN field data for (diagnostics)"
+        required: false
+        default: ""
 
 permissions:
   contents: read
@@ -38,4 +42,5 @@ jobs:
           WEEK: ${{ inputs.week }}
           NAME: ${{ inputs.name }}
           START: ${{ inputs.start }}
+          PROBE: ${{ inputs.probe }}
         run: node scripts/pool-admin.mjs "$MODE" "$WEEK" "$NAME" "$START"
