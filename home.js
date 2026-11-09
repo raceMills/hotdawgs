@@ -230,24 +230,32 @@
     if (live.event && live.event.final && st && st.complete) {
       return { cls: "gold", html: `<div class="hd-kicker">${t ? shortName(t.name) : "Tournament"} is final</div>
         <div class="hd-headline">🏁 Who's getting paid?</div>
-        <p class="hint" style="margin:0">Results need to be confirmed on the Money tab.</p>
-        <button class="btn" data-go="payments">Settle the week</button>` };
+        <p class="hint" style="margin:0">Crunching the payouts now. Check the Money tab in a minute.</p>
+        <button class="btn" data-go="payments">See the Money tab</button>` };
     }
 
     // 3. Draft still going
+    if (st && !st.complete && HD.draftOpen && !HD.draftOpen(w)) {
+      const first = st.board[0].m;
+      return { cls: "", html: `<div class="hd-kicker">Week ${w} draft${t ? ` · ${shortName(t.name)}` : ""}</div>
+        <div class="hd-headline">🔒 Draft opens when the field posts</div>
+        <p class="hint" style="margin:0">${first === me ? "You pick first this week. Start starring golfers in your queue." : `${first} picks first. Star golfers now so you're ready.`}</p>
+        <button class="btn ghost" data-go="draft">Build my queue</button>` };
+    }
     if (st && !st.complete) {
+      const cl = HD.clockLine ? HD.clockLine(w, st) : "";
       if (st.onClock === me) {
         const need = !mine.hot && !mine.dawg ? "hot or dawg" : (!mine.hot ? "hot" : "dawg");
         return { cls: "hot", html: `<div class="hd-kicker">Week ${w} draft · pick ${st.clock + 1} of ${st.total}</div>
           <div class="hd-headline">You're on the clock! 🌭</div>
-          <p class="hint" style="margin:0">Time to draft your ${need}${t ? ` for the ${shortName(t.name)}` : ""}.</p>
+          <p class="hint" style="margin:0">Time to draft your ${need}${t ? ` for the ${shortName(t.name)}` : ""}.${cl ? `<br><b>${cl}</b>` : ""}</p>
           <button class="btn" style="background:#fff;color:var(--ink)" data-go="draft">Draft now</button>` };
       }
       const myNext = st.board.findIndex((x, i) => i >= st.clock && x.m === me && !x.done);
       const away = myNext < 0 ? null : myNext - st.clock;
       return { cls: "", html: `<div class="hd-kicker">Week ${w} draft · pick ${st.clock + 1} of ${st.total}</div>
         <div class="hd-headline">${st.onClock} is on the clock</div>
-        <p class="hint" style="margin:0">${away === null ? "Your picks are in. Sit back and heckle." : away === 1 ? "You're up next. Stretch those fingers." : `You pick in ${away} turns.`}</p>
+        <p class="hint" style="margin:0">${away === null ? "Your picks are in. Sit back and heckle." : away === 1 ? "You're up next. Stretch those fingers." : `You pick in ${away} turns.`}${cl ? `<br>${cl}` : ""}</p>
         <button class="btn ghost" data-nudge="${st.onClock}">Nudge ${st.onClock} 💬</button>` };
     }
 

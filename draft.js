@@ -1,40 +1,35 @@
-// Hotdawgs draft order: 2-round snake draft with a rotating first pick.
-// Week 1 starts with the first member, week 2 with the second, and so on.
-// Round 1 goes in order, round 2 goes in reverse. Each member ends with one hot and one dawg.
-// This file replaces the draft screen from index.html, so it must load after the main script.
+// Hotdawgs draft: 2-round snake with a rotating first pick (rules live in core.js).
+// Adds: draft locked until the field is posted, a pick clock that auto-picks when it
+// runs out (paused overnight), each member's pick queue, odds, and commissioner
+// "pick for" mode. Must load after the main script.
 
 (function () {
-  let lastClock = null;     // who was on the clock last render, to alert the next person
+  const C = HDCore;
+  let lastClock = null;      // who was on the clock last render, to alert the next person
   let justPickedWeek = null; // after you pick, offer to nudge the next person
+  let openingWeek = null, autoBusy = false;
 
   const appLink = () => location.origin + location.pathname;
+  const draftOrder = (week) => C.draftOrder(week, MEMBERS);
+  const draftState = (week) => C.draftState(week, weekOf(week).picks || {}, MEMBERS);
+  // Who you're picking for: yourself, or someone else in commissioner mode
+  const actor = () => window.HD_PROXY || me;
+  // The draft opens once the field is posted (or the commissioner opens it early)
+  const draftOpen = (week) => fieldIsLive() || !!weekOf(week).forceOpen;
+  const clock = (week) => C.clockInfo(weekOf(week), config, Date.now());
+  function fmtLeft(ms) {
+    const m = Math.ceil(ms / 60000), h = Math.floor(m / 60);
+    return h ? `${h}h ${m % 60}m` : `${m}m`;
+  }
+  function clockLine(week, st) {
+    if (st.complete || !draftOpen(week)) return "";
+    const ci = clock(week);
+    if (weekOf(week).clockPaused) return "⏸ Pick clock paused by the commissioner";
+    if (!ci) return config.autoPickHours === 0 ? "No pick clock this season" : "";
+    if (ci.quiet) return `🌙 Clock paused overnight · ${fmtLeft(ci.leftMs)} left after 7am`;
+    return ci.due ? "⏱ Time's up. Auto-picking…" : `⏱ Auto-pick in ${fmtLeft(ci.leftMs)}`;
+  }
 
-  function draftOrder(week) {
-    const n = MEMBERS.length;
-    const s = (week - 1) % n;
-    return MEMBERS.slice(s).concat(MEMBERS.slice(0, s));
-  }
-  function slots(week) {
-    const o = draftOrder(week);
-    return o.concat(o.slice().reverse());
-  }
-  function picksOf(week, m) {
-    const p = (weekOf(week).picks || {})[m] || {};
-    return (p.hot ? 1 : 0) + (p.dawg ? 1 : 0);
-  }
-  // A member's 1st slot is filled once they have 1 pick, their 2nd once they have 2
-  function draftState(week) {
-    const s = slots(week), seen = {};
-    let clock = -1;
-    const board = s.map((m, i) => {
-      seen[m] = (seen[m] || 0) + 1;
-      const nth = seen[m];
-      const done = picksOf(week, m) >= nth;
-      if (!done && clock < 0) clock = i;
-      return { m, i, nth, round: i < MEMBERS.length ? 1 : 2, done };
-    });
-    return { board, clock, onClock: clock >= 0 ? s[clock] : null, complete: clock < 0, total: s.length };
-  }
   // Which golfer went in a member's 1st or 2nd slot
   function slotPick(week, m, nth) {
     const p = (weekOf(week).picks || {})[m] || {};
@@ -42,13 +37,16 @@
     const kind = nth === 1 ? first : (first === "hot" ? "dawg" : "hot");
     return p[kind] ? { name: p[kind], kind } : null;
   }
+  const takenNames = (week) => C.entriesOf(weekOf(week).picks).map(e => e.name);
+  const queueOf = (week, m) => (weekOf(week).queues || {})[m] || [];
 
-  window.HD = Object.assign(window.HD || {}, { draftState, draftOrder });
+  window.HD = Object.assign(window.HD || {}, { draftState, draftOrder, draftOpen, clock, fmtLeft, clockLine });
 
   async function nudge(who, week, st) {
+    const ci = clock(week);
     const text = who === null
       ? `🌭 Week ${week} draft is done! Picks are in: ${appLink()}`
-      : `🌭 @${who} you're on the clock! Week ${week} draft, pick ${st.clock + 1} of ${st.total}. Make your pick: ${appLink()}`;
+      : `🌭 @${who} you're on the clock! Week ${week} draft, pick ${st.clock + 1} of ${st.total}.${ci && !ci.due ? ` Auto-pick in ${fmtLeft(ci.leftMs)}.` : ""} Make your pick: ${appLink()}`;
     if (navigator.share) {
       try { await navigator.share({ text }); return; } catch (e) { return; }
     }
@@ -73,8 +71,22 @@
       border-radius: 999px; padding: 3px 9px; }
     #draftForCard .meta .warn { background: var(--mustard); }
     #draftForCard .meta .ok { background: var(--green); color: #fff; }
+    .hd-qbtn { border: 2px solid var(--shadow); background: #fff; border-radius: 999px; font: inherit; font-size: 12px;
+      font-weight: 900; padding: 4px 8px; color: var(--ink); cursor: pointer; white-space: nowrap; }
+    .hd-qbtn.on { background: var(--mustard); }
+    .hd-odds { color: var(--teal); font-weight: 900; }
+    .hd-proxy { background: var(--teal); color: #fff; border: 3px solid var(--shadow); border-radius: 12px; padding: 10px 12px;
+      margin-bottom: 12px; display: flex; align-items: center; gap: 8px; font-weight: 900; }
+    .hd-lock { background: var(--cream); border: 3px dashed var(--bun); border-radius: 12px; padding: 14px; text-align: center; }
+    .hd-qrow { display: flex; align-items: center; gap: 6px; padding: 7px 0; border-bottom: 1px dashed var(--bun); }
+    .hd-qrow:last-child { border-bottom: 0; }
+    .hd-qrow .n { width: 22px; font-weight: 900; }
+    .hd-qrow .nm { flex: 1; font-weight: 800; }
+    .hd-qrow .nm.gone { text-decoration: line-through; opacity: .5; }
+    .hd-mini { border: 2px solid var(--shadow); background: var(--cream); border-radius: 8px; font: inherit; font-weight: 900; width: 30px; height: 28px; cursor: pointer; color: var(--ink); }
   `;
   document.head.appendChild(tourneyStyle);
+
   function renderDraftFor(week) {
     let card = document.getElementById("draftForCard");
     if (!card) {
@@ -108,53 +120,127 @@
       </div>`;
   }
 
-  function ensureBoard() {
-    let b = document.getElementById("boardCard");
+  function ensureCard(id, beforeEl) {
+    let b = document.getElementById(id);
     if (!b) {
       b = document.createElement("div");
       b.className = "card";
-      b.id = "boardCard";
-      const dc = document.getElementById("draftCard");
-      dc.insertBefore(b, dc.firstChild);
+      b.id = id;
+      beforeEl.parentNode.insertBefore(b, beforeEl);
     }
     return b;
   }
 
+  // ----- Picking -----
+  async function savePick(week, member, g, auto) {
+    const kind = g.hot ? "hot" : "dawg";
+    await write("week", week, C.pickPatch(weekOf(week), week, member, g.name, kind, auto, auto ? "auto" : me, Date.now()));
+  }
   async function draftPick(g) {
-    const week = currentWeek();
+    const week = currentWeek(), who = actor();
     const kind = g.hot ? "hot" : "dawg";
     const t = currentTourney();
-    if (!confirm(`Draft ${g.name} as your ${kind}${t ? ` for the ${splitName(t.name).main}` : ""}?`)) return;
-    // Re-read the latest picks so two people can't grab the same golfer
-    try {
-      const { data } = await sb.from("pool_weeks").select("data").eq("week", week).maybeSingle();
-      if (data) weekDocs[week] = data.data;
-    } catch (e) {}
+    const forWho = who === me ? "your" : `${who}'s`;
+    if (!confirm(`Draft ${g.name} as ${forWho} ${kind}${t ? ` for the ${splitName(t.name).main}` : ""}?`)) return;
+    await loadWeek(week); // latest picks, so two people can't grab the same golfer
     const st = draftState(week);
-    if (st.onClock !== me) { toast("It's not your turn anymore."); renderActive(); return; }
-    if (claimedMap(week)[g.name]) { toast(`${g.name} was just taken.`); renderActive(); return; }
+    if (st.onClock !== who) { toast("That turn is over. Someone already picked."); renderActive(); return; }
+    if (takenNames(week).some(n => C.compactKey(n) === C.compactKey(g.name))) { toast(`${g.name} was just taken.`); renderActive(); return; }
+    const mine = (weekOf(week).picks || {})[who] || {};
+    if (mine[kind]) { toast(`${who === me ? "You" : who} already ${who === me ? "have" : "has"} a ${kind}. Pick a ${kind === "hot" ? "dawg" : "hot"}.`); return; }
+    await savePick(week, who, g, false);
+    if (who !== me) { toast(`Picked ${g.name} for ${who}`); window.HD_PROXY = null; }
+    else { justPickedWeek = week; celebrate(); }
+  }
+  // Auto-pick for whoever is on the clock when their time runs out. Any open phone
+  // can do this; the background task does it too if no phone is open.
+  async function autoPickIfDue(force) {
+    const week = currentWeek();
+    if (autoBusy || !dataReady || !draftOpen(week) || !golfers.length) return;
+    let st = draftState(week);
+    if (st.complete) return;
+    const ci = clock(week);
+    if (!force && (!ci || !ci.due)) return;
+    autoBusy = true;
+    try {
+      await loadWeek(week);
+      st = draftState(week);
+      const ci2 = clock(week);
+      if (st.complete || (!force && (!ci2 || !ci2.due))) return;
+      const m = st.onClock;
+      const choice = C.chooseAutoPick(golfers, takenNames(week), (weekOf(week).picks || {})[m], queueOf(week, m));
+      if (!choice) return;
+      await savePick(week, m, choice.golfer, true);
+      toast(`⏱ ${force ? "Auto-picked" : "Time's up."} ${choice.golfer.name} for ${m === me ? "you" : m}${choice.fromQueue ? " from the queue" : ""}.`);
+    } finally { autoBusy = false; }
+  }
+  // Record when the draft opened (starts the first pick's clock)
+  function markOpen(week) {
+    if (!dataReady || openingWeek === week || weekOf(week).draftOpenAt || !draftOpen(week) || draftState(week).complete) return;
+    openingWeek = week;
+    write("week", week, { draftOpenAt: Date.now() });
+    toast(`🌭 The field is set. The week ${week} draft is open!`);
+  }
+  setInterval(() => { if (!document.hidden) { markOpen(currentWeek()); autoPickIfDue(false); } }, 30000);
+  window.HD.autoPickNow = () => autoPickIfDue(true);
+
+  // ----- Queue -----
+  async function setQueue(week, list) {
+    await write("week", week, { queues: { [me]: list } });
+  }
+  function toggleQueue(week, name) {
+    const q = queueOf(week, me).slice();
+    const i = q.findIndex(n => C.compactKey(n) === C.compactKey(name));
+    if (i >= 0) q.splice(i, 1); else q.push(name);
+    setQueue(week, q);
+    toast(i >= 0 ? `Removed ${name} from your queue` : `Added ${name} to your queue (#${q.length})`);
+  }
+  function renderQueue(week, st, beforeEl) {
+    const card = ensureCard("queueCard", beforeEl);
+    const q = queueOf(week, me);
+    const taken = new Set(takenNames(week).map(C.compactKey));
     const mine = (weekOf(week).picks || {})[me] || {};
-    if (mine[kind]) { toast(`You already have your ${kind}. Pick a ${kind === "hot" ? "dawg" : "hot"}.`); return; }
-    const entry = { [kind]: g.name };
-    if (!mine.hot && !mine.dawg) entry.first = kind;
-    await write("week", week, { picks: { [me]: entry } });
-    justPickedWeek = week;
-    celebrate();
+    const need = C.needOf(mine);
+    if (!need) { card.hidden = true; return; }
+    card.hidden = false;
+    const myTurn = st.onClock === me && !window.HD_PROXY && draftOpen(week);
+    const next = C.chooseAutoPick(golfers, takenNames(week), mine, q);
+    card.innerHTML = `<h2>My queue ⭐</h2>
+      <p class="hint">Star golfers to line them up. ${config.autoPickHours === 0 ? "" : "If your clock runs out, auto-pick takes the first one still available that fills a slot you need, or else the best-ranked golfer left."}</p>
+      ${q.length ? q.map((n, i) => `<div class="hd-qrow"><span class="n">${i + 1}</span>
+          <span class="nm ${taken.has(C.compactKey(n)) ? "gone" : ""}">${n}</span>
+          <button class="hd-mini" data-qup="${i}" ${i === 0 ? "disabled" : ""}>↑</button>
+          <button class="hd-mini" data-qdown="${i}" ${i === q.length - 1 ? "disabled" : ""}>↓</button>
+          <button class="hd-mini" data-qdel="${i}">✕</button></div>`).join("")
+        : `<p class="hint" style="margin:0">Your queue is empty. Tap ☆ next to any golfer below.</p>`}
+      ${next ? `<p class="hint" style="margin:10px 0 0">Next up for you: <b>${next.golfer.name}</b> ${next.fromQueue ? "(from your queue)" : "(best-ranked available)"}</p>` : ""}
+      ${myTurn && next ? `<button class="btn" id="qPickBtn">Draft ${next.golfer.name}</button>` : ""}`;
+    const move = (i, d) => { const a = q.slice(); [a[i], a[i + d]] = [a[i + d], a[i]]; setQueue(week, a); };
+    card.querySelectorAll("[data-qup]").forEach(b => b.onclick = () => move(Number(b.dataset.qup), -1));
+    card.querySelectorAll("[data-qdown]").forEach(b => b.onclick = () => move(Number(b.dataset.qdown), 1));
+    card.querySelectorAll("[data-qdel]").forEach(b => b.onclick = () => { const a = q.slice(); a.splice(Number(b.dataset.qdel), 1); setQueue(week, a); });
+    const qp = document.getElementById("qPickBtn");
+    if (qp) qp.onclick = () => draftPick(next.golfer);
   }
 
+  // ----- Draft screen -----
   renderDraft = function () {
     renderSetup();
     if (!me) { $("#draftCard").hidden = true; return; }
     $("#draftCard").hidden = false;
     const week = currentWeek();
+    markOpen(week);
     const st = draftState(week);
-    const mine = (weekOf(week).picks || {})[me] || {};
-    const myTurn = st.onClock === me;
-    const need = mine.hot && mine.dawg ? null : (!mine.hot && !mine.dawg ? "either" : (!mine.hot ? "hot" : "dawg"));
+    const who = actor();
+    const proxy = who !== me;
+    const mine = (weekOf(week).picks || {})[who] || {};
+    const open = draftOpen(week);
+    const myTurn = open && st.onClock === who;
+    const need = C.needOf(mine);
 
     // Alert when it becomes your turn while the app is open
     if (st.onClock !== lastClock) {
-      if (myTurn && lastClock !== null) {
+      if (st.onClock === me && lastClock !== null) {
         toast("🌭 You're on the clock!");
         if (navigator.vibrate) navigator.vibrate([120, 60, 120]);
       }
@@ -162,33 +248,42 @@
     }
 
     // ----- Draft board -----
-    const board = ensureBoard();
+    const dc = document.getElementById("draftCard");
+    const board = ensureCard("boardCard", dc.firstChild);
     renderDraftFor(week);
     const row = (s) => {
       const p = s.done ? slotPick(week, s.m, s.nth) : null;
-      const now = s.i === st.clock;
+      const now = open && s.i === st.clock;
+      const log = ((weekOf(week).pickLog || {})[s.i]) || {};
       return `<div class="rule" style="${now ? "background:var(--mustard);border-radius:10px;padding:8px;" : ""}">
         <span style="width:26px;font-weight:900">${s.i + 1}</span>
         <span style="flex:1">${s.m}${s.m === me ? " (you)" : ""}</span>
-        <span class="hint" style="margin:0">${p ? `${p.name} · ${p.kind === "hot" ? "🔥" : "🐶"}` : (now ? "On the clock" : "")}</span>
+        <span class="hint" style="margin:0">${p ? `${p.name} · ${p.kind === "hot" ? "🔥" : "🐶"}${log.auto ? " ⏱" : ""}` : (now ? "On the clock" : "")}</span>
       </div>`;
     };
+    const cl = clockLine(week, st);
     let banner;
-    if (st.complete) {
+    if (!open && !st.complete) {
+      const t = currentTourney();
+      banner = `<div class="hd-lock"><div style="font-size:20px;font-weight:900">🔒 Draft opens when the field is posted</div>
+        <p class="hint" style="margin:6px 0 0">The app checks for the ${t ? splitName(t.name).main : "tournament"} field every few hours. ${st.onClock} picks first. Start your queue below while you wait.</p></div>`;
+    } else if (st.complete) {
       banner = `<div class="big">Draft complete ✓</div>`;
     } else if (myTurn) {
       banner = `<div style="background:var(--red);color:#fff;border:3px solid var(--shadow);border-radius:12px;padding:12px;text-align:center">
-        <div style="font-size:20px;font-weight:900">🌭 You're on the clock!</div>
-        <div>Pick ${st.clock + 1} of ${st.total}: draft your ${need === "either" ? "hot or dawg" : need}.</div></div>`;
+        <div style="font-size:20px;font-weight:900">${proxy ? `Picking for ${who}` : "🌭 You're on the clock!"}</div>
+        <div>Pick ${st.clock + 1} of ${st.total}: draft ${proxy ? "their" : "your"} ${need === "either" ? "hot or dawg" : need}.</div>
+        ${cl ? `<div style="margin-top:6px;font-weight:900">${cl}</div>` : ""}</div>`;
     } else {
       banner = `<div class="big">On the clock: ${st.onClock}</div>
-        <div class="hint">Pick ${st.clock + 1} of ${st.total}</div>`;
+        <div class="hint">Pick ${st.clock + 1} of ${st.total}${cl ? ` · ${cl}` : ""}</div>`;
     }
-    const justPicked = justPickedWeek === week && !myTurn;
-    const nudgeBtn = st.complete
-      ? `<button class="btn ghost" id="nudgeBtn">Tell the group the draft is done 💬</button>`
-      : (!myTurn ? `<button class="btn ${justPicked ? "" : "ghost"}" id="nudgeBtn">${justPicked ? `Your pick is in. Text ${st.onClock} they're up 💬` : `Nudge ${st.onClock} in the group chat 💬`}</button>` : "");
+    const justPicked = justPickedWeek === week && st.onClock !== me;
+    const nudgeBtn = !open && !st.complete ? ""
+      : st.complete ? `<button class="btn ghost" id="nudgeBtn">Tell the group the draft is done 💬</button>`
+      : (st.onClock !== me ? `<button class="btn ${justPicked ? "" : "ghost"}" id="nudgeBtn">${justPicked ? `Your pick is in. Text ${st.onClock} they're up 💬` : `Nudge ${st.onClock} in the group chat 💬`}</button>` : "");
     board.innerHTML = `
+      ${proxy ? `<div class="hd-proxy"><span style="flex:1">🧢 Commissioner mode: picking for ${who}</span><button class="btn small ghost" id="proxyCancel">Cancel</button></div>` : ""}
       <h2>Draft order${currentTourney() ? ` · ${splitName(currentTourney().name).main}` : ""}</h2>
       ${banner}
       ${nudgeBtn}
@@ -196,50 +291,66 @@
       ${st.board.filter(s => s.round === 1).map(row).join("")}
       <p class="hint" style="margin-top:12px">Round 2 (reverse order)</p>
       ${st.board.filter(s => s.round === 2).map(row).join("")}
-      <p class="hint" style="margin-top:10px">First pick rotates each week. Next week ${draftOrder(week + 1)[0]} picks first.</p>`;
+      <p class="hint" style="margin-top:10px">First pick rotates each week. Next week ${draftOrder(week + 1)[0]} picks first.${Object.values(weekOf(week).pickLog || {}).some(l => l.auto) ? " ⏱ = auto-picked." : ""}</p>`;
     const nb = document.getElementById("nudgeBtn");
     if (nb) nb.onclick = () => { justPickedWeek = null; nudge(st.complete ? null : st.onClock, week, st); renderDraft(); };
+    const pc = document.getElementById("proxyCancel");
+    if (pc) pc.onclick = () => { window.HD_PROXY = null; renderDraft(); };
 
     // ----- Your picks -----
-    $("#draftTitle").innerHTML = `Your picks<small>${need ? (myTurn ? "Your turn" : "Waiting for your turn") : "Both picks in"}</small>`;
+    $("#draftTitle").innerHTML = `${proxy ? `${who}'s picks` : "Your picks"}<small>${need ? (myTurn ? (proxy ? "Their turn" : "Your turn") : "Waiting for your turn") : "Both picks in"}</small>`;
     fillSlot($("#slotHot"), mine.hot, "Hot", "Pick a top 10");
     fillSlot($("#slotDawg"), mine.dawg, "Dawg", "Pick a field golfer");
+
+    // ----- Queue (your own, not in commissioner mode) -----
+    const listCard = $("#golferList").closest(".card");
+    if (!proxy) renderQueue(week, st, listCard);
+    else { const qc = document.getElementById("queueCard"); if (qc) qc.hidden = true; }
 
     // ----- Golfer list -----
     if (myTurn && (need === "hot" || need === "dawg") && filter !== need) {
       filter = need;
       document.querySelectorAll(".chip[data-filter]").forEach(x => x.classList.toggle("on", x.dataset.filter === need));
     }
-    const taken = claimedMap(week);
+    const owners = {};
+    C.entriesOf(weekOf(week).picks).forEach(e => owners[C.compactKey(e.name)] = e.who);
+    const queued = queueOf(week, me).map(C.compactKey);
     const list = $("#golferList");
     const t = currentTourney();
-    list.innerHTML = (fieldIsLive() ? "" : `<p class="hint" style="background:var(--cream);border:2px dashed var(--bun);border-radius:10px;padding:8px">⏳ ESPN hasn't posted the ${t ? t.name : "tournament"} field yet, so this is the world top 200. Some of them may not be playing.</p>`)
-      + (myTurn
-      ? `<p class="hint">Tap a golfer to draft them.</p>`
-      : `<p class="hint">${need ? `Browse while you wait. You can pick when it's your turn.` : "You're done this week. Browse the field below."}</p>`);
+    const hasOdds = golfers.some(g => g.odds);
+    list.innerHTML = (fieldIsLive() ? "" : `<p class="hint" style="background:var(--cream);border:2px dashed var(--bun);border-radius:10px;padding:8px">⏳ The ${t ? splitName(t.name).main : "tournament"} field isn't posted yet, so this is the world top 200. Some of them may not be playing.</p>`)
+      + `<p class="hint">${myTurn ? `Tap a golfer to draft ${proxy ? "for " + who : "them"}.` : need ? "Browse and star golfers for your queue. You can pick when it's your turn." : "You're done this week. Browse the field below."}${hasOdds ? " Odds to win are in teal." : ""}</p>`;
     golfers.filter(g => (filter === "hot") === g.hot).forEach(g => {
-      const owner = taken[g.name];
+      const key = C.compactKey(g.name);
+      const owner = owners[key];
       const isMine = mine.hot === g.name || mine.dawg === g.name;
+      const qi = queued.indexOf(key);
       const el = document.createElement("div");
-      el.className = "golfer" + (isMine ? " selected" : "") + (owner && owner !== me ? " taken" : "");
-      el.innerHTML = `<div><div>${g.name}</div><div class="rank">${g.rank < 999 ? "World #" + g.rank : "Unranked"}</div></div>`
-        + (owner ? `<span class="owner">${owner === me ? "You ✓" : owner}</span>` : "");
+      el.className = "golfer" + (isMine ? " selected" : "") + (owner && owner !== who ? " taken" : "");
+      el.innerHTML = `<div><div>${g.name}</div><div class="rank">${g.rank < 999 ? "World #" + g.rank : "Unranked"}${g.odds ? ` · <span class="hd-odds">${g.odds}</span>` : ""}</div></div>
+        <div style="display:flex;gap:6px;align-items:center">
+          ${owner ? `<span class="owner">${owner === me ? "You ✓" : owner}</span>`
+            : !proxy && C.needOf((weekOf(week).picks || {})[me]) ? `<button class="hd-qbtn ${qi >= 0 ? "on" : ""}" data-q="1">${qi >= 0 ? `★ #${qi + 1}` : "☆"}</button>` : ""}
+        </div>`;
+      const qb = el.querySelector("[data-q]");
+      if (qb) qb.onclick = (e) => { e.stopPropagation(); toggleQueue(week, g.name); };
       el.onclick = () => {
-        if (owner) { if (owner !== me) toast(`${g.name} is already taken by ${owner}`); return; }
+        if (owner) { if (owner !== who) toast(`${g.name} is already taken by ${owner}`); return; }
+        if (!open) { toast("The draft opens when the field is posted. Star golfers for your queue in the meantime."); return; }
         if (!myTurn) { toast(st.complete ? "The draft is done for this week." : `Not your turn yet. ${st.onClock} is on the clock.`); return; }
         const kind = g.hot ? "hot" : "dawg";
-        if (mine[kind]) { toast(`You already have your ${kind}. Pick a ${kind === "hot" ? "dawg" : "hot"}.`); return; }
+        if (mine[kind]) { toast(`Already have a ${kind}. Pick a ${kind === "hot" ? "dawg" : "hot"}.`); return; }
         draftPick(g);
       };
       list.appendChild(el);
     });
 
-    // Picks save one at a time now, so the old two-pick button isn't needed
+    // Picks save one at a time, so the old two-pick button isn't needed
     $("#submitBtn").hidden = true;
+    if (open && !st.complete) setTimeout(() => autoPickIfDue(false), 0);
   };
 
   // ----- Payout alert when the tournament ends -----
-  // Adds a box to the top of the tournament card once ESPN marks the event final.
   const baseTourney = renderTourney;
   renderTourney = function () {
     baseTourney();
@@ -253,7 +364,7 @@
 
     if (!s || !s.winner) {
       box.innerHTML = `<div style="font-size:18px;font-weight:900">🏁 Tournament's final!</div>
-        <p class="hint" style="margin:4px 0 0">Payouts aren't set yet. Fill in the results and calculate the winner.</p>
+        <p class="hint" style="margin:4px 0 0">Working out payouts…</p>
         <button class="btn" id="goPayBtn">Go to Payments</button>`;
       el.insertBefore(box, el.firstChild);
       document.getElementById("goPayBtn").onclick = () => { goToTab("payments"); renderActive(); };
@@ -266,7 +377,7 @@
     const owing = payers.filter(p => !paid[p]);
     box.innerHTML = owing.length
       ? `<div style="font-size:18px;font-weight:900">🏁 ${s.winner} wins ${money(per * payers.length)}!</div>
-         <p class="hint" style="margin:4px 0 0">${owing.length} still owe ${money(per)} each: ${owing.join(", ")}.</p>
+         <p class="hint" style="margin:4px 0 0">${s.auto ? "Settled automatically. " : ""}${owing.length} still owe ${money(per)} each: ${owing.join(", ")}.</p>
          <button class="btn" id="payTextBtn">Text payouts to the group 💬</button>`
       : `<div style="font-size:18px;font-weight:900">🏁 ${s.winner} won ${money(per * payers.length)}. Everyone's paid 🎉</div>`;
     el.insertBefore(box, el.firstChild);
@@ -279,6 +390,5 @@
     };
   };
 
-  // Redraw with the new draft screen if the app has already started
   try { renderActive(); } catch (e) {}
 })();

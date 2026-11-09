@@ -48,17 +48,43 @@ let i = tournaments.findIndex(t => t.thisWeek);
 if (i < 0) i = tournaments.findIndex(t => t.start >= today);
 const targets = tournaments.slice(Math.max(i, 0), Math.max(i, 0) + 2);
 
+// Odds to win, when the PGA Tour has posted them (usually a few days before the event).
+// Field names vary, so this reads them defensively and skips anything it doesn't recognize.
+function oddsMap(data) {
+  const out = new Map();
+  const rows = data && (data.players || data.odds || (data.oddsToWin && data.oddsToWin.players)) || [];
+  for (const r of Array.isArray(rows) ? rows : []) {
+    const p = r.player || r;
+    const nm = `${p.firstName || ""} ${p.lastName || ""}`.trim() || p.displayName || p.playerName || p.name || "";
+    let o = r.odds ?? r.oddsToWin ?? r.currentOdds ?? r.oddsValue ?? r.value;
+    if (o && typeof o === "object") o = o.odds ?? o.value ?? o.displayOdds;
+    if (typeof o === "number") o = (o > 0 ? "+" : "") + o;
+    if (nm && typeof o === "string" && /^[+-]?\d+(\/\d+)?$/.test(o.trim())) out.set(nm.toLowerCase(), o.trim());
+  }
+  return out;
+}
+async function oddsFor(t, get) {
+  let m = oddsMap(get("oddsToWin"));
+  if (m.size) return m;
+  try { m = oddsMap((await pageData(`/tournaments/${t.start.slice(0, 4)}/x/${t.id}/odds`))("oddsToWin")); } catch (e) { m = new Map(); }
+  return m;
+}
+
 const events = [];
 for (const t of targets) {
   try {
-    const field = (await pageData(`/tournaments/${t.start.slice(0, 4)}/x/${t.id}/field`))("field");
+    const get = await pageData(`/tournaments/${t.start.slice(0, 4)}/x/${t.id}/field`);
+    const field = get("field");
     const players = (field && field.players) || [];
     const name = (p) => `${p.firstName || ""} ${p.lastName || ""}`.trim() || p.displayName || "";
     const rank = (p) => { const n = parseInt(p.owgr, 10); return Number.isFinite(n) ? n : null; };
     const inField = players.filter(p => !p.withdrawn && !p.alternate).map(p => ({ name: name(p), owgr: rank(p) })).filter(p => p.name);
     const alternates = players.filter(p => !p.withdrawn && p.alternate).map(p => ({ name: name(p), owgr: rank(p) })).filter(p => p.name);
+    let odds = new Map();
+    try { odds = await oddsFor(t, get); } catch (e) { console.log(`odds: ${e.message}`); }
+    for (const p of inField.concat(alternates)) { const o = odds.get(p.name.toLowerCase()); if (o) p.odds = o; }
     events.push({ pgaTourId: t.id, name: t.name, start: t.start, updated: field && field.lastUpdated ? new Date(field.lastUpdated).toISOString() : null, players: inField, alternates });
-    console.log(`${t.name} (${t.start}): ${inField.length} in the field, ${alternates.length} alternates`);
+    console.log(`${t.name} (${t.start}): ${inField.length} in the field, ${alternates.length} alternates, ${odds.size} odds`);
   } catch (e) {
     console.log(`${t.name} (${t.start}): field not available (${e.message})`);
     events.push({ pgaTourId: t.id, name: t.name, start: t.start, updated: null, players: [], alternates: [] });

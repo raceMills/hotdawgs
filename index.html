@@ -55,6 +55,9 @@
   nav button.active { background: var(--red); color: #fff; }
   section { display: none; }
   section.active { display: block; animation: slideUp .35s ease-out; }
+  /* Nothing but the login form until you're in */
+  body:has(#gate:not([hidden])) .hd-tabbar, body:has(#gate:not([hidden])) .hd-coachbtn,
+  body:has(#gate:not([hidden])) .hd-coach, body:has(#gate:not([hidden])) .hd-tip { display: none !important; }
   .card {
     background: var(--paper); border: 3px solid var(--shadow); border-radius: var(--radius);
     padding: 16px; margin-bottom: 16px; box-shadow: 5px 5px 0 var(--shadow); position: relative; overflow: hidden;
@@ -159,12 +162,22 @@
 <body>
 
 <!-- Password gate -->
-<div id="gate" class="card" hidden style="margin-top:40px">
-  <h2>Enter the pool password</h2>
-  <p class="hint">Ask the pool organizer for the password.</p>
-  <div class="field"><input type="password" id="passIn" placeholder="Password" autocomplete="off"></div>
-  <button class="btn" id="passBtn">Enter</button>
-  <p class="hint" id="passMsg" style="color:var(--red);margin-top:8px"></p>
+<div id="gate" style="margin-top:28px">
+  <form id="loginForm" class="card" action="#" method="post" autocomplete="on" hidden>
+    <div style="text-align:center;font-size:44px;line-height:1">🌭</div>
+    <h2 id="gateTitle" style="text-align:center">Hotdawgs Golf Pool</h2>
+    <p class="hint" id="gateHint" style="text-align:center"></p>
+    <div class="field"><label for="loginName">Your name</label>
+      <input type="text" id="loginName" name="username" autocomplete="username" autocapitalize="words" spellcheck="false" placeholder="Tap your name below" required></div>
+    <div class="chips" id="nameChips"></div>
+    <div class="field"><label for="loginPass" id="pwLabel">Password</label>
+      <input type="password" id="loginPass" name="password" autocomplete="current-password" required></div>
+    <div class="field" id="pw2Field" hidden><label for="loginPass2">Type it again</label>
+      <input type="password" id="loginPass2" name="password2" autocomplete="new-password"></div>
+    <button class="btn" type="submit" id="loginBtn">Let's go 🌭</button>
+    <p class="hint" id="passMsg" style="color:var(--red);margin-top:8px;text-align:center"></p>
+  </form>
+  <p class="hint" id="gateLoading" style="text-align:center;margin-top:60px">Firing up the grill…</p>
 </div>
 
 <div id="appArea" hidden>
@@ -232,17 +245,10 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script>
-  // ===== SETUP: paste your three values here =====
-  const SUPABASE_URL = "https://ecvjuminsfjszwgzfqte.supabase.co";
-  const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVjdmp1bWluc2Zqc3p3Z3pmcXRlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM5NzA0NTAsImV4cCI6MjEwOTU0NjQ1MH0.iDyN7v21oFkEbJobjbr-u3WCpRO-tgJ7efkd0bBwtVE";
-  const POOL_PASSWORD = "Hotdawgs";
-  // ===============================================
-
-  // App version. Bump it on every release: the feature files are loaded with it, and
-  // open phones notice the new number and reload themselves.
-  const APP_VERSION = "2026-11-09.2";
+  // App version. Bump it on every release: files load with it, and open phones notice
+  // a new number and reload themselves.
+  const APP_VERSION = "2026-11-09.3";
   async function checkForUpdate() {
     try {
       const r = await fetch(location.pathname + "?check=" + Date.now(), { cache: "no-store" });
@@ -253,33 +259,22 @@
   checkForUpdate();
   setInterval(() => { if (!document.hidden) checkForUpdate(); }, 300000);
   document.addEventListener("visibilitychange", () => { if (!document.hidden) checkForUpdate(); });
+  // Pool rules shared with the background task
+  document.write(`<script src="core.js?v=${encodeURIComponent(APP_VERSION)}"><\/script>`);
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+  // ===== SETUP: paste your three values here =====
+  const SUPABASE_URL = "https://ecvjuminsfjszwgzfqte.supabase.co";
+  const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVjdmp1bWluc2Zqc3p3Z3pmcXRlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM5NzA0NTAsImV4cCI6MjEwOTU0NjQ1MH0.iDyN7v21oFkEbJobjbr-u3WCpRO-tgJ7efkd0bBwtVE";
+  const POOL_PASSWORD = "Hotdawgs";
+  // ===============================================
 
   const $ = (s) => document.querySelector(s);
   const MEMBERS = ["Jacob", "Michael", "Pat", "Ryan", "Zach", "Race"];
   const OTHERS = MEMBERS.length - 1;
 
-  const RULES = {
-    weekly: [
-      { id: "hotTourney", label: "Hot tourney winner", amount: 10 },
-      { id: "dawgTourney", label: "Dawg tourney winner", amount: 15 },
-      { id: "hotGroup", label: "Hot group winner", amount: 5 },
-      { id: "dawgGroup", label: "Dawg group winner", amount: 10 },
-      { id: "top2None", label: "Top two in group, no winner", amount: 15 },
-      { id: "top2Hot", label: "Top two in group and hot wins", amount: 20 },
-      { id: "top2Dawg", label: "Top two in group and dawg wins", amount: 25 },
-      { id: "trueTop2", label: "True top 2, either order", amount: 30 }
-    ],
-    majors: [
-      { id: "mHotLeader", label: "Hot group leader", amount: 15 },
-      { id: "mDawgLeader", label: "Dawg group leader", amount: 20 },
-      { id: "mHotWin", label: "Hot tourney winner", amount: 25 },
-      { id: "mDawgWin", label: "Dawg winner", amount: 30 },
-      { id: "mTop2None", label: "Top two, no winner", amount: 25 },
-      { id: "mTop2Hot", label: "Top two and hot wins", amount: 30 },
-      { id: "mTop2Dawg", label: "Top two and dawg wins", amount: 35 },
-      { id: "mTrueTop2", label: "True top 2", amount: 40 }
-    ]
-  };
+  const RULES = HDCore.RULES;
 
   const DEFAULT_FIELD_TEXT = "Scottie Scheffler, 1\nRory McIlroy, 2\nMatt Fitzpatrick, 3\nCameron Young, 4\nWyndham Clark, 5\nChris Gotterup, 6\nXander Schauffele, 7\nTommy Fleetwood, 8\nSam Burns, 9\nRussell Henley, 10\nCollin Morikawa, 11\nJ.J. Spaun, 12\nViktor Hovland, 13\nSi Woo Kim, 14\nJon Rahm, 15\nJacob Bridgeman, 16\nAaron Rai, 17\nMichael Brennan, 18\nRobert MacIntyre, 19\nLudvig Åberg, 20\nJustin Rose, 21\nRyan Fox, 22\nRyan Gerard, 23\nAlex Noren, 24\nBen Griffin, 25";
   function parseField(text) {
@@ -501,33 +496,11 @@
     return out;
   }
   function derive(w) {
-    const doc = weekOf(w), fin = doc.finishes || {}, entries = entriesFor(w);
+    const doc = weekOf(w);
     const rankOf = (n) => (golfers.find(g => g.name === n) || { rank: 999 }).rank;
-    const posOf = (n) => (fin[n] != null ? Number(fin[n]) : 999);
-    const group = (k) => entries.filter(e => !k || e.kind === k)
-      .sort((a, b) => posOf(a.name) - posOf(b.name) || rankOf(b.name) - rankOf(a.name));
-    const W = doc.resultWinner, R = doc.resultRunner;
-    const hits = {};
-    const add = (who, id) => { (hits[who] ||= []).push(id); };
-    const all = group(null);
-    const we = entries.find(e => e.name === W);
-    if (we) add(we.who, we.kind === "hot" ? "hotTourney" : "dawgTourney");
-    if (all[0] && posOf(all[0].name) < 999 && all[0].name !== W) add(all[0].who, all[0].kind === "hot" ? "hotGroup" : "dawgGroup");
-    const t2 = [W, R].map(n => entries.find(e => e.name === n)).filter(Boolean);
-    const t2Owners = [...new Set(t2.map(e => e.who))];
-    const flags = [];
-    if (t2.length === 2 && t2Owners.length === 1) hits[t2Owners[0]] = ["trueTop2"];
-    if (t2.length === 2 && t2Owners.length === 2) flags.push("The two top finishers were picked by different members, so set the true top 2 payout by hand.");
-    if (all.length > 1 && all[0].who === all[1].who && posOf(all[1].name) < 999 && !all.some(e => e.name === W)) {
-      hits[all[0].who] = [all[0].kind === "hot" ? "top2Hot" : "top2Dawg"];
-      flags.push("Top two payout set by the top pick's type. If the top two are a hot and a dawg, confirm the amount.");
-    }
-    const totals = Object.entries(hits)
-      .map(([who, ids]) => ({ who, ids, total: ids.reduce((s, id) => s + amountOf(id), 0) }))
-      .sort((a, b) => b.total - a.total);
-    flags.push("Top two in group payouts ($15, $20, $25) are not auto-detected. Check them by hand.");
-    if (totals.length > 1) flags.push("More than one member triggered a payout. Confirm the winner.");
-    return { totals, winner: totals[0] ? totals[0].who : "", rules: totals[0] ? totals[0].ids : [], flags, week: w };
+    const t = weekTourney(w) || currentTourney();
+    const r = HDCore.computeWeek(entriesFor(w), doc.finishes, doc.resultWinner, doc.resultRunner, rankOf, config.amounts, t && t.name);
+    return Object.assign(r, { week: w });
   }
   function calcHtml(w) {
     if (!calcResult || calcResult.week !== w) return "";
@@ -673,7 +646,7 @@
     const calc = $("#calcBtn");
     if (calc) calc.onclick = () => {
       calcResult = derive(w);
-      settleDraft = { winner: calcResult.winner, kind: "weekly", rules: calcResult.rules };
+      settleDraft = { winner: calcResult.winner, kind: calcResult.kind || "weekly", rules: calcResult.rules };
       settleKey = w;
       renderPayments();
     };
@@ -747,8 +720,9 @@
     const myPicked = !!(me && (weekOf(currentWeek()).picks || {})[me] && weekOf(currentWeek()).picks[me].hot && weekOf(currentWeek()).picks[me].dawg);
     wrap.innerHTML = `
       <div class="card">
-        <h2>Who are you?</h2>
-        <div class="chips">${MEMBERS.map(m => `<button class="chip ${m === me ? "on" : ""}" data-me="${m}">${m}</button>`).join("")}</div>
+        <h2>Signed in as ${me}</h2>
+        <p class="hint">Your password is saved on this phone. Logging out means typing it again (or letting Keychain fill it in).</p>
+        <button class="btn ghost" id="logOutBtn">Log out</button>
       </div>
       ${me ? `
       <div class="card">
@@ -798,11 +772,7 @@
         <div class="field"><label>Rankings updated (optional)</label><input type="text" id="rkIn" value="${config.rankingsDate || ""}" placeholder="e.g. Nov 6, 2026"></div>
         <button class="btn" id="saveTourney">Save tournament info</button>
       </div>`;
-    wrap.querySelectorAll("[data-me]").forEach(b => b.onclick = () => {
-      me = b.dataset.me;
-      try { localStorage.setItem("hotdawgs-me", me); } catch (e) {}
-      renderActive();
-    });
+    $("#logOutBtn").onclick = logOut;
     const save = $("#saveHandle");
     if (save) save.onclick = () => {
       const h = $("#handleIn").value.trim().replace(/^@/, "");
@@ -847,8 +817,8 @@
     $("#inviteBtn").onclick = async () => {
       const text = [
         "Join the Hotdawgs Golf Pool 🌭",
-        "1. Open the pool link and enter the pool password.",
-        "2. Pick your name under 'Who are you?'",
+        "1. Open the pool link (Safari, then Share > Add to Home Screen).",
+        "2. Tap your name and log in with the group password, then set your own password.",
         "3. Add your Venmo name (the part after venmo.com/).",
         "4. Make your weekly picks: one hot and one dawg."
       ].join("\n");
@@ -937,59 +907,8 @@
   // Turn one ESPN scoreboard response into { event, players, calendar }.
   // ESPN's scoreboard gives each golfer an order and round-by-round scores but no
   // printed position, so ties, missed cuts and holes played are worked out here.
-  const parsePar = (v) => { const s = String(v == null ? "" : v).trim(); if (!s || /^e$/i.test(s)) return 0; const n = parseInt(s.replace("+", ""), 10); return Number.isFinite(n) ? n : 0; };
   const todayIso = () => new Date().toISOString().slice(0, 10);
-  function parseScoreboard(data) {
-    const ev = (data.events || [])[0];
-    const comp = ev && (ev.competitions || [])[0];
-    const final = !!(ev && ev.status && ev.status.type && ev.status.type.completed);
-    const raw = ((comp && comp.competitors) || []).map((c, i) => {
-      const rounds = (c.linescores || []).filter(l => l.period >= 1 && l.period <= 4 && ((l.linescores || []).length || l.value != null));
-      const last = rounds[rounds.length - 1];
-      return {
-        name: (c.athlete && (c.athlete.displayName || c.athlete.fullName)) || "",
-        order: c.order || i + 1,
-        toPar: c.score && typeof c.score === "object" ? (c.score.displayValue || "") : String(c.score == null ? "" : c.score),
-        round: last ? last.period : 0,
-        holes: last ? (last.linescores || []).length : 0
-      };
-    }).filter(p => p.name).sort((x, y) => x.order - y.order);
-    const maxRound = raw.reduce((m, p) => Math.max(m, p.round), 0);
-    // Once round 3 starts, anyone who never started it missed the cut. Anyone who
-    // stopped short of 72 holes in a finished event withdrew.
-    const missedCut = (p) => maxRound >= 3 && p.round <= 2;
-    const withdrew = (p) => final && maxRound >= 4 && !missedCut(p) && (p.round < 4 || (p.holes > 0 && p.holes < 18));
-    const inPlay = raw.filter(p => !missedCut(p) && !withdrew(p));
-    const score = (p) => parsePar(p.toPar);
-    const started = maxRound > 0;
-    const players = raw.map(p => {
-      if (missedCut(p) || withdrew(p)) return { name: p.name, pos: 999, posText: missedCut(p) ? "MC" : "WD", toPar: p.toPar, thru: "" };
-      if (!started) return { name: p.name, pos: p.order, posText: "—", toPar: "", thru: "" };
-      const s = score(p);
-      let pos = 1 + inPlay.filter(q => score(q) < s).length;
-      let tied = inPlay.filter(q => score(q) === s).length > 1;
-      // A finished event has one winner, even after a playoff
-      if (final && pos === 1) {
-        if (p === inPlay[0]) tied = false;
-        else { pos = 2; tied = inPlay.filter(q => q !== inPlay[0] && score(q) === s).length > 1; }
-      }
-      return { name: p.name, pos, posText: (tied ? "T" : "") + pos, toPar: p.toPar, thru: final ? "" : (p.holes >= 18 ? "F" : p.holes ? String(p.holes) : "") };
-    });
-    const cal = (((data.leagues || [])[0] || {}).calendar || []).map(e => ({
-      name: e.label || e.name || "", start: isoDay(e.startDate), end: isoDay(e.endDate), where: ""
-    })).filter(e => e.name);
-    const espnStatus = (ev && ev.status && ev.status.type && (ev.status.type.shortDetail || ev.status.type.detail)) || "";
-    const event = ev ? {
-      name: ev.name || ev.shortName || "",
-      start: isoDay(ev.date),
-      end: isoDay(ev.endDate),
-      where: (comp && comp.venue && comp.venue.fullName) || "",
-      round: final ? 4 : maxRound,
-      status: final ? "Final" : started ? (/round/i.test(espnStatus) ? espnStatus : `Round ${maxRound} · in progress`) : (ev.date ? `Starts ${fmtDate(isoDay(ev.date))}` : ""),
-      final
-    } : null;
-    return { event, players, calendar: cal };
-  }
+  const parseScoreboard = HDCore.parseScoreboard;
   async function getBoard(query) {
     const res = await fetch(LIVE_URL + (query || ""), { cache: "no-store" });
     if (!res.ok) throw new Error("HTTP " + res.status);
@@ -1016,17 +935,7 @@
   }
   // When two sites spell a drafted golfer differently ("Min Woo Lee" vs "Min-Woo Lee"),
   // rename the leaderboard entry to the exact name the pool drafted
-  function matchPickNames(players, picked) {
-    const key = (n) => nameKey(n).replace(/ /g, "");
-    const lastInitial = (n) => { const p = nameKey(n).split(" "); return p[p.length - 1] + "|" + (p[0] || "").charAt(0); };
-    for (const name of picked) {
-      if (!name || players.some(p => p.name === name)) continue;
-      let hit = players.find(p => key(p.name) === key(name));
-      if (!hit) { const c = players.filter(p => lastInitial(p.name) === lastInitial(name)); if (c.length === 1) hit = c[0]; }
-      if (hit) hit.name = name;
-    }
-    return players;
-  }
+  const matchPickNames = HDCore.matchPickNames;
 
   let dataReady = false; // true once the pool's weeks have loaded
   async function fetchLive() {
@@ -1056,12 +965,13 @@
       }
       // ESPN hasn't posted the field yet: use the PGA Tour's, saved by the field task
       let fieldSource = board.players.length ? "ESPN" : "";
-      if (!board.players.length && board.event) {
-        const saved = await savedField(board.event.start);
-        if (saved) {
-          board.players = saved.players.map((p, i) => ({ name: p.name, owgr: p.owgr, pos: i + 1, posText: "—", toPar: "", thru: "" }));
-          fieldSource = "PGA Tour";
-        }
+      const saved = board.event ? await savedField(board.event.start) : null;
+      if (!board.players.length && saved) {
+        board.players = saved.players.map((p, i) => ({ name: p.name, owgr: p.owgr, odds: p.odds || "", pos: i + 1, posText: "—", toPar: "", thru: "" }));
+        fieldSource = "PGA Tour";
+      } else if (saved) {
+        const odds = new Map(saved.players.filter(p => p.odds).map(p => [HDCore.compactKey(p.name), p.odds]));
+        board.players.forEach(p => { const o = odds.get(HDCore.compactKey(p.name)); if (o) p.odds = o; });
       }
       if (dataReady) matchPickNames(board.players, entriesFor(currentWeek()).map(e => e.name));
       live = { ok: true, loading: false, error: "", players: board.players, calendar: board.calendar, fetchedAt: new Date(), event: board.event, fieldSource };
@@ -1072,6 +982,31 @@
     }
     rebuildGolfers();
     renderActive();
+    autoSettle();
+  }
+  // When a week's tournament is final, work out the winner and payouts automatically.
+  // Any open phone does this; the background task does it too.
+  let settling = false;
+  async function autoSettle() {
+    if (!dataReady || settling) return;
+    settling = true;
+    try {
+      for (const w of [currentWeek(), currentWeek() - 1]) {
+        if (w < 1) continue;
+        const doc = weekOf(w);
+        if ((doc.settle && doc.settle.winner) || !HDCore.entriesOf(doc.picks).length) continue;
+        const pin = weekTourney(w);
+        let board = null;
+        if (w === currentWeek() && live.event && (!pin || live.event.start === pin.start)) board = { event: live.event, players: live.players.map(p => Object.assign({}, p)) };
+        else if (pin) { try { board = await getBoard("?dates=" + espnDate(pin.start)); } catch (e) { board = null; } }
+        if (!board || !board.event || !board.event.final || live.fieldSource === "PGA Tour" && w === currentWeek()) continue;
+        await loadWeek(w);
+        if (weekOf(w).settle && weekOf(w).settle.winner) continue;
+        const rankOf = rankLookup(rankingsFile ? rankingsFile.players : parseFieldAny(config.fieldText));
+        const patch = HDCore.settlePatch(weekOf(w), board, rankOf, config.amounts, Date.now());
+        if (patch) { await write("week", w, patch); toast(`🏁 Week ${w} is final. ${patch.settle.winner} wins!`); }
+      }
+    } finally { settling = false; }
   }
   const livePlayer = (name) => live.players.find(p => norm(p.name) === norm(name));
 
@@ -1092,16 +1027,7 @@
 
   // ---------- Name matching between ESPN and the world rankings ----------
   // Handles accents, "Last, First" order, hyphens, initials (J.J.), and Jr./III.
-  function nameKey(s) {
-    let n = (s || "").trim();
-    if (n.includes(",")) {
-      const [last, ...rest] = n.split(",").map(x => x.trim());
-      if (rest.length && rest.join(" ")) n = rest.join(" ") + " " + last;
-    }
-    return n.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase()
-      .replace(/[-]/g, " ").replace(/[.']/g, "").replace(/[^a-z ]/g, "")
-      .replace(/\b(jr|sr|ii|iii|iv)\b/g, "").replace(/\s+/g, " ").trim();
-  }
+  const nameKey = HDCore.nameKey;
   // "Scheffler, Scottie" -> "Scottie Scheffler" for display
   function displayName(s) {
     const n = (s || "").trim();
@@ -1109,27 +1035,7 @@
     const [last, ...rest] = n.split(",").map(x => x.trim());
     return rest.join(" ") ? `${rest.join(" ")} ${last}` : last;
   }
-  function rankLookup(ranked) {
-    const byFull = new Map(), byLastInitial = new Map();
-    for (const p of ranked) {
-      const k = nameKey(p.name);
-      if (!k) continue;
-      const full = k.replace(/ /g, "");
-      if (!byFull.has(full)) byFull.set(full, p.rank);
-      const parts = k.split(" ");
-      const li = parts[parts.length - 1] + "|" + parts[0][0];
-      byLastInitial.set(li, byLastInitial.has(li) ? -1 : p.rank); // -1 = two players share it
-    }
-    return (name) => {
-      const k = nameKey(name);
-      if (!k) return 999;
-      const full = k.replace(/ /g, "");
-      if (byFull.has(full)) return byFull.get(full);
-      const parts = k.split(" ");
-      const r = byLastInitial.get(parts[parts.length - 1] + "|" + parts[0][0]);
-      return r && r > 0 ? r : 999;
-    };
-  }
+  const rankLookup = HDCore.rankLookup;
 
   // Backup list: accepts "12, Scottie Scheffler" or "Scottie Scheffler, 12"
   function parseFieldAny(text) {
@@ -1149,13 +1055,11 @@
     const ranked = rankingsFile
       ? rankingsFile.players.map(p => ({ name: p.name, rank: p.rank }))
       : parseFieldAny(config.fieldText);
-    const rankOfName = rankLookup(ranked);
     const field = (typeof live !== "undefined" && live.players && live.players.length)
-      ? live.players.map(p => { const r = rankOfName(p.name); return { name: p.name, rank: r < 999 ? r : (p.owgr || 999) }; })
-      : ranked.slice(0, 200).map(p => ({ name: displayName(p.name), rank: p.rank }));
-    field.sort((a, b) => a.rank - b.rank || a.name.localeCompare(b.name));
+      ? HDCore.buildField(live.players, rankLookup(ranked))
+      : ranked.slice(0, 200).map((p, i) => ({ name: displayName(p.name), rank: p.rank, odds: "", hot: i < 10 }));
     matchStats = { matched: field.filter(g => g.rank < 999).length, total: field.length };
-    golfers = field.map((g, i) => ({ name: g.name, rank: g.rank, hot: i < 10 && g.rank < 999 }));
+    golfers = field;
   }
   const fieldIsLive = () => live.players.length > 0;
   // The tournament a newly started week should be pinned to: the next event after
@@ -1306,25 +1210,122 @@
     renderTourney();
   }
 
+  // ---------- Log in ----------
+  // First time: your name + the group password, then you set your own password.
+  // After that: your name + your password. The form is a real username/password
+  // form, so iPhone Keychain offers to save it and fills it in next time.
+  // Passwords are stored as salted PBKDF2 hashes in the pool database.
+  const SESSION = "hotdawgs-session";
+  const getSession = () => { try { return JSON.parse(localStorage.getItem(SESSION)); } catch (e) { return null; } };
+  const authOf = (name) => (config.auth || {})[name] || null;
+  async function hashPass(pass, salt) {
+    const enc = new TextEncoder();
+    const key = await crypto.subtle.importKey("raw", enc.encode(pass), "PBKDF2", false, ["deriveBits"]);
+    const bits = await crypto.subtle.deriveBits({ name: "PBKDF2", salt: enc.encode(salt), iterations: 150000, hash: "SHA-256" }, key, 256);
+    return [...new Uint8Array(bits)].map(x => x.toString(16).padStart(2, "0")).join("");
+  }
+  function sessionValid() {
+    const ses = getSession();
+    if (!ses || !MEMBERS.includes(ses.name)) return false;
+    if (!dataReady) return true; // offline: trust this phone
+    const a = authOf(ses.name);
+    return !!(a && a.hash && a.hash.slice(0, 16) === ses.v);
+  }
+  let gateMode = "login", gateName = "";
+  function showGate(mode, name, note) {
+    gateMode = mode; gateName = name || gateName;
+    $("#gateLoading").hidden = true;
+    $("#appArea").hidden = true;
+    $("#gate").hidden = false;
+    const f = $("#loginForm");
+    f.hidden = false;
+    const setting = mode === "set";
+    $("#gateTitle").textContent = setting ? `Set your password, ${gateName}` : "Hotdawgs Golf Pool";
+    $("#gateHint").textContent = note || (setting
+      ? "Pick a password just for you. Your phone will offer to save it. Don't reuse an important one."
+      : "First time? Use the group password, then you'll set your own.");
+    $("#loginName").value = gateName;
+    $("#loginName").readOnly = setting;
+    $("#nameChips").hidden = setting;
+    $("#nameChips").innerHTML = MEMBERS.map(m => `<button type="button" class="chip ${m === gateName ? "on" : ""}" data-gn="${m}">${m}</button>`).join("");
+    $("#nameChips").querySelectorAll("[data-gn]").forEach(b => b.onclick = () => { gateName = b.dataset.gn; showGate("login", gateName); $("#loginPass").focus(); });
+    $("#pwLabel").textContent = setting ? "New password" : "Password";
+    $("#loginPass").value = "";
+    $("#loginPass").setAttribute("autocomplete", setting ? "new-password" : "current-password");
+    $("#pw2Field").hidden = !setting;
+    $("#loginPass2").value = "";
+    $("#loginBtn").textContent = setting ? "Save my password 🌭" : "Let's go 🌭";
+    $("#passMsg").textContent = "";
+  }
+  async function onLogin(e) {
+    e.preventDefault();
+    const typed = $("#loginName").value.trim();
+    const name = MEMBERS.find(m => m.toLowerCase() === typed.toLowerCase());
+    const pass = $("#loginPass").value;
+    const msg = (t) => { $("#passMsg").textContent = t; };
+    if (!name) return msg("That name isn't in the pool. Tap your name above.");
+    if (!pass) return msg("Enter a password.");
+    gateName = name;
+    $("#loginBtn").disabled = true;
+    try {
+      if (gateMode === "set") {
+        if (pass.length < 4) return msg("Make it at least 4 characters.");
+        if (pass !== $("#loginPass2").value) return msg("Those passwords don't match.");
+        if (pass === POOL_PASSWORD) return msg("Pick something other than the group password.");
+        const salt = [...crypto.getRandomValues(new Uint8Array(16))].map(x => x.toString(16).padStart(2, "0")).join("");
+        const hash = await hashPass(pass, salt);
+        await write("config", 0, { auth: { [name]: { salt, hash, set: Date.now() } } });
+        return finishLogin(name, hash);
+      }
+      await loadAll(); // latest passwords
+      const a = authOf(name);
+      if (a && a.hash) {
+        if (await hashPass(pass, a.salt) === a.hash) return finishLogin(name, a.hash);
+        return msg(pass === POOL_PASSWORD ? "You've set your own password. Use that, or ask the commissioner to reset it." : pickJoke(JOKES.wrongPass));
+      }
+      if (pass === POOL_PASSWORD) return showGate("set", name);
+      return msg(pickJoke(JOKES.wrongPass));
+    } finally { $("#loginBtn").disabled = false; }
+  }
+  function finishLogin(name, hash) {
+    try {
+      localStorage.setItem(SESSION, JSON.stringify({ name, v: hash.slice(0, 16) }));
+      localStorage.setItem("hotdawgs-me", name);
+      localStorage.removeItem("hotdawgs-pass");
+    } catch (e) {}
+    me = name;
+    // Removing the submitted form is the signal Keychain uses to offer saving the password
+    const f = $("#loginForm");
+    setTimeout(() => { f.remove(); $("#gate").hidden = true; }, 50);
+    enterApp(true);
+  }
+  function logOut() {
+    try { localStorage.removeItem(SESSION); } catch (e) {}
+    location.replace(location.pathname);
+  }
+
   // ---------- Start ----------
   function showApp() {
     $("#gate").hidden = true;
     $("#appArea").hidden = false;
   }
-  async function start() {
-    if (localStorage.getItem("hotdawgs-pass") !== POOL_PASSWORD) {
-      $("#gate").hidden = false;
-      $("#appArea").hidden = true;
-      return;
-    }
+  let liveTimers = false;
+  function enterApp(justLoggedIn) {
     showApp();
-    if (SUPABASE_URL.startsWith("PASTE")) {
-      $("#subline").textContent = "Setup needed: add your keys to index.html";
-      renderActive();
-      return;
-    }
-    sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     renderActive();
+    if (!liveTimers) {
+      liveTimers = true;
+      // Live scores: load now, then every 2 minutes while the app is open
+      fetchLive();
+      setInterval(() => { if (!document.hidden) fetchLive(); }, 120000);
+      document.addEventListener("visibilitychange", () => { if (!document.hidden) fetchLive(); });
+    }
+    if (justLoggedIn && window.HD && HD.eggBeer) HD.eggBeer(me);
+  }
+  async function start() {
+    $("#loginForm").addEventListener("submit", onLogin);
+    if (SUPABASE_URL.startsWith("PASTE")) { $("#gateLoading").textContent = "Setup needed: add your keys to index.html"; return; }
+    sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     loadRankings();
     try {
       await loadAll();
@@ -1333,22 +1334,17 @@
     } catch (e) {
       toast("Couldn't connect. Check your internet and reload.");
     }
-    renderActive();
-    // Live scores: load now, then every 2 minutes while the app is open
-    fetchLive();
-    setInterval(() => { if (!document.hidden) fetchLive(); }, 120000);
-    document.addEventListener("visibilitychange", () => { if (!document.hidden) fetchLive(); });
+    if (sessionValid()) { me = getSession().name; return enterApp(false); }
+    // Members who joined before personal passwords: go straight to setting one
+    let legacy = false, savedName = null;
+    try { legacy = localStorage.getItem("hotdawgs-pass") === POOL_PASSWORD; savedName = localStorage.getItem("hotdawgs-me"); } catch (e) {}
+    if (legacy && MEMBERS.includes(savedName) && !authOf(savedName)) return showGate("set", savedName, "New: set your own password so nobody can pick as you. Your phone will remember it.");
+    const ses = getSession();
+    showGate("login", (ses && ses.name) || (MEMBERS.includes(savedName) ? savedName : ""),
+      ses ? "Your password was reset or changed. Log in again." : "");
   }
 
   // ---------- Events ----------
-  $("#passBtn").onclick = () => {
-    if ($("#passIn").value === POOL_PASSWORD) {
-      localStorage.setItem("hotdawgs-pass", POOL_PASSWORD);
-      start();
-    } else {
-      $("#passMsg").textContent = pickJoke(JOKES.wrongPass);
-    }
-  };
   document.querySelectorAll("nav button").forEach(btn => btn.onclick = () => {
     document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
     btn.classList.add("active");
@@ -1372,7 +1368,7 @@
 </script>
 <script>
   // Load the feature files in order, tagged with the app version so they're never stale
-  ["draft", "stats", "extras", "history", "home", "tips"].forEach(name => {
+  ["draft", "stats", "extras", "history", "home", "club", "egg", "tips"].forEach(name => {
     document.write(`<script src="${name}.js?v=${encodeURIComponent(APP_VERSION)}"><\/script>`);
   });
 </script>
