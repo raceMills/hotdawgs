@@ -5,7 +5,7 @@
       "pgaTourId": "R2026558",
       "name": "Austin Championship presented by Compliance Solutions",
       "start": "2026-11-12",
-      "updated": "2026-11-09T18:11:12.693Z",
+      "updated": "2026-11-10T00:06:12.891Z",
       "players": [
         {
           "name": "Zach Bauchou",
@@ -124,8 +124,16 @@
           "owgr": 126
         },
         {
+          "name": "Nick Hardy",
+          "owgr": 686
+        },
+        {
           "name": "Brian Harman",
           "owgr": 70
+        },
+        {
+          "name": "Frankie Harris",
+          "owgr": 309
         },
         {
           "name": "Joe Highsmith",
@@ -328,6 +336,10 @@
           "owgr": 132
         },
         {
+          "name": "Thomas Rosenmueller",
+          "owgr": 277
+        },
+        {
           "name": "Kevin Roy",
           "owgr": 122
         },
@@ -366,6 +378,10 @@
         {
           "name": "Neal Shipley",
           "owgr": 163
+        },
+        {
+          "name": "William Sides",
+          "owgr": 373
         },
         {
           "name": "David Skinns",
