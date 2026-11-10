@@ -586,7 +586,16 @@
           "network": "GOLF Channel",
           "url": "https://www.golfchannel.com/watch/live"
         }
-      ]
+      ],
+      "where": {
+        "city": "Austin",
+        "state": "Texas",
+        "country": "USA",
+        "course": "Fazio Canyons Course - Omni Barton Creek Resort & Spa",
+        "tz": "America/Chicago",
+        "lat": 30.26715,
+        "lon": -97.74306
+      }
     },
     {
       "pgaTourId": "R2026493",
@@ -692,7 +701,14 @@
           "network": "GOLF Channel",
           "url": "https://www.golfchannel.com/watch/live"
         }
-      ]
+      ],
+      "where": {
+        "city": "St. Simons Island",
+        "state": "Georgia",
+        "country": "USA",
+        "course": "Sea Island Golf Club (Seaside Course)",
+        "tz": "America/New_York"
+      }
     }
   ]
 }
