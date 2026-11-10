@@ -15,7 +15,9 @@ async function pageData(path) {
   const m = /<script id="__NEXT_DATA__" type="application\/json">([\s\S]*?)<\/script>/.exec(await r.text());
   if (!m) throw new Error(`${path}: no page data`);
   const queries = ((((JSON.parse(m[1]).props || {}).pageProps || {}).dehydratedState) || {}).queries || [];
-  return (name) => { const q = queries.find(x => Array.isArray(x.queryKey) && x.queryKey[0] === name); return q && q.state ? q.state.data : null; };
+  const get = (name) => { const q = queries.find(x => Array.isArray(x.queryKey) && x.queryKey[0] === name); return q && q.state ? q.state.data : null; };
+  get.all = queries;
+  return get;
 }
 
 // Every object in a tree that looks like a schedule entry
@@ -73,9 +75,34 @@ async function oddsFor(t, get) {
 // TV, streaming and radio windows from the tournament page ("broadcastCoverage")
 const KIND = { BroadcastFullTelecast: "TV", BroadcastFeaturedGroup: "Featured groups", BroadcastFeaturedHole: "Featured holes",
   BroadcastAudioStream: "Radio", BroadcastLiveStream: "Live stream" };
+// Where the tournament is (for the weather forecast): city from the tournament page,
+// coordinates from Open-Meteo's free geocoder
+function findById(o, id) {
+  if (!o || typeof o !== "object") return null;
+  if (!Array.isArray(o) && o.id === id && o.city) return o;
+  for (const v of Object.values(o)) { const f = findById(v, id); if (f) return f; }
+  return null;
+}
+async function placeFor(t, get) {
+  const info = findById(get.all, t.id);
+  if (!info) return null;
+  const course = ((info.courses || []).find(c => c.hostCourse) || (info.courses || [])[0] || {}).courseName || "";
+  const where = { city: info.city, state: info.state || "", country: info.country || "", course, tz: info.timezone || "" };
+  try {
+    const r = await fetch(`https://geocoding-api.open-meteo.com/v1/search?count=10&language=en&format=json&name=${encodeURIComponent(info.city)}`);
+    const hits = ((await r.json()).results || []);
+    const iso3 = { USA: "US", MEX: "MX", CAN: "CA", GBR: "GB", ENG: "GB", SCO: "GB", JPN: "JP", BHS: "BS", BER: "BM", PUR: "PR", DOM: "DO", KOR: "KR", AUS: "AU", ARE: "AE" }[info.country] || "";
+    const hit = hits.find(h => (!iso3 || h.country_code === iso3) && (!info.state || h.admin1 === info.state)) || hits.find(h => !iso3 || h.country_code === iso3) || hits[0];
+    if (hit) Object.assign(where, { lat: hit.latitude, lon: hit.longitude });
+  } catch (e) { console.log(`geocode: ${e.message}`); }
+  return where;
+}
+let lastPlace = null;
 async function watchFor(t) {
   try {
-    const cov = (await pageData(`/tournaments/${t.start.slice(0, 4)}/x/${t.id}`))("broadcastCoverage");
+    const get = await pageData(`/tournaments/${t.start.slice(0, 4)}/x/${t.id}`);
+    try { lastPlace = await placeFor(t, get); } catch (e) { lastPlace = null; }
+    const cov = get("broadcastCoverage");
     const list = (cov && (cov.coverageType || cov.coverage)) || [];
     const seen = new Set();
     return list.map(c => ({
@@ -92,6 +119,7 @@ async function watchFor(t) {
 const events = [];
 for (const t of targets) {
   const watch = await watchFor(t);
+  const where = lastPlace;
   try {
     const get = await pageData(`/tournaments/${t.start.slice(0, 4)}/x/${t.id}/field`);
     const field = get("field");
@@ -103,11 +131,11 @@ for (const t of targets) {
     let odds = new Map();
     try { odds = await oddsFor(t, get); } catch (e) { console.log(`odds: ${e.message}`); }
     for (const p of inField.concat(alternates)) { const o = odds.get(p.name.toLowerCase()); if (o) p.odds = o; }
-    events.push({ pgaTourId: t.id, name: t.name, start: t.start, updated: field && field.lastUpdated ? new Date(field.lastUpdated).toISOString() : null, players: inField, alternates, watch });
-    console.log(`${t.name} (${t.start}): ${inField.length} in the field, ${alternates.length} alternates, ${odds.size} odds, ${watch.length} TV/stream windows`);
+    events.push({ pgaTourId: t.id, name: t.name, start: t.start, updated: field && field.lastUpdated ? new Date(field.lastUpdated).toISOString() : null, players: inField, alternates, watch, where });
+    console.log(`${t.name} (${t.start}): ${inField.length} in the field, ${alternates.length} alternates, ${odds.size} odds, ${watch.length} TV/stream windows, ${where && where.lat ? `${where.city} ${where.lat},${where.lon}` : "no location"}`);
   } catch (e) {
     console.log(`${t.name} (${t.start}): field not available (${e.message})`);
-    events.push({ pgaTourId: t.id, name: t.name, start: t.start, updated: null, players: [], alternates: [], watch });
+    events.push({ pgaTourId: t.id, name: t.name, start: t.start, updated: null, players: [], alternates: [], watch, where });
   }
 }
 if (!events.some(e => e.players.length)) console.log("No fields posted yet for these events.");
