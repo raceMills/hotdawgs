@@ -700,7 +700,9 @@
   // falls back to the share sheet.
   function groupNumbers() {
     const ph = config.phones || {};
-    return MEMBERS.filter(m => m !== me && ph[m]).map(m => String(ph[m]).replace(/[^\d+]/g, "")).filter(n => n.length >= 10);
+    // Each is a phone number or an Apple ID email, whichever that person uses in the group chat
+    return MEMBERS.filter(m => m !== me && ph[m]).map(m => String(ph[m]).trim())
+      .map(v => v.includes("@") ? v : v.replace(/[^\d+]/g, "")).filter(v => v.includes("@") || v.length >= 10);
   }
   // A Ketchup Cam photo can ride along: texts can't carry pictures through a
   // pre-addressed link, so with a photo we use the share sheet (your group chat
@@ -1869,10 +1871,11 @@
   function phoneCard() {
     const ph = config.phones || {}, have = MEMBERS.filter(m => ph[m]), missing = MEMBERS.filter(m => !ph[m]);
     return `<div class="card" id="hdPhones"><h2>💬 Group texts</h2>
-      <p class="hint">Add your number so nudges and payout texts open Messages already addressed to the whole group. You just tap Send.</p>
-      <div class="field"><label for="myPhone">Your cell number</label>
-        <input type="tel" id="myPhone" autocomplete="tel" inputmode="tel" placeholder="(512) 555-0123" value="${esc(ph[me] || "")}"></div>
-      <button class="btn ghost" data-club="phone">Save my number</button>
+      <p class="hint">Add how you show up in the Hot Dawgs group chat so texts from the app open Messages already addressed to everyone. You just tap Send.</p>
+      <p class="hint"><b>Use exactly what the group chat shows for you</b>: your cell number, or your Apple ID email if that's what iMessage uses (check the chat's member list).</p>
+      <div class="field"><label for="myPhone">Your iMessage number or email</label>
+        <input type="text" id="myPhone" autocomplete="tel" inputmode="email" autocapitalize="off" spellcheck="false" placeholder="(512) 555-0123 or you@icloud.com" value="${esc(ph[me] || "")}"></div>
+      <button class="btn ghost" data-club="phone">Save</button>
       <p class="hint" style="margin-top:8px">${have.length}/${MEMBERS.length} added${missing.length ? `. Still need: ${missing.map(esc).join(", ")}` : ". Group texts go straight to everyone."}</p>
       <p class="hint" style="margin:0">Numbers are only used for group texts and are visible to pool members.</p></div>`;
   }
@@ -1934,8 +1937,9 @@
     if (what === "pushOff") return turnOff();
     if (what === "phone") {
       const raw = $("#myPhone").value.trim(), digits = raw.replace(/\D/g, "");
-      if (raw && digits.length < 10) return toast("That number looks short. Include the area code.");
-      const num = !raw ? null : digits.length === 10 ? "+1" + digits : "+" + digits;
+      const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(raw);
+      if (raw && !isEmail && digits.length < 10) return toast("Use your number with the area code, or your iMessage email.");
+      const num = !raw ? null : isEmail ? raw.toLowerCase() : digits.length === 10 ? "+1" + digits : "+" + digits;
       document.activeElement && document.activeElement.blur();
       await write("config", 0, { phones: { [me]: num } });
       return toast(num ? "📱 Saved. Group texts will go straight to everyone once they've all added theirs." : "Number removed.");

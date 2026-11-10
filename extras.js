@@ -71,7 +71,9 @@
   // falls back to the share sheet.
   function groupNumbers() {
     const ph = config.phones || {};
-    return MEMBERS.filter(m => m !== me && ph[m]).map(m => String(ph[m]).replace(/[^\d+]/g, "")).filter(n => n.length >= 10);
+    // Each is a phone number or an Apple ID email, whichever that person uses in the group chat
+    return MEMBERS.filter(m => m !== me && ph[m]).map(m => String(ph[m]).trim())
+      .map(v => v.includes("@") ? v : v.replace(/[^\d+]/g, "")).filter(v => v.includes("@") || v.length >= 10);
   }
   // A Ketchup Cam photo can ride along: texts can't carry pictures through a
   // pre-addressed link, so with a photo we use the share sheet (your group chat
