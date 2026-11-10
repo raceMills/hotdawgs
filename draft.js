@@ -26,6 +26,7 @@
     const ci = clock(week);
     if (weekOf(week).clockPaused) return "⏸ Pick clock paused by the commissioner";
     if (!ci) return config.autoPickHours === 0 ? "No pick clock this season" : "";
+    if (ci.waiting) return `⏱ No rush yet. The ${fmtLeft(ci.limitMs)} pick clock starts ${new Date(ci.startsAt).toLocaleString([], { weekday: "long", hour: "numeric", minute: "2-digit" }).replace(":00", "")}`;
     if (ci.quiet) return `🌙 Clock paused overnight · ${fmtLeft(ci.leftMs)} left after 7am`;
     return ci.due ? "⏱ Time's up. Auto-picking…" : `⏱ Auto-pick in ${fmtLeft(ci.leftMs)}`;
   }
@@ -77,7 +78,7 @@
     const ci = clock(week);
     const text = who === null
       ? `🌭 Week ${week} draft is done! Picks are in: ${appLink()}`
-      : `🌭 @${who} you're on the clock! Week ${week} draft, pick ${st.clock + 1} of ${st.total}.${ci && !ci.due ? ` Auto-pick in ${fmtLeft(ci.leftMs)}.` : ""} Make your pick: ${appLink()}`;
+      : `🌭 @${who} you're on the clock! Week ${week} draft, pick ${st.clock + 1} of ${st.total}.${ci && !ci.due && !ci.waiting ? ` Auto-pick in ${fmtLeft(ci.leftMs)}.` : ""} Make your pick: ${appLink()}`;
     if (navigator.share) {
       try { await navigator.share({ text }); return; } catch (e) { return; }
     }

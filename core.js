@@ -188,19 +188,36 @@
     while (t < endMs) { const step = Math.min(STEP, endMs - t); if (!quietAt(t)) total += step; t += step; }
     return total;
   }
-  // When the current pick's clock started: the last pick, or when the draft opened
+  // The pick clock never runs before 7am Central on the Wednesday of tournament week
+  // (the day before a Thursday start). Picks made earlier are just early birds.
+  function clockFloor(weekDoc) {
+    const start = weekDoc && weekDoc.tournament && weekDoc.tournament.start;
+    if (!start) return 0;
+    const d = new Date(start + "T00:00:00Z");
+    d.setUTCDate(d.getUTCDate() - 1);
+    for (const utcHour of [12, 13]) { // 7am Central is 12:00 UTC in summer, 13:00 in winter
+      const ms = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), utcHour);
+      if (chicagoHour(ms) === 7) return ms;
+    }
+    return 0;
+  }
+  // When the current pick's clock started: the last pick, when the draft opened,
+  // or Wednesday 7am, whichever is latest
   function clockStart(weekDoc) {
     const log = Object.values((weekDoc && weekDoc.pickLog) || {});
     const last = log.reduce((m, x) => Math.max(m, x && x.at ? x.at : 0), 0);
-    return Math.max(last, (weekDoc && weekDoc.draftOpenAt) || 0) || null;
+    const opened = Math.max(last, (weekDoc && weekDoc.draftOpenAt) || 0);
+    return opened ? Math.max(opened, clockFloor(weekDoc)) : null;
   }
   // { limitMs, leftMs, due } for the pick on the clock (null if the clock is off)
   function clockInfo(weekDoc, cfg, now) {
-    const hours = cfg && cfg.autoPickHours != null ? Number(cfg.autoPickHours) : 6;
+    const hours = cfg && cfg.autoPickHours != null ? Number(cfg.autoPickHours) : 4;
     const start = clockStart(weekDoc);
     if (!hours || !start || (weekDoc && weekDoc.clockPaused)) return null;
-    const limitMs = hours * 3600000, used = activeMs(start, now);
-    return { limitMs, usedMs: used, leftMs: Math.max(0, limitMs - used), due: used >= limitMs, quiet: quietAt(now) };
+    const limitMs = hours * 3600000;
+    if (now < start) return { limitMs, usedMs: 0, leftMs: limitMs, due: false, quiet: false, waiting: true, startsAt: start };
+    const used = activeMs(start, now);
+    return { limitMs, usedMs: used, leftMs: Math.max(0, limitMs - used), due: used >= limitMs, quiet: quietAt(now), startsAt: start };
   }
   // The golfer auto-pick takes: first available golfer from your queue that fills a
   // slot you still need; otherwise the best-ranked available golfer you can take
@@ -279,6 +296,6 @@
   }
 
   return { MEMBERS, RULES, amountFor, isMajor, nameKey, compactKey, rankLookup, matchPickNames, buildField,
-    parsePar, parseScoreboard, isoDay, draftOrder, draftState, needOf, activeMs, quietAt, clockStart, clockInfo,
+    parsePar, parseScoreboard, isoDay, draftOrder, draftState, needOf, activeMs, quietAt, clockFloor, clockStart, clockInfo,
     chooseAutoPick, pickPatch, computeWeek, entriesOf, settlePatch };
 });

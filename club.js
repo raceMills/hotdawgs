@@ -100,7 +100,7 @@
   function commishCard() {
     const w = currentWeek(), doc = weekOf(w), st = HD.draftState(w);
     const open = HD.draftOpen(w), lp = lastPick(w);
-    const hours = config.autoPickHours != null ? Number(config.autoPickHours) : 6;
+    const hours = config.autoPickHours != null ? Number(config.autoPickHours) : 4;
     const picks = doc.picks || {};
     const taken = new Set(C.entriesOf(picks).map(e => e.name));
     return `<div class="card" id="hdCommish">
@@ -109,7 +109,7 @@
 
       <div class="field"><label>Pick clock</label>
         <div class="chips">${[0, 2, 4, 6, 8, 12].map(h => `<button class="chip ${h === hours ? "on" : ""}" data-hours="${h}">${h ? h + "h" : "Off"}</button>`).join("")}</div>
-        <p class="hint">Time each person gets before auto-pick. The clock pauses 11pm–7am Central.</p></div>
+        <p class="hint">Time each person gets before auto-pick. The clock starts Wednesday 7am Central of tournament week and pauses 11pm–7am.</p></div>
 
       <div style="display:grid;gap:8px">
         ${!open && !st.complete ? `<button class="btn" data-club="forceOpen">🔓 Open the draft now</button>` : ""}
