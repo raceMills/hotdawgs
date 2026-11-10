@@ -357,7 +357,7 @@
     const n = wrap.querySelector("[data-nudge]");
     if (n) n.onclick = () => {
       const st = HD.draftState(w);
-      HD.shareText(`🌭 @${n.dataset.nudge} you're on the clock! Week ${wk(w)} draft, pick ${st.clock + 1} of ${st.total}. Make your pick: ${location.origin + location.pathname}`);
+      HD.shareText(`🌭 ${HDCore.nudgeLine(n.dataset.nudge)}\nWeek ${wk(w)}, pick ${st.clock + 1} of ${st.total}. ${location.origin + location.pathname}`);
     };
     const p = wrap.querySelector("[data-paid]");
     if (p) p.onclick = () => { write("week", w, { paid: { [me]: true } }); toast(pickJoke(JOKES.paid)); };

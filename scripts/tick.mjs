@@ -155,7 +155,7 @@ async function draftTick(w) {
       // The first picker already heard about it in the "draft is open" note
       if (st.clock === 0 && mark.open) mark["clock-0"] = NOW;
       once(`clock-${st.clock}`, () => notify(st.onClock, "🌭 You're on the clock!",
-        `Week ${C.seasonWeek(w, config)} draft, pick ${st.clock + 1} of ${st.total}.${ci2 && !ci2.waiting ? ` Auto-pick in ${Math.round(ci2.leftMs / 3600000 * 10) / 10}h.` : ci2 && ci2.waiting ? " No clock until Wednesday 7am, but early picks are welcome." : ""}`, `clock-${w}`));
+        `${(l => l[0].toUpperCase() + l.slice(1))(C.nudgeLine(st.onClock, NOW).replace(/^@\S+, /, ""))} Week ${C.seasonWeek(w, config)}, pick ${st.clock + 1} of ${st.total}.${ci2 && !ci2.waiting ? ` Auto-pick in ${Math.round(ci2.leftMs / 3600000 * 10) / 10}h.` : ci2 && ci2.waiting ? " No clock until Wednesday 7am, but early picks are welcome." : ""}`, `clock-${w}`));
     }
   }
   if (st.complete && C.entriesOf(doc.picks).length) {

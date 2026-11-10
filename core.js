@@ -188,6 +188,26 @@
     while (t < endMs) { const step = Math.min(STEP, endMs - t); if (!quietAt(t)) total += step; t += step; }
     return total;
   }
+  // On-the-clock nudges: original lines riffing on Caddyshack and Happy Gilmore.
+  // {m} is the person on the clock.
+  const NUDGES = [
+    "@{m}, the gopher has drafted faster than you. Get in the app.",
+    "@{m}, a hockey player with a 400-yard slap shot just made his pick in two seconds. Your turn.",
+    "@{m}, find your happy place. Your happy place is the draft screen.",
+    "@{m}, Judge Smails has ruled: pick now or lose your egg beer privileges.",
+    "@{m}, Carl the groundskeeper has plastic explosives and more patience than this group. Pick.",
+    "@{m}, Shooter McGavin is smirking at your empty slot. Don't give him the satisfaction.",
+    "@{m}, Ty Webb would tell you to become the pick. We're telling you to make it.",
+    "@{m}, Happy's grandma's house is on the line and you're still scrolling.",
+    "@{m}, somebody dropped a candy bar in the Bushwood pool. Everyone's out of the water, so you have time to draft.",
+    "@{m}, Carl has a theory you're scared of the dawgs. Prove him wrong.",
+    "@{m}, the alligator on 12 makes decisions faster than you.",
+    "@{m}, Danny Noonan needs this scholarship and you need a golfer. Go.",
+    "@{m}, Happy just putted with a hockey stick. You can at least tap a name.",
+    "@{m}, the Bushwood snack bar is out of hot dogs because you're holding up the line. Pick."
+  ];
+  const nudgeLine = (m, seed) => NUDGES[Math.abs(seed == null ? Math.floor(Math.random() * 1e6) : seed) % NUDGES.length].replace("{m}", m);
+
   // Week numbers keep counting across seasons; this is the number people see
   // (week 1 of the current season = config.seasonStartWeek).
   function seasonWeek(w, cfg) { return w - ((cfg && cfg.seasonStartWeek) || 1) + 1; }
@@ -300,6 +320,6 @@
   }
 
   return { MEMBERS, RULES, amountFor, isMajor, nameKey, compactKey, rankLookup, matchPickNames, buildField,
-    parsePar, parseScoreboard, isoDay, draftOrder, draftState, needOf, activeMs, quietAt, clockFloor, seasonWeek, clockStart, clockInfo,
+    parsePar, parseScoreboard, isoDay, draftOrder, draftState, needOf, activeMs, quietAt, clockFloor, seasonWeek, NUDGES, nudgeLine, clockStart, clockInfo,
     chooseAutoPick, pickPatch, computeWeek, entriesOf, settlePatch };
 });

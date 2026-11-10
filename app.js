@@ -81,11 +81,8 @@
     const ci = clock(week);
     const text = who === null
       ? `🌭 Week ${wk(week)} draft is done! Picks are in: ${appLink()}`
-      : `🌭 @${who} you're on the clock! Week ${wk(week)} draft, pick ${st.clock + 1} of ${st.total}.${ci && !ci.due && !ci.waiting ? ` Auto-pick in ${fmtLeft(ci.leftMs)}.` : ""} Make your pick: ${appLink()}`;
-    if (navigator.share) {
-      try { await navigator.share({ text }); return; } catch (e) { return; }
-    }
-    location.href = "sms:&body=" + encodeURIComponent(text);
+      : `🌭 ${C.nudgeLine(who)}\nWeek ${wk(week)}, pick ${st.clock + 1} of ${st.total}.${ci && !ci.due && !ci.waiting ? ` Auto-pick in ${fmtLeft(ci.leftMs)}.` : ""} ${appLink()}`;
+    HD.shareText(text);
   }
 
   // Split "Austin Championship pres. by Compliance Solutions" into name + sponsor
@@ -429,8 +426,7 @@
     if (btn) btn.onclick = async () => {
       const text = `🌭 Week ${wk(w)} is final! ${s.winner} wins ${money(per * payers.length)}. `
         + `${owing.map(p => "@" + p).join(" ")} each owe ${money(per)}. Pay on Venmo in the app: ${appLink()}`;
-      if (navigator.share) { try { await navigator.share({ text }); } catch (e) {} return; }
-      location.href = "sms:&body=" + encodeURIComponent(text);
+      HD.shareText(text);
     };
   };
 
@@ -697,7 +693,16 @@
     const m = /round\s*(\d)/i.exec(live.event.status || "");
     return m ? { round: Number(m[1]), final: false } : null;
   }
+  // Text the group. With everyone's numbers saved (Me tab), this opens Messages
+  // already addressed to the whole group, so you just tap Send. Otherwise it
+  // falls back to the share sheet.
+  function groupNumbers() {
+    const ph = config.phones || {};
+    return MEMBERS.filter(m => m !== me && ph[m]).map(m => String(ph[m]).replace(/[^\d+]/g, "")).filter(n => n.length >= 10);
+  }
   async function shareText(text) {
+    const nums = groupNumbers();
+    if (nums.length >= 2) { location.href = `sms://open?addresses=${nums.join(",")}&body=${encodeURIComponent(text)}`; return; }
     if (navigator.share) { try { await navigator.share({ text }); } catch (e) {} return; }
     location.href = "sms:&body=" + encodeURIComponent(text);
   }
@@ -1664,7 +1669,7 @@
     const n = wrap.querySelector("[data-nudge]");
     if (n) n.onclick = () => {
       const st = HD.draftState(w);
-      HD.shareText(`🌭 @${n.dataset.nudge} you're on the clock! Week ${wk(w)} draft, pick ${st.clock + 1} of ${st.total}. Make your pick: ${location.origin + location.pathname}`);
+      HD.shareText(`🌭 ${HDCore.nudgeLine(n.dataset.nudge)}\nWeek ${wk(w)}, pick ${st.clock + 1} of ${st.total}. ${location.origin + location.pathname}`);
     };
     const p = wrap.querySelector("[data-paid]");
     if (p) p.onclick = () => { write("week", w, { paid: { [me]: true } }); toast(pickJoke(JOKES.paid)); };
@@ -1840,6 +1845,20 @@
     return `<div class="card" id="hdPushCard"><h2>Notifications</h2>${body}</div>`;
   }
 
+  // ===================== Group texts =====================
+  // Everyone's number lets the app open Messages already addressed to the whole
+  // group (Apple still makes you tap Send; apps can't send iMessages on their own).
+  function phoneCard() {
+    const ph = config.phones || {}, have = MEMBERS.filter(m => ph[m]), missing = MEMBERS.filter(m => !ph[m]);
+    return `<div class="card" id="hdPhones"><h2>💬 Group texts</h2>
+      <p class="hint">Add your number so nudges and payout texts open Messages already addressed to the whole group. You just tap Send.</p>
+      <div class="field"><label for="myPhone">Your cell number</label>
+        <input type="tel" id="myPhone" autocomplete="tel" inputmode="tel" placeholder="(512) 555-0123" value="${esc(ph[me] || "")}"></div>
+      <button class="btn ghost" data-club="phone">Save my number</button>
+      <p class="hint" style="margin-top:8px">${have.length}/${MEMBERS.length} added${missing.length ? `. Still need: ${missing.map(esc).join(", ")}` : ". Group texts go straight to everyone."}</p>
+      <p class="hint" style="margin:0">Numbers are only used for group texts and are visible to pool members.</p></div>`;
+  }
+
   // ===================== Commissioner =====================
   function lastPick(week) {
     const st = HD.draftState(week);
@@ -1895,6 +1914,14 @@
     const w = currentWeek();
     if (what === "pushOn") return turnOn();
     if (what === "pushOff") return turnOff();
+    if (what === "phone") {
+      const raw = $("#myPhone").value.trim(), digits = raw.replace(/\D/g, "");
+      if (raw && digits.length < 10) return toast("That number looks short. Include the area code.");
+      const num = !raw ? null : digits.length === 10 ? "+1" + digits : "+" + digits;
+      document.activeElement && document.activeElement.blur();
+      await write("config", 0, { phones: { [me]: num } });
+      return toast(num ? "📱 Saved. Group texts will go straight to everyone once they've all added theirs." : "Number removed.");
+    }
     if (!isCommish()) return;
     if (what === "forceOpen") {
       await write("week", w, { forceOpen: true, draftOpenAt: Date.now() });
@@ -1965,7 +1992,7 @@
     if (!me || wrap.querySelector("#hdClub")) return; // still being edited
     const box = document.createElement("div");
     box.id = "hdClub";
-    box.innerHTML = pushCard() + (isCommish() ? commishCard() : "");
+    box.innerHTML = phoneCard() + pushCard() + (isCommish() ? commishCard() : "");
     wrap.insertBefore(box, wrap.children[1] || null);
     wire();
     if (subState === "unknown") refreshSubState();

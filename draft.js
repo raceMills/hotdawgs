@@ -78,11 +78,8 @@
     const ci = clock(week);
     const text = who === null
       ? `🌭 Week ${wk(week)} draft is done! Picks are in: ${appLink()}`
-      : `🌭 @${who} you're on the clock! Week ${wk(week)} draft, pick ${st.clock + 1} of ${st.total}.${ci && !ci.due && !ci.waiting ? ` Auto-pick in ${fmtLeft(ci.leftMs)}.` : ""} Make your pick: ${appLink()}`;
-    if (navigator.share) {
-      try { await navigator.share({ text }); return; } catch (e) { return; }
-    }
-    location.href = "sms:&body=" + encodeURIComponent(text);
+      : `🌭 ${C.nudgeLine(who)}\nWeek ${wk(week)}, pick ${st.clock + 1} of ${st.total}.${ci && !ci.due && !ci.waiting ? ` Auto-pick in ${fmtLeft(ci.leftMs)}.` : ""} ${appLink()}`;
+    HD.shareText(text);
   }
 
   // Split "Austin Championship pres. by Compliance Solutions" into name + sponsor
@@ -426,8 +423,7 @@
     if (btn) btn.onclick = async () => {
       const text = `🌭 Week ${wk(w)} is final! ${s.winner} wins ${money(per * payers.length)}. `
         + `${owing.map(p => "@" + p).join(" ")} each owe ${money(per)}. Pay on Venmo in the app: ${appLink()}`;
-      if (navigator.share) { try { await navigator.share({ text }); } catch (e) {} return; }
-      location.href = "sms:&body=" + encodeURIComponent(text);
+      HD.shareText(text);
     };
   };
 

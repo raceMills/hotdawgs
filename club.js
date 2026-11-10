@@ -85,6 +85,20 @@
     return `<div class="card" id="hdPushCard"><h2>Notifications</h2>${body}</div>`;
   }
 
+  // ===================== Group texts =====================
+  // Everyone's number lets the app open Messages already addressed to the whole
+  // group (Apple still makes you tap Send; apps can't send iMessages on their own).
+  function phoneCard() {
+    const ph = config.phones || {}, have = MEMBERS.filter(m => ph[m]), missing = MEMBERS.filter(m => !ph[m]);
+    return `<div class="card" id="hdPhones"><h2>💬 Group texts</h2>
+      <p class="hint">Add your number so nudges and payout texts open Messages already addressed to the whole group. You just tap Send.</p>
+      <div class="field"><label for="myPhone">Your cell number</label>
+        <input type="tel" id="myPhone" autocomplete="tel" inputmode="tel" placeholder="(512) 555-0123" value="${esc(ph[me] || "")}"></div>
+      <button class="btn ghost" data-club="phone">Save my number</button>
+      <p class="hint" style="margin-top:8px">${have.length}/${MEMBERS.length} added${missing.length ? `. Still need: ${missing.map(esc).join(", ")}` : ". Group texts go straight to everyone."}</p>
+      <p class="hint" style="margin:0">Numbers are only used for group texts and are visible to pool members.</p></div>`;
+  }
+
   // ===================== Commissioner =====================
   function lastPick(week) {
     const st = HD.draftState(week);
@@ -140,6 +154,14 @@
     const w = currentWeek();
     if (what === "pushOn") return turnOn();
     if (what === "pushOff") return turnOff();
+    if (what === "phone") {
+      const raw = $("#myPhone").value.trim(), digits = raw.replace(/\D/g, "");
+      if (raw && digits.length < 10) return toast("That number looks short. Include the area code.");
+      const num = !raw ? null : digits.length === 10 ? "+1" + digits : "+" + digits;
+      document.activeElement && document.activeElement.blur();
+      await write("config", 0, { phones: { [me]: num } });
+      return toast(num ? "📱 Saved. Group texts will go straight to everyone once they've all added theirs." : "Number removed.");
+    }
     if (!isCommish()) return;
     if (what === "forceOpen") {
       await write("week", w, { forceOpen: true, draftOpenAt: Date.now() });
@@ -210,7 +232,7 @@
     if (!me || wrap.querySelector("#hdClub")) return; // still being edited
     const box = document.createElement("div");
     box.id = "hdClub";
-    box.innerHTML = pushCard() + (isCommish() ? commishCard() : "");
+    box.innerHTML = phoneCard() + pushCard() + (isCommish() ? commishCard() : "");
     wrap.insertBefore(box, wrap.children[1] || null);
     wire();
     if (subState === "unknown") refreshSubState();

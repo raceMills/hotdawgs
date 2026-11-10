@@ -66,7 +66,16 @@
     const m = /round\s*(\d)/i.exec(live.event.status || "");
     return m ? { round: Number(m[1]), final: false } : null;
   }
+  // Text the group. With everyone's numbers saved (Me tab), this opens Messages
+  // already addressed to the whole group, so you just tap Send. Otherwise it
+  // falls back to the share sheet.
+  function groupNumbers() {
+    const ph = config.phones || {};
+    return MEMBERS.filter(m => m !== me && ph[m]).map(m => String(ph[m]).replace(/[^\d+]/g, "")).filter(n => n.length >= 10);
+  }
   async function shareText(text) {
+    const nums = groupNumbers();
+    if (nums.length >= 2) { location.href = `sms://open?addresses=${nums.join(",")}&body=${encodeURIComponent(text)}`; return; }
     if (navigator.share) { try { await navigator.share({ text }); } catch (e) {} return; }
     location.href = "sms:&body=" + encodeURIComponent(text);
   }
