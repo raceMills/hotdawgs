@@ -357,7 +357,8 @@
     const n = wrap.querySelector("[data-nudge]");
     if (n) n.onclick = () => {
       const st = HD.draftState(w);
-      HD.shareText(`🌭 ${HDCore.nudgeLine(n.dataset.nudge)}\nWeek ${wk(w)}, pick ${st.clock + 1} of ${st.total}. ${location.origin + location.pathname}`);
+      const who = n.dataset.nudge, photo = (weekOf(-w).photos || {})[who];
+      HD.shareText(`🌭 ${HDCore.nudgeLine(who)}\n${photo ? `📸 Exhibit A: ${who}'s Ketchup Cam dog.\n` : ""}Week ${wk(w)}, pick ${st.clock + 1} of ${st.total}. ${location.origin + location.pathname}`, photo ? { photo, photoName: `${who}-ketchup-cam` } : null);
     };
     const p = wrap.querySelector("[data-paid]");
     if (p) p.onclick = () => { write("week", w, { paid: { [me]: true } }); toast(pickJoke(JOKES.paid)); };

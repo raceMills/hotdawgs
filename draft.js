@@ -79,7 +79,9 @@
     const text = who === null
       ? `🌭 Week ${wk(week)} draft is done! Picks are in: ${appLink()}`
       : `🌭 ${C.nudgeLine(who)}\nWeek ${wk(week)}, pick ${st.clock + 1} of ${st.total}.${ci && !ci.due && !ci.waiting ? ` Auto-pick in ${fmtLeft(ci.leftMs)}.` : ""} ${appLink()}`;
-    HD.shareText(text);
+    // Their Ketchup Cam photo from this week comes along, if they posted one
+    const photo = who && ((weekOf(-week).photos || {})[who]);
+    HD.shareText(photo ? text.replace("\n", `\n📸 Exhibit A: ${who}'s Ketchup Cam dog.\n`) : text, photo ? { photo, photoName: `${who}-ketchup-cam` } : null);
   }
 
   // Split "Austin Championship pres. by Compliance Solutions" into name + sponsor

@@ -73,7 +73,22 @@
     const ph = config.phones || {};
     return MEMBERS.filter(m => m !== me && ph[m]).map(m => String(ph[m]).replace(/[^\d+]/g, "")).filter(n => n.length >= 10);
   }
-  async function shareText(text) {
+  // A Ketchup Cam photo can ride along: texts can't carry pictures through a
+  // pre-addressed link, so with a photo we use the share sheet (your group chat
+  // is usually the first suggestion at the top).
+  function photoFile(dataUrl, name) {
+    try {
+      const [head, b64] = dataUrl.split(",");
+      const type = (/data:([^;]+)/.exec(head) || [])[1] || "image/jpeg";
+      const bytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+      return new File([bytes], `${name || "ketchup-cam"}.jpg`, { type });
+    } catch (e) { return null; }
+  }
+  async function shareText(text, opts) {
+    const photo = opts && opts.photo ? photoFile(opts.photo, opts.photoName) : null;
+    if (photo && navigator.share && navigator.canShare && navigator.canShare({ files: [photo] })) {
+      try { await navigator.share({ files: [photo], text }); return; } catch (e) { if (e && e.name === "AbortError") return; }
+    }
     const nums = groupNumbers();
     if (nums.length >= 2) { location.href = `sms://open?addresses=${nums.join(",")}&body=${encodeURIComponent(text)}`; return; }
     if (navigator.share) { try { await navigator.share({ text }); } catch (e) {} return; }
