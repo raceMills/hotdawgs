@@ -1,0 +1,29 @@
+name: Bundle
+
+on:
+  push:
+    branches: [main]
+    paths: ["draft.js", "stats.js", "extras.js", "history.js", "home.js", "club.js", "egg.js", "fun.js", "records.js", "watch.js", "party.js", "tips.js", "scripts/bundle.mjs"]
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  bundle:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: node scripts/bundle.mjs && node --check app.js
+      - name: Save if changed
+        run: |
+          git add app.js
+          if git diff --cached --quiet; then echo "app.js is up to date."; exit 0; fi
+          git config user.name "hotdawgs-bot"
+          git config user.email "hotdawgs-bot@users.noreply.github.com"
+          git commit -m "Rebuild app.js"
+          git pull --rebase origin main
+          git push

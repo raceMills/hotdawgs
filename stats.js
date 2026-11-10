@@ -58,7 +58,7 @@
     MEMBERS.forEach(a => { flowOwed[a] = {}; flowPaid[a] = {}; MEMBERS.forEach(b => { flowOwed[a][b] = 0; flowPaid[a][b] = 0; }); });
     const best = [], history = [];
 
-    for (let w = 1; w <= currentWeek(); w++) {
+    for (let w = seasonStart(); w <= currentWeek(); w++) {
       const d = weekOf(w);
       const picks = d.picks || {};
       const fin = d.finishes || {};
@@ -151,7 +151,7 @@
         <p class="hint">Money-winning picks, longest shots first, by current world rank.</p>
         ${best.length ? best.slice(0, 10).map(b => `
           <div class="rule">
-            <span style="flex:1">${b.name} <span class="hint" style="margin:0">(${b.who}, week ${b.w}, ${b.kind})</span></span>
+            <span style="flex:1">${b.name} <span class="hint" style="margin:0">(${b.who}, week ${wk(b.w)}, ${b.kind})</span></span>
             <span class="hint" style="margin:0 8px 0 0">${b.rank < 999 ? "World #" + b.rank : "Unranked"} · ${ord(b.pos)}</span>
             <span class="amt">${money(b.won)}</span>
           </div>`).join("") : `<p class="hint">No winning picks yet. Check back after the first payout.</p>`}
@@ -161,7 +161,7 @@
         <h2>Pick history</h2>
         ${history.length ? history.map(h => `
           <div class="wk">
-            <div style="font-weight:900">Week ${h.w}${h.settle && h.settle.winner ? ` · ${h.settle.winner} won ${money(perPayerOf(h.settle) * (MEMBERS.length - 1))}` : " · not settled"}</div>
+            <div style="font-weight:900">Week ${wk(h.w)}${h.settle && h.settle.winner ? ` · ${h.settle.winner} won ${money(perPayerOf(h.settle) * (MEMBERS.length - 1))}` : " · not settled"}</div>
             ${MEMBERS.filter(m => h.picks[m]).map(m => {
               const p = h.picks[m];
               const cell = (k) => p[k] ? `${p[k]} <span class="hint" style="margin:0">${ord(h.fin[p[k]])}</span>` : "—";

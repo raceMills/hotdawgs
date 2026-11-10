@@ -18,6 +18,16 @@
     .tv-row .t { width: 118px; flex: none; font-variant-numeric: tabular-nums; opacity: .8; }
     .tv-row a { color: var(--ink); font-weight: 900; }
     .tv-row.on { background: #fff4c8; border-radius: 8px; padding: 6px 6px; }
+    .wx { margin-top: 10px; }
+    .wx-h { font-size: 12px; font-weight: 800; opacity: .85; margin-bottom: 6px; }
+    .wx-days { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+    .wx-d { display: flex; flex-direction: column; align-items: center; gap: 1px; background: var(--cream); border: 2px solid var(--shadow); border-radius: 12px;
+      padding: 6px 2px; font-size: 13px; color: var(--ink); }
+    .wx-i { font-size: 22px; line-height: 1.2; }
+    .wx-s { font-size: 11.5px; opacity: .85; }
+    .wx-s small { opacity: .7; }
+    .wx-bad { color: var(--red); font-weight: 900; opacity: 1; }
+    .wx-tip { font-size: 12.5px; font-weight: 700; margin-top: 6px; }
     .tv-tag { font-size: 11px; font-weight: 900; background: var(--red); color: #fff; border-radius: 999px; padding: 1px 7px; margin-left: 4px; }
   `;
   document.head.appendChild(style);
@@ -38,10 +48,59 @@
       if (r.ok) { fieldFile = await r.json(); renderActive(); }
     } catch (e) {}
   }
+  function thisEvent() {
+    if (!fieldFile) return null;
+    const t = weekTourney(currentWeek()) || (live.event ? { start: live.event.start } : null);
+    return t && (fieldFile.events || []).find(x => x.start === t.start) || null;
+  }
+
+  // ---------- Course weather (Open-Meteo, free, no key) ----------
+  const WMO = (c) => c === 0 ? ["☀️", "Sunny"] : c <= 2 ? ["🌤️", "Partly cloudy"] : c === 3 ? ["☁️", "Cloudy"] : c <= 48 ? ["🌫️", "Fog"]
+    : c <= 57 ? ["🌦️", "Drizzle"] : c <= 67 ? ["🌧️", "Rain"] : c <= 77 ? ["🌨️", "Snow"] : c <= 82 ? ["🌧️", "Showers"] : ["⛈️", "Storms"];
+  let wx = null, wxKey = "", wxAt = 0;
+  async function loadWeather() {
+    const e = thisEvent(), p = e && e.where;
+    if (!p || p.lat == null) return;
+    const key = `${p.lat},${p.lon},${e.start}`;
+    if (key === wxKey && Date.now() - wxAt < 60 * 60000) return;
+    wxKey = key; wxAt = Date.now();
+    const start = new Date(e.start + "T12:00:00Z");
+    const d = (n) => { const x = new Date(start); x.setUTCDate(x.getUTCDate() + n); return x.toISOString().slice(0, 10); };
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${p.lat}&longitude=${p.lon}&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,wind_speed_10m_max,wind_gusts_10m_max`
+      + `&current=temperature_2m,weather_code,wind_speed_10m,wind_gusts_10m&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=auto&start_date=${d(0)}&end_date=${d(3)}`;
+    try {
+      const r = await fetch(url);
+      if (!r.ok) return;
+      const j = await r.json();
+      const days = (j.daily && j.daily.time || []).map((t, i) => ({ date: t, code: j.daily.weather_code[i], hi: j.daily.temperature_2m_max[i], lo: j.daily.temperature_2m_min[i],
+        rain: j.daily.precipitation_probability_max[i], wind: j.daily.wind_speed_10m_max[i], gust: j.daily.wind_gusts_10m_max[i] })).filter(x => x.hi != null);
+      wx = { place: p, days, now: j.current || null };
+      renderActive();
+    } catch (err) { /* forecast is a nice-to-have */ }
+  }
+  function weatherTip(days) {
+    if (!days.length) return "";
+    const windy = days.filter(x => x.wind >= 18 || x.gust >= 28).length, wet = days.filter(x => x.rain >= 50).length;
+    if (windy >= 2) return "💨 Windy week. Coach Frank likes grinders and low ball hitters; scores stay high.";
+    if (wet >= 2) return "🌧️ Soft and wet. Bombers love it, and watch for delays and a Monday finish.";
+    if (days.every(x => x.wind < 10 && x.rain < 30)) return "🎯 Calm and dry. Expect a birdie-fest; the putters decide this one.";
+    return "";
+  }
+  function weatherStrip(compact) {
+    if (!wx || !wx.days.length) return "";
+    const day = (iso) => new Date(iso + "T12:00:00").toLocaleDateString([], { weekday: "short" });
+    const tip = weatherTip(wx.days);
+    return `<div class="wx">
+      <div class="wx-h">🌤️ Course weather · ${esc(wx.place.city)}${wx.place.state ? ", " + esc(wx.place.state) : ""}${wx.now ? ` · now ${Math.round(wx.now.temperature_2m)}° ${WMO(wx.now.weather_code)[0]} 💨${Math.round(wx.now.wind_speed_10m)} mph` : ""}</div>
+      <div class="wx-days">${wx.days.map(x => `<div class="wx-d"><b>${day(x.date)}</b><span class="wx-i" title="${WMO(x.code)[1]}">${WMO(x.code)[0]}</span>
+        <span>${Math.round(x.hi)}°/${Math.round(x.lo)}°</span><span class="wx-s">💧${x.rain ?? 0}%</span><span class="wx-s ${x.wind >= 18 || x.gust >= 28 ? "wx-bad" : ""}">💨${Math.round(x.wind)}${x.gust >= x.wind + 6 ? `<small>/${Math.round(x.gust)}</small>` : ""}</span></div>`).join("")}</div>
+      ${tip && !compact ? `<div class="wx-tip">${tip}</div>` : tip && compact ? `<div class="wx-tip">${tip.split(".")[0]}.</div>` : ""}
+    </div>`;
+  }
+
   function windows() {
     if (!fieldFile) return [];
-    const t = weekTourney(currentWeek()) || (live.event ? { start: live.event.start } : null);
-    const e = t && (fieldFile.events || []).find(x => x.start === t.start);
+    const e = thisEvent();
     return ((e && e.watch) || []).slice().sort((a, b) => a.start - b.start);
   }
   function state() {
@@ -64,11 +123,12 @@
     return `<div class="card" id="tvHome"><h2>📺 Where to watch</h2>
       ${s.on.length ? s.on.slice(0, 2).map(nowRow).join("") : `<p class="hint" style="margin:0">Nothing on right now.</p>`}
       ${!s.on.length && s.next ? nextRow(s.next) : ""}
-      <button class="btn ghost" style="margin-top:10px" data-tv="all">This week's TV schedule</button></div>`;
+      ${wx && wx.now ? `<p class="hint" style="margin:8px 0 0">At the course: ${Math.round(wx.now.temperature_2m)}° ${WMO(wx.now.weather_code)[0]} ${WMO(wx.now.weather_code)[1].toLowerCase()}, wind ${Math.round(wx.now.wind_speed_10m)} mph</p>` : ""}
+      <button class="btn ghost" style="margin-top:10px" data-tv="all">TV schedule and weather</button></div>`;
   }
   function fullCard() {
     const s = state();
-    if (!s) return `<div class="card" id="tvFull"><h2>📺 Where to watch</h2><p class="hint">The TV and streaming schedule shows up here once the PGA Tour posts it, usually early in tournament week.</p></div>`;
+    if (!s) return `<div class="card" id="tvFull"><h2>📺 Where to watch</h2><p class="hint">The TV and streaming schedule shows up here once the PGA Tour posts it, usually early in tournament week.</p>${weatherStrip(false)}</div>`;
     const now = Date.now();
     const byDay = {};
     s.ws.forEach(w => { const d = day(w.start); (byDay[d] = byDay[d] || []).push(w); });
@@ -80,6 +140,7 @@
         ${list.map(w => { const on = w.start <= now && now < w.end, past = w.end <= now;
           return `<div class="tv-row ${on ? "on" : ""}" style="${past ? "opacity:.45" : ""}"><span class="t">${time(w.start)}–${time(w.end)}</span>
           <span style="flex:1">${ICON[w.kind] || "📺"} ${link(w)} <span class="hint" style="margin:0">· ${esc(w.kind)}</span>${on ? `<span class="tv-tag">LIVE</span>` : ""}</span></div>`; }).join("")}`).join("")}
+      ${weatherStrip(false)}
       <p class="hint" style="margin-top:10px">Featured groups streams follow a few top groups all day. Schedule from the PGA Tour; networks can change it late.</p></div>`;
   }
 
@@ -88,6 +149,7 @@
     baseRender.apply(this, arguments);
     if (!me || !dataReady) return;
     load();
+    loadWeather();
     const active = document.querySelector("section.active");
     const id = active && active.id;
     if (id === "home") {
@@ -118,7 +180,7 @@
       else sec.appendChild(box.firstElementChild);
     }
   };
-  window.HD = Object.assign(window.HD || {}, { watchWindows: windows });
+  window.HD = Object.assign(window.HD || {}, { watchWindows: windows, weatherStrip, loadWeather });
   // Keep "on now" fresh while the app sits open
   setInterval(() => { if (!document.hidden && dataReady) { const a = document.querySelector("section.active"); if (a && (a.id === "home" || a.id === "scores")) renderActive(); } }, 60000);
 })();

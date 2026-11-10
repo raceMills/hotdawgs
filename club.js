@@ -105,7 +105,7 @@
     const taken = new Set(C.entriesOf(picks).map(e => e.name));
     return `<div class="card" id="hdCommish">
       <h2>🎩 Commissioner tools</h2>
-      <p class="hint">Only ${esc(commish())} sees this. Week ${w}: ${st.complete ? "draft complete" : open ? `${esc(st.onClock)} is on the clock (pick ${st.clock + 1} of ${st.total})` : "draft locked until the field posts"}.</p>
+      <p class="hint">Only ${esc(commish())} sees this. Week ${wk(w)}: ${st.complete ? "draft complete" : open ? `${esc(st.onClock)} is on the clock (pick ${st.clock + 1} of ${st.total})` : "draft locked until the field posts"}.</p>
 
       <div class="field"><label>Pick clock</label>
         <div class="chips">${[0, 2, 4, 6, 8, 12].map(h => `<button class="chip ${h === hours ? "on" : ""}" data-hours="${h}">${h ? h + "h" : "Off"}</button>`).join("")}</div>

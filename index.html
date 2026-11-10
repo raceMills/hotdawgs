@@ -248,7 +248,7 @@
 <script>
   // App version. Bump it on every release: files load with it, and open phones notice
   // a new number and reload themselves.
-  const APP_VERSION = "2026-11-09.7";
+  const APP_VERSION = "2026-11-10.1";
   async function checkForUpdate() {
     try {
       const r = await fetch(location.pathname + "?check=" + Date.now(), { cache: "no-store" });
@@ -262,6 +262,8 @@
   // Pool rules shared with the background task
   document.write(`<script src="core.js?v=${encodeURIComponent(APP_VERSION)}"><\/script>`);
 </script>
+<link rel="preconnect" href="https://ecvjuminsfjszwgzfqte.supabase.co" crossorigin>
+<link rel="preconnect" href="https://site.api.espn.com" crossorigin>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script>
   // ===== SETUP: paste your three values here =====
@@ -275,6 +277,10 @@
   const OTHERS = MEMBERS.length - 1;
 
   const RULES = HDCore.RULES;
+  // Seasons: weeks keep counting up forever; labels count from this season's first week
+  const seasonStart = () => (config && config.seasonStartWeek) || 1;
+  const wk = (w) => HDCore.seasonWeek(w, config);
+  const seasonName = () => (config && config.seasonName) || String(new Date().getFullYear());
 
   const DEFAULT_FIELD_TEXT = "Scottie Scheffler, 1\nRory McIlroy, 2\nMatt Fitzpatrick, 3\nCameron Young, 4\nWyndham Clark, 5\nChris Gotterup, 6\nXander Schauffele, 7\nTommy Fleetwood, 8\nSam Burns, 9\nRussell Henley, 10\nCollin Morikawa, 11\nJ.J. Spaun, 12\nViktor Hovland, 13\nSi Woo Kim, 14\nJon Rahm, 15\nJacob Bridgeman, 16\nAaron Rai, 17\nMichael Brennan, 18\nRobert MacIntyre, 19\nLudvig Åberg, 20\nJustin Rose, 21\nRyan Fox, 22\nRyan Gerard, 23\nAlex Noren, 24\nBen Griffin, 25";
   function parseField(text) {
@@ -405,7 +411,7 @@
     const sel = locked ? saved : pending;
     const taken = claimedMap(week);
 
-    $("#draftTitle").innerHTML = `Week ${week}<small>${locked ? "Picks locked" : "Draft open"}</small>`;
+    $("#draftTitle").innerHTML = `Week ${wk(week)}<small>${locked ? "Picks locked" : "Draft open"}</small>`;
     fillSlot($("#slotHot"), sel.hot, "Hot", "Pick a top 10");
     fillSlot($("#slotDawg"), sel.dawg, "Dawg", "Pick a field golfer");
 
@@ -524,7 +530,7 @@
       return `<div class="rule"><span style="flex:1">${e.name} <span class="hint" style="margin:0">(${e.who}, ${e.kind})</span></span>
         <input type="number" min="1" max="200" value="${shown}" placeholder="finish" data-fin="${e.name}" style="width:72px;padding:6px;border:2px solid var(--shadow);border-radius:8px;font:inherit"></div>`;
     }).join("") : `<p class="hint">No picks for this week yet.</p>`;
-    return `<h2>Week ${w} results</h2>
+    return `<h2>Week ${wk(w)} results</h2>
       <p class="hint">Tap the button to copy positions from the live leaderboard, or type them in. Blank means missed cut. Check the numbers before you calculate.</p>
       <button class="btn green" id="fillLiveBtn" style="margin-bottom:10px" ${live.ok ? "" : "disabled"}>${live.ok ? "Fill in from live leaderboard" : "Live leaderboard unavailable"}</button>
       ${rows}
@@ -534,7 +540,7 @@
       ${calcHtml(w)}
     </div>
     <div class="card">
-      <h2>Set week ${w} result</h2>`;
+      <h2>Set week ${wk(w)} result</h2>`;
   }
 
   // ---------- Payments ----------
@@ -557,14 +563,14 @@
     const owedTotal = winner ? perPayer * payers.length : 0;
     const collected = winner ? perPayer * paidCount : 0;
     const pct = owedTotal ? Math.round(collected / owedTotal * 100) : 0;
-    const weekLabel = isPrev ? "Last week" : (w === currentWeek() ? "This week" : `Week ${w}`);
-    const note = `Hotdawgs Week ${w}`;
+    const weekLabel = isPrev ? "Last week" : (w === currentWeek() ? "This week" : `Week ${wk(w)}`);
+    const note = `Hotdawgs Week ${wk(w)}`;
 
     wrap.innerHTML = `
       <div class="card">
         <div class="weekbar">
           <button class="btn small ghost" id="prevWeek" ${w <= 1 ? "disabled" : ""}>‹ Prev</button>
-          <div class="title">Week ${w}<small>${weekLabel}</small></div>
+          <div class="title">Week ${wk(w)}<small>${weekLabel}</small></div>
           <button class="btn small ghost" id="nextWeek" ${w >= currentWeek() ? "disabled" : ""}>Next ›</button>
         </div>
         ${winner ? `
@@ -667,7 +673,7 @@
     const names = rules.map(id => findRule(id).label).join(", ");
     const paidList = payers.filter(p => paid[p]);
     const owing = payers.filter(p => !paid[p]);
-    const text = `🌭 Hotdawgs Week ${w}\nWinner: ${winner} collects ${money(perPayer * payers.length)}\nRules: ${names}\nPaid: ${paidList.join(", ") || "none yet"}\nStill owes ${money(perPayer)}: ${owing.join(", ") || "nobody"}`;
+    const text = `🌭 Hotdawgs Week ${wk(w)}\nWinner: ${winner} collects ${money(perPayer * payers.length)}\nRules: ${names}\nPaid: ${paidList.join(", ") || "none yet"}\nStill owes ${money(perPayer)}: ${owing.join(", ") || "nobody"}`;
     if (navigator.share) {
       try { await navigator.share({ text }); return; } catch (e) {}
     }
@@ -758,8 +764,8 @@
       </div>
       <div class="card">
         <h2>Season</h2>
-        <p class="hint">Currently on week ${currentWeek()}. Start the next week once the previous one is settled.</p>
-        <button class="btn green" id="nextWeekBtn">Start week ${currentWeek() + 1}${nextTourneyForNewWeek() ? ` · ${nextTourneyForNewWeek().name}` : ""}</button>
+        <p class="hint">Currently on week ${wk(currentWeek())}. Start the next week once the previous one is settled.</p>
+        <button class="btn green" id="nextWeekBtn">Start week ${wk(currentWeek() + 1)}${nextTourneyForNewWeek() ? ` · ${nextTourneyForNewWeek().name}` : ""}</button>
         <h2 style="margin-top:18px">Tournament field</h2>
         <p class="hint">${rankingsFile ? "Rankings now update automatically every Monday, so this list is only a backup." : "Backup list, used until the automatic rankings file exists."} One golfer per line, as "12, Scottie Scheffler" or "Scottie Scheffler, 12". Either order works.</p>
         <textarea id="fieldIn" rows="8" style="width:100%">${config.fieldText || DEFAULT_FIELD_TEXT}</textarea>
@@ -830,7 +836,7 @@
       const up = nextTourneyForNewWeek();
       if (up) await write("week", next, { tournament: { name: up.name, start: up.start } });
       await write("config", 0, { currentWeek: next });
-      toast(`Week ${next} is open${up ? `: ${up.name}` : ""}`);
+      toast(`Week ${wk(next)} is open${up ? `: ${up.name}` : ""}`);
       fetchLive();
     };
   }
@@ -1004,7 +1010,7 @@
         if (weekOf(w).settle && weekOf(w).settle.winner) continue;
         const rankOf = rankLookup(rankingsFile ? rankingsFile.players : parseFieldAny(config.fieldText));
         const patch = HDCore.settlePatch(weekOf(w), board, rankOf, config.amounts, Date.now());
-        if (patch) { await write("week", w, patch); toast(`🏁 Week ${w} is final. ${patch.settle.winner} wins!`); }
+        if (patch) { await write("week", w, patch); toast(`🏁 Week ${wk(w)} is final. ${patch.settle.winner} wins!`); }
       }
     } finally { settling = false; }
   }
@@ -1200,7 +1206,7 @@
   function renderActive() {
     setupFlow();
     const active = document.querySelector("section.active").id;
-    $("#subline").textContent = `Week ${currentWeek()} · Draft open · Lock Thu 7am`;
+    $("#subline").textContent = `Week ${wk(currentWeek())} · Draft open · Lock Thu 7am`;
     if (active === "draft") renderDraft();
     if (active === "payments") renderPayments();
     if (active === "payouts") renderPayouts();
@@ -1368,9 +1374,8 @@
 </script>
 <script>
   // Load the feature files in order, tagged with the app version so they're never stale
-  ["draft", "stats", "extras", "history", "home", "club", "egg", "fun", "watch", "party", "tips"].forEach(name => {
-    document.write(`<script src="${name}.js?v=${encodeURIComponent(APP_VERSION)}"><\/script>`);
-  });
+  // All the feature files, bundled into one (scripts/bundle.mjs builds it)
+  document.write(`<script src="app.js?v=${encodeURIComponent(APP_VERSION)}"><\/script>`);
 </script>
 </body>
 </html>

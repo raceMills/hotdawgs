@@ -121,7 +121,7 @@ async function flush() {
 async function draftTick(w) {
   let doc = await loadWeek(w);
   const { golfers, tourney } = await weekField(doc);
-  const ev = shortName(tourney && tourney.name) || `Week ${w}`;
+  const ev = shortName(tourney && tourney.name) || `Week ${C.seasonWeek(w, config)}`;
   const sent = doc.notified || {};
   const mark = {};
   const once = (key, fn) => { if (!QUIET && !sent[key] && !mark[key]) { fn(); mark[key] = NOW; } };
@@ -130,9 +130,9 @@ async function draftTick(w) {
   const fieldUp = golfers.length > 0;
   const open = fieldUp || !!doc.forceOpen;
   let st = C.draftState(w, doc.picks || {});
-  if (fieldUp && !doc.draftOpenAt && !st.complete) { patch.draftOpenAt = NOW; doc.draftOpenAt = NOW; log(`Week ${w}: field is posted (${golfers.length} golfers). Draft open.`); }
+  if (fieldUp && !doc.draftOpenAt && !st.complete) { patch.draftOpenAt = NOW; doc.draftOpenAt = NOW; log(`Week ${C.seasonWeek(w, config)}: field is posted (${golfers.length} golfers). Draft open.`); }
   if (open && !st.complete) {
-    once("open", () => notify(C.MEMBERS, `🌭 Week ${w} draft is open`, `The ${ev} field is set. ${st.board[0].m} picks first.`, `open-${w}`));
+    once("open", () => notify(C.MEMBERS, `🌭 Week ${C.seasonWeek(w, config)} draft is open`, `The ${ev} field is set. ${st.board[0].m} picks first.`, `open-${w}`));
 
     // Clock ran out: auto-pick (one per tick; the next person's clock starts now)
     const ci = C.clockInfo(doc, config, NOW);
@@ -144,7 +144,7 @@ async function draftTick(w) {
         const g = choice.golfer, kind = g.hot ? "hot" : "dawg";
         const pp = C.pickPatch(doc, w, m, g.name, kind, true, "clock", NOW);
         await saveWeek(w, pp);
-        log(`Week ${w}: auto-picked ${g.name} (${kind}) for ${m}${choice.fromQueue ? " from their queue" : ""}.`);
+        log(`Week ${C.seasonWeek(w, config)}: auto-picked ${g.name} (${kind}) for ${m}${choice.fromQueue ? " from their queue" : ""}.`);
         doc = await loadWeek(w);
         st = C.draftState(w, doc.picks || {});
         once(`auto-${pp.pickLog && Object.keys(pp.pickLog)[0]}`, () => notify(m, "⏱ Your clock ran out", `Auto-picked ${g.name} as your ${kind}${choice.fromQueue ? " (from your queue)" : ""}.`, `auto-${w}`));
@@ -155,11 +155,11 @@ async function draftTick(w) {
       // The first picker already heard about it in the "draft is open" note
       if (st.clock === 0 && mark.open) mark["clock-0"] = NOW;
       once(`clock-${st.clock}`, () => notify(st.onClock, "🌭 You're on the clock!",
-        `Week ${w} draft, pick ${st.clock + 1} of ${st.total}.${ci2 && !ci2.waiting ? ` Auto-pick in ${Math.round(ci2.leftMs / 3600000 * 10) / 10}h.` : ci2 && ci2.waiting ? " No clock until Wednesday 7am, but early picks are welcome." : ""}`, `clock-${w}`));
+        `Week ${C.seasonWeek(w, config)} draft, pick ${st.clock + 1} of ${st.total}.${ci2 && !ci2.waiting ? ` Auto-pick in ${Math.round(ci2.leftMs / 3600000 * 10) / 10}h.` : ci2 && ci2.waiting ? " No clock until Wednesday 7am, but early picks are welcome." : ""}`, `clock-${w}`));
     }
   }
   if (st.complete && C.entriesOf(doc.picks).length) {
-    once("done", () => notify(C.MEMBERS, `✅ Week ${w} draft is done`, `All ${st.total} picks are in for the ${ev}. Let the sweat begin.`, `done-${w}`));
+    once("done", () => notify(C.MEMBERS, `✅ Week ${C.seasonWeek(w, config)} draft is done`, `All ${st.total} picks are in for the ${ev}. Let the sweat begin.`, `done-${w}`));
   }
   if (Object.keys(mark).length) patch.notified = mark;
   if (Object.keys(patch).length) await saveWeek(w, patch);
@@ -201,7 +201,7 @@ async function liveTick(w) {
       C.matchPickNames(players, entries.map(e => e.name));
       for (const e of entries) {
         if (players.some(p => p.name === e.name)) continue;
-        log(`Week ${w}: ${e.name} (${e.who}) is no longer in the field.`);
+        log(`Week ${C.seasonWeek(w, config)}: ${e.name} (${e.who}) is no longer in the field.`);
         once(`wd-${e.name}`, () => {
           notify(e.who, "⚠️ Your golfer withdrew", `${e.name} is out of the ${ev}. Open the app to pick a replacement (anyone who hasn't teed off).`, `wd-${w}`);
           if (commish !== e.who) notify(commish, "⚠️ Withdrawal", `${e.name} (${e.who}'s ${e.kind}) is out of the ${ev}. They can pick a replacement in the app.`, `wd-${w}`);
@@ -255,6 +255,32 @@ async function liveTick(w) {
   if (Object.keys(patch).length) await saveWeek(w, patch);
 }
 
+// Payment nudges: Tuesday is gentle, Thursday is louder (10am Central or later)
+async function nudgeTick(cur) {
+  const c = chicago(NOW);
+  const dow = new Date(c.day + "T12:00:00Z").getUTCDay(); // 2 = Tue, 4 = Thu
+  if ((dow !== 2 && dow !== 4) || c.hour < 10 || QUIET) return;
+  const from = Math.max(config.seasonStartWeek || 1, cur - 3);
+  for (let w = from; w <= cur; w++) {
+    const doc = await loadWeek(w);
+    const s = doc.settle;
+    if (!s || !s.winner || (s.at && NOW - s.at < 12 * 3600000)) continue;
+    const amt = (s.rules || []).reduce((t, id) => t + C.amountFor(id, config.amounts), 0);
+    const players = [...new Set(C.entriesOf(doc.picks).map(e => e.who))];
+    const owe = players.filter(m => m !== s.winner && !(doc.paid || {})[m]);
+    if (!owe.length) continue;
+    const mark = {};
+    for (const m of owe) {
+      const key = `nudge-${m}-${c.day}`;
+      if ((doc.notified || {})[key]) continue;
+      if (dow === 2) notify(m, "🌭 Friendly reminder", `You owe ${s.winner} $${amt} for week ${C.seasonWeek(w, config)}. One tap in the app opens Venmo.`, `nudge-${w}`);
+      else notify(m, "🚨 Coach Frank has noticed", `Still unpaid: $${amt} to ${s.winner} for week ${C.seasonWeek(w, config)}. The whole pool can see your name on the Money tab.`, `nudge-${w}`);
+      mark[key] = NOW;
+    }
+    if (Object.keys(mark).length) await saveWeek(w, { notified: mark });
+  }
+}
+
 // Someone started a watch party in the app: ping everyone else (once per party)
 async function partyTick(w) {
   const doc = await loadWeek(w);
@@ -278,13 +304,13 @@ async function settleTick(w) {
     if (!patch) return;
     await saveWeek(w, patch);
     settle = patch.settle;
-    log(`Week ${w}: final. ${settle.winner} wins (${settle.rules.join(", ")}).`);
+    log(`Week ${C.seasonWeek(w, config)}: final. ${settle.winner} wins (${settle.rules.join(", ")}).`);
   }
   if ((doc.notified || {}).settled || QUIET) return;
   const amt = settle.rules.reduce((s, id) => s + C.amountFor(id, config.amounts), 0);
-  const ev = shortName(t && t.name) || `Week ${w}`;
-  notify(settle.winner, `🏆 You won week ${w}!`, `The ${ev} is final. Everyone owes you $${amt}. Watch for those Venmos.`, `paid-${w}`);
-  notify(C.MEMBERS.filter(m => m !== settle.winner), `🏁 ${settle.winner} wins week ${w}`, `The ${ev} is final. You owe ${settle.winner} $${amt}. Pay in the app.`, `paid-${w}`);
+  const ev = shortName(t && t.name) || `Week ${C.seasonWeek(w, config)}`;
+  notify(settle.winner, `🏆 You won week ${C.seasonWeek(w, config)}!`, `The ${ev} is final. Everyone owes you $${amt}. Watch for those Venmos.`, `paid-${w}`);
+  notify(C.MEMBERS.filter(m => m !== settle.winner), `🏁 ${settle.winner} wins week ${C.seasonWeek(w, config)}`, `The ${ev} is final. You owe ${settle.winner} $${amt}. Pay in the app.`, `paid-${w}`);
   await saveWeek(w, { notified: { settled: NOW } });
 }
 
@@ -293,9 +319,10 @@ const cur = config.currentWeek || 1;
 if (QUIET) log("Quiet hours (11pm–7am Central): the pick clock is paused and notifications wait until morning.");
 for (const w of [cur - 1, cur]) {
   if (w < 1) continue;
-  try { await settleTick(w); } catch (e) { log(`Week ${w} settle: ${e.message}`); }
+  try { await settleTick(w); } catch (e) { log(`Week ${C.seasonWeek(w, config)} settle: ${e.message}`); }
 }
 try { await draftTick(cur); } catch (e) { log(`Week ${cur} draft: ${e.message}`); }
 try { await liveTick(cur); } catch (e) { log(`Week ${cur} live: ${e.message}`); }
 try { await partyTick(cur); } catch (e) { log(`Week ${cur} party: ${e.message}`); }
+try { await nudgeTick(cur); } catch (e) { log(`Payment nudges: ${e.message}`); }
 await flush();

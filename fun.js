@@ -119,7 +119,7 @@
   }
   const eggDebts = () => {
     const out = [];
-    for (let w = 1; w <= currentWeek(); w++) {
+    for (let w = seasonStart(); w <= currentWeek(); w++) {
       const lp = lastPlace(w);
       if (lp) out.push({ w, m: lp.who, golfer: lp.name, pos: lp.pos, proof: ((weekOf(-w).eggProof || {})[lp.who]) || null, at: ((weekOf(-w).eggProofTimes || {})[lp.who]) || 0 });
     }
@@ -176,17 +176,18 @@
     const nextFirst = HD.draftOrder ? HD.draftOrder(w + 1)[0] : "";
     return `<div class="hz">
       <div class="hz-mast"><h1>The Hotdawg Herald</h1><div style="font-size:11px;font-style:italic">"All the news that's fit to relish"</div></div>
-      <div class="hz-dateline"><span>${date}</span><span>Week ${w} edition</span><span>Price: one egg beer</span></div>
+      <div class="hz-dateline"><span>${date}</span><span>Week ${wk(w)} edition</span><span>Price: one egg beer</span></div>
       <div class="hz-head">${esc(head)}</div>
       <div class="hz-deck">${deck} Total haul: $${h.total}.</div>
       <div class="hz-photo">${h.cam ? `<img src="${h.cam.src}" alt="">` : `<span class="noimg">🌭</span>`}</div>
-      <div class="hz-cap">${h.cam ? `KETCHUP CAM: ${esc(h.cam.m)}'s week ${w} dog${h.cam.votes ? `, winner by ${h.cam.votes} vote${h.cam.votes > 1 ? "s" : ""}` : ""}. Photo: the Herald staff.` : "No Ketchup Cam photos this week. The Herald is disappointed in all of you."}</div>
+      <div class="hz-cap">${h.cam ? `KETCHUP CAM: ${esc(h.cam.m)}'s week ${wk(w)} dog${h.cam.votes ? `, winner by ${h.cam.votes} vote${h.cam.votes > 1 ? "s" : ""}` : ""}. Photo: the Herald staff.` : "No Ketchup Cam photos this week. The Herald is disappointed in all of you."}</div>
       <div class="hz-cols">
         ${h.bust && h.bust.pos > 10 ? `<div><h4>Bust of the week</h4><p><b>${esc(h.bust.name)}</b> came in ranked No. ${h.bust.rank} and left ${h.bust.pos >= 999 ? "on Friday" : `in ${ord(h.bust.pos)}`}. ${esc(h.bust.who)} declined to comment.</p></div>` : ""}
         ${h.longshot ? `<div><h4>Long shot</h4><p><b>${esc(h.longshot.name)}</b>, world No. ${h.longshot.rank >= 999 ? "who-knows" : h.longshot.rank}, finished ${ord(h.longshot.pos)} for ${esc(h.longshot.who)}. Scouts are baffled.</p></div>` : ""}
         <div><h4>Police blotter</h4><p>${h.mcs.length ? `${h.mcs.length} pool golfer${h.mcs.length > 1 ? "s" : ""} missed the cut: ${h.mcs.map(e => esc(e.name)).join(", ")}. No arrests made.` : "Every pool golfer made the cut. Authorities are suspicious."}</p></div>
         <div><h4>Egg beer watch</h4><p>${h.last ? `<b>${esc(h.last.who)}</b> finished last (${esc(h.last.name)}, ${ord(h.last.pos)}) and owes the group an egg beer. Proof ${((weekOf(-w).eggProof || {})[h.last.who]) ? "has been filed." : "is pending."}` : "No egg beer owed this week."}</p></div>
       </div>
+      ${HD.recordsBrokenIn ? HD.recordsBrokenIn(w).map(r => `<div class="hz-quote" style="font-style:normal;background:#1c140c;color:#f6f0e1"><b>🏅 RECORD BROKEN:</b> ${esc(r.title)}. ${esc(r.holder)}, ${esc(r.value)}.</div>`).join("") : ""}
       <div class="hz-quote">"${esc(pick(QUOTES, w * 7 + 3))}"<br><span style="font-size:12px;font-style:normal">— Coach Frank Furter</span></div>
       <div class="hz-tick"><b>SEASON TICKER:</b> ${tick}</div>
       <div class="hz-ad">Next week: ${nextFirst ? `${esc(nextFirst)} picks first.` : ""} Draft opens when the field posts. Bring mustard.</div>
@@ -204,7 +205,7 @@
     ov.querySelector(".hd-x").onclick = close;
     ov.querySelector("[data-hz=share]").onclick = () => {
       const h = heraldData(w);
-      const text = `📰 THE HOTDAWG HERALD, Week ${w}\n${h.s.winner.toUpperCase()} WINS: ${h.wp ? `${h.wp.name} ${ord(h.wp.pos)}` : ""}, $${h.per} from everyone.${h.last ? `\n🥚🍺 ${h.last.who} owes an egg beer.` : ""}\nRead it: ${location.origin + location.pathname}`;
+      const text = `📰 THE HOTDAWG HERALD, Week ${wk(w)}\n${h.s.winner.toUpperCase()} WINS: ${h.wp ? `${h.wp.name} ${ord(h.wp.pos)}` : ""}, $${h.per} from everyone.${h.last ? `\n🥚🍺 ${h.last.who} owes an egg beer.` : ""}\nRead it: ${location.origin + location.pathname}`;
       HD.shareText ? HD.shareText(text) : (navigator.share ? navigator.share({ text }).catch(() => {}) : null);
     };
   }
@@ -214,7 +215,7 @@
     const season = HD.seasonData();
     const st = season.stats[m];
     const weeks = [];
-    for (let w = 1; w <= currentWeek(); w++) if (settled(w)) weeks.push(w);
+    for (let w = seasonStart(); w <= currentWeek(); w++) if (settled(w)) weeks.push(w);
     const mine = weeks.flatMap(w => entriesWithPos(w).filter(e => e.who === m).map(e => Object.assign({ w }, e)));
     const avg = (arr) => arr.length ? arr.reduce((s, x) => s + Math.min(x.pos, 80), 0) / arr.length : 99;
     const hots = mine.filter(e => e.kind === "hot"), dawgs = mine.filter(e => e.kind === "dawg");
@@ -237,8 +238,8 @@
     const slides = [
       { bg: "linear-gradient(160deg,#d92b2b,#7a1414)", html: `<div class="wr-emoji">🌭</div><div class="wr-k">Hotdawgs Wrapped</div><div class="wr-mid">${esc(m)}, here's your season${weeks.length < 10 ? " so far" : ""}</div><div class="wr-p">${weeks.length} week${weeks.length === 1 ? "" : "s"} in the books. Tap to keep going.</div>` },
       { bg: st.net >= 0 ? "linear-gradient(160deg,#1f8a4c,#0c4426)" : "linear-gradient(160deg,#5a2a82,#26103d)", html: `<div class="wr-k">Your bottom line</div><div class="wr-big">${st.net < 0 ? "−" : "+"}$${Math.abs(st.net)}</div><div class="wr-p">${st.wins} win${st.wins === 1 ? "" : "s"} · ${ord(place)} place in the pool</div><div class="wr-p">${st.net > 0 ? "The pool has been very good to you." : st.net < 0 ? "Think of it as a donation to your friends' hot dog fund." : "Perfectly balanced. As all things should be."}</div>` },
-      longShot ? { bg: "linear-gradient(160deg,#f2b33d,#c4661c)", html: `<div class="wr-k">Your best long shot</div><div class="wr-emoji">🎯</div><div class="wr-mid">${esc(longShot.name)}</div><div class="wr-p">World No. ${longShot.rank >= 999 ? "unranked" : longShot.rank}, finished ${ord(longShot.pos)} in week ${longShot.w}. Nobody saw it coming except you.</div>` } : null,
-      curse ? { bg: "linear-gradient(160deg,#30343b,#0e0f12)", html: `<div class="wr-k">The one that cursed you</div><div class="wr-emoji">👻</div><div class="wr-mid">${esc(curse.name)}</div><div class="wr-p">Ranked No. ${curse.rank}, finished ${curse.pos >= 999 ? "with a missed cut" : ord(curse.pos)} in week ${curse.w}. Never forget.</div>` } : null,
+      longShot ? { bg: "linear-gradient(160deg,#f2b33d,#c4661c)", html: `<div class="wr-k">Your best long shot</div><div class="wr-emoji">🎯</div><div class="wr-mid">${esc(longShot.name)}</div><div class="wr-p">World No. ${longShot.rank >= 999 ? "unranked" : longShot.rank}, finished ${ord(longShot.pos)} in week ${wk(longShot.w)}. Nobody saw it coming except you.</div>` } : null,
+      curse ? { bg: "linear-gradient(160deg,#30343b,#0e0f12)", html: `<div class="wr-k">The one that cursed you</div><div class="wr-emoji">👻</div><div class="wr-mid">${esc(curse.name)}</div><div class="wr-p">Ranked No. ${curse.rank}, finished ${curse.pos >= 999 ? "with a missed cut" : ord(curse.pos)} in week ${wk(curse.w)}. Never forget.</div>` } : null,
       (nemesis || customer) ? { bg: "linear-gradient(160deg,#1b6fa8,#0b2f4a)", html: `<div class="wr-k">Money trail</div><div class="wr-emoji">💸</div>${nemesis ? `<div class="wr-p">Your nemesis: <b>${esc(nemesis[0])}</b>. You've sent them $${nemesis[1]}.</div>` : ""}${customer ? `<div class="wr-p">Your best customer: <b>${esc(customer[0])}</b>. They've paid you $${customer[1]}.</div>` : ""}` } : null,
       { bg: "linear-gradient(160deg,#fff6e3,#f2b33d)", dark: true, html: `<div class="wr-k">Egg beer report</div><div class="wr-emoji">🥚🍺</div><div class="wr-big">${debts.length}</div><div class="wr-p">${debts.length ? `egg beer${debts.length === 1 ? "" : "s"} owed for finishing last. ${debts.filter(d => d.proof).length} with photo proof.` : "Zero last-place finishes. Your stomach thanks you."}</div>` },
       { bg: "linear-gradient(160deg,#d92b2b,#f2b33d)", html: `<div class="wr-k">Your pool personality</div><div class="wr-emoji">${persona[0]}</div><div class="wr-mid">${persona[1]}</div><div class="wr-p">${persona[2]}</div>`, last: persona }
@@ -309,11 +310,11 @@
     return `<div class="card" id="eggCourt"><h2>🥚🍺 Egg Beer Court</h2>
       <p class="hint">Last place each week owes the group an egg beer. Photo proof or it didn't happen.</p>
       ${open.length ? open.map(d => `<div class="eb-row"><span class="avatar">${initial(d.m)}</span>
-        <span style="flex:1"><b>${esc(d.m)}</b> · week ${d.w}<br><span class="hint" style="margin:0">${esc(d.golfer)} finished ${ord(d.pos)}</span></span>
+        <span style="flex:1"><b>${esc(d.m)}</b> · week ${wk(d.w)}<br><span class="hint" style="margin:0">${esc(d.golfer)} finished ${ord(d.pos)}</span></span>
         <b style="color:var(--red)">OWES 🥚</b></div>`).join("") : `<p><b>All egg beers paid in full.</b> The court is satisfied.</p>`}
-      ${myOpen.length ? `<label class="btn" style="display:block;text-align:center;margin-top:10px">📸 Post my proof (week ${myOpen[0].w})
+      ${myOpen.length ? `<label class="btn" style="display:block;text-align:center;margin-top:10px">📸 Post my proof (week ${wk(myOpen[0].w)})
         <input type="file" accept="image/*" capture="environment" id="eggIn" data-w="${myOpen[0].w}" style="display:none"></label>` : ""}
-      ${proofs.length ? `<p class="hint" style="margin-top:12px">Hall of shame</p><div class="eb-proofs">${proofs.slice(0, 9).map(d => `<figure><img src="${d.proof}" alt=""><figcaption>${esc(d.m)} · wk ${d.w}</figcaption></figure>`).join("")}</div>` : ""}
+      ${proofs.length ? `<p class="hint" style="margin-top:12px">Hall of shame</p><div class="eb-proofs">${proofs.slice(0, 9).map(d => `<figure><img src="${d.proof}" alt=""><figcaption>${esc(d.m)} · wk ${wk(d.w)}</figcaption></figure>`).join("")}</div>` : ""}
     </div>`;
   }
   function wireEgg(root) {
@@ -451,13 +452,13 @@
       out.push(`<div class="card hd-paper" data-fun="herald" data-w="${hw}" style="cursor:pointer;background:#f6f0e1;font-family:Georgia,serif">
         <div style="display:flex;align-items:center;gap:10px"><span style="font-size:34px">📰</span>
         <span style="flex:1"><b style="font-size:17px">The Hotdawg Herald</b>${read < hw ? ` <span class="hd-new">NEW</span>` : ""}<br>
-        <span class="hint" style="margin:0;font-style:italic">Week ${hw} edition: "${esc(h.winner)} ${read < hw ? "makes the front page" : "on the front page"}"</span></span><b>›</b></div></div>`);
+        <span class="hint" style="margin:0;font-style:italic">Week ${wk(hw)} edition: "${esc(h.winner)} ${read < hw ? "makes the front page" : "on the front page"}"</span></span><b>›</b></div></div>`);
     }
     return out.join("");
   }
   function clubCards() {
     const weeks = [];
-    for (let w = currentWeek(); w >= 1; w--) if (settled(w)) weeks.push(w);
+    for (let w = currentWeek(); w >= seasonStart(); w--) if (settled(w)) weeks.push(w);
     return `<div class="card" id="wrappedCard" style="background:linear-gradient(140deg,#d92b2b,#f2b33d);color:#fff">
         <h2 style="color:#fff">🎁 Hotdawgs Wrapped</h2>
         <p style="margin:4px 0 10px;font-weight:700">Your season as a story: money, your best long shot, your nemesis, your curse and your pool personality.</p>
@@ -465,7 +466,7 @@
       </div>
       ${eggCourtCard()}
       ${weeks.length ? `<div class="card"><h2>📰 Herald archive</h2>${weeks.map(w => `<div class="rule" data-fun="herald" data-w="${w}" style="cursor:pointer">
-        <span style="width:60px;font-weight:900">Wk ${w}</span><span style="flex:1;font-family:Georgia,serif;font-style:italic">${esc(weekOf(w).settle.winner)} wins${weekTourney(w) ? ` the ${esc(short(weekTourney(w).name))}` : ""}</span><b>›</b></div>`).join("")}</div>` : ""}`;
+        <span style="width:60px;font-weight:900">Wk ${wk(w)}</span><span style="flex:1;font-family:Georgia,serif;font-style:italic">${esc(weekOf(w).settle.winner)} wins${weekTourney(w) ? ` the ${esc(short(weekTourney(w).name))}` : ""}</span><b>›</b></div>`).join("")}</div>` : ""}`;
   }
   function wire(root) {
     root.querySelectorAll("[data-fun]").forEach(el => el.onclick = () => {
@@ -512,5 +513,5 @@
     }
   };
 
-  window.HD = Object.assign(window.HD || {}, { isWD, swapOptions, openSwap, notTeedOff, openHerald, openWrapped, lastPlace, eggDebts, confetti, watchEagles });
+  window.HD = Object.assign(window.HD || {}, { isWD, swapOptions, openSwap, notTeedOff, openHerald, openWrapped, lastPlace, eggDebts, confetti, watchEagles, settledWeek: settled, entriesWithPos });
 })();

@@ -163,7 +163,7 @@
     const st = HD.draftState ? HD.draftState(w) : null;
     const d = weekOf(w), s = d.settle;
     const pill = document.getElementById("subline");
-    if (pill) pill.textContent = `Week ${w} · ` + (s && s.winner ? `${s.winner} won the week`
+    if (pill) pill.textContent = `Week ${wk(w)} · ` + (s && s.winner ? `${s.winner} won the week`
       : st && !st.complete ? `Draft · pick ${st.clock + 1} of ${st.total}`
       : live.event && live.event.final ? "Final · settle up"
       : live.event && live.event.status ? live.event.status : "Picks locked");
@@ -208,20 +208,20 @@
       const pot = HD.potOf(s), per = pot / (MEMBERS.length - 1);
       if (s.winner === me) {
         const paidCount = MEMBERS.filter(m => m !== me && (d.paid || {})[m]).length;
-        return { cls: "gold", html: `<div class="hd-kicker">Week ${w} results</div>
+        return { cls: "gold", html: `<div class="hd-kicker">Week ${wk(w)} results</div>
           <div class="hd-headline">You won ${money(pot)}! 🏆</div>
           <p class="hint" style="margin:0">${paidCount} of ${MEMBERS.length - 1} have paid you.</p>
           <button class="btn" data-go="clubhouse">Make your trophy card</button>` };
       }
       if (!(d.paid || {})[me]) {
         const handle = (config.venmo || {})[s.winner];
-        return { cls: "hot", html: `<div class="hd-kicker">Week ${w} results</div>
+        return { cls: "hot", html: `<div class="hd-kicker">Week ${wk(w)} results</div>
           <div class="hd-headline">You owe ${s.winner} ${money(per)}</div>
           <p class="hint" style="margin:0">${s.winner} won ${money(pot)}. Settle up and stay off Shooter's list.</p>
-          ${handle ? `<a class="btn" style="background:#fff;color:var(--ink)" href="${venmoLink(handle, per, `Hotdawgs Week ${w}`)}">Pay on Venmo</a>` : `<p class="hint">${s.winner} hasn't added a Venmo name yet.</p>`}
+          ${handle ? `<a class="btn" style="background:#fff;color:var(--ink)" href="${venmoLink(handle, per, `Hotdawgs Week ${wk(w)}`)}">Pay on Venmo</a>` : `<p class="hint">${s.winner} hasn't added a Venmo name yet.</p>`}
           <button class="btn ghost" data-paid="1">I paid ✓</button>` };
       }
-      return { cls: "", html: `<div class="hd-kicker">Week ${w} results</div>
+      return { cls: "", html: `<div class="hd-kicker">Week ${wk(w)} results</div>
         <div class="hd-headline">${s.winner} took the week</div>
         <p class="hint" style="margin:0">You're paid up. Clean hands, clear conscience. Next week's draft opens soon.</p>` };
     }
@@ -237,7 +237,7 @@
     // 3. Draft still going
     if (st && !st.complete && HD.draftOpen && !HD.draftOpen(w)) {
       const first = st.board[0].m;
-      return { cls: "", html: `<div class="hd-kicker">Week ${w} draft${t ? ` · ${shortName(t.name)}` : ""}</div>
+      return { cls: "", html: `<div class="hd-kicker">Week ${wk(w)} draft${t ? ` · ${shortName(t.name)}` : ""}</div>
         <div class="hd-headline">🔒 Draft opens when the field posts</div>
         <p class="hint" style="margin:0">${first === me ? "You pick first this week. Start starring golfers in your queue." : `${first} picks first. Star golfers now so you're ready.`}</p>
         <button class="btn ghost" data-go="draft">Build my queue</button>` };
@@ -246,14 +246,14 @@
       const cl = HD.clockLine ? HD.clockLine(w, st) : "";
       if (st.onClock === me) {
         const need = !mine.hot && !mine.dawg ? "hot or dawg" : (!mine.hot ? "hot" : "dawg");
-        return { cls: "hot", html: `<div class="hd-kicker">Week ${w} draft · pick ${st.clock + 1} of ${st.total}</div>
+        return { cls: "hot", html: `<div class="hd-kicker">Week ${wk(w)} draft · pick ${st.clock + 1} of ${st.total}</div>
           <div class="hd-headline">You're on the clock! 🌭</div>
           <p class="hint" style="margin:0">Time to draft your ${need}${t ? ` for the ${shortName(t.name)}` : ""}.${cl ? `<br><b>${cl}</b>` : ""}</p>
           <button class="btn" style="background:#fff;color:var(--ink)" data-go="draft">Draft now</button>` };
       }
       const myNext = st.board.findIndex((x, i) => i >= st.clock && x.m === me && !x.done);
       const away = myNext < 0 ? null : myNext - st.clock;
-      return { cls: "", html: `<div class="hd-kicker">Week ${w} draft · pick ${st.clock + 1} of ${st.total}</div>
+      return { cls: "", html: `<div class="hd-kicker">Week ${wk(w)} draft · pick ${st.clock + 1} of ${st.total}</div>
         <div class="hd-headline">${st.onClock} is on the clock</div>
         <p class="hint" style="margin:0">${away === null ? "Your picks are in. Sit back and heckle." : away === 1 ? "You're up next. Stretch those fingers." : `You pick in ${away} turns.`}${cl ? `<br>${cl}` : ""}</p>
         <button class="btn ghost" data-nudge="${st.onClock}">Nudge ${st.onClock} 💬</button>` };
@@ -269,7 +269,7 @@
     const sw = HD.sweat ? HD.sweat(w) : null;
     const myOdds = sw ? (sw.odds.find(o => o.m === me) || { pct: 0 }).pct : null;
     const started = live.players.some(p => p.toPar && p.toPar !== "E" && p.toPar !== "");
-    return { cls: myOdds !== null && myOdds >= 40 ? "gold" : "", html: `<div class="hd-kicker">${t ? shortName(t.name) : `Week ${w}`}${t && t.status ? " · " + t.status : ""}</div>
+    return { cls: myOdds !== null && myOdds >= 40 ? "gold" : "", html: `<div class="hd-kicker">${t ? shortName(t.name) : `Week ${wk(w)}`}${t && t.status ? " · " + t.status : ""}</div>
       <div class="hd-headline">${myOdds !== null ? `${myOdds}% to win the week ${myOdds >= 40 ? "😎" : myOdds >= 15 ? "😰" : "🥶"}` : started ? "Your picks are live" : "Picks locked. Now we wait."}</div>
       ${sw && sw.now.winner ? `<p class="hint" style="margin:0">If it ended now: <b>${sw.now.winner === me ? "you" : sw.now.winner}</b> ${sw.now.winner === me ? "win" : "wins"} ${money(sw.now.total * (MEMBERS.length - 1))}.</p>` : ""}
       ${row(mine.hot, "hot")}${row(mine.dawg, "dawg")}
@@ -357,7 +357,7 @@
     const n = wrap.querySelector("[data-nudge]");
     if (n) n.onclick = () => {
       const st = HD.draftState(w);
-      HD.shareText(`🌭 @${n.dataset.nudge} you're on the clock! Week ${w} draft, pick ${st.clock + 1} of ${st.total}. Make your pick: ${location.origin + location.pathname}`);
+      HD.shareText(`🌭 @${n.dataset.nudge} you're on the clock! Week ${wk(w)} draft, pick ${st.clock + 1} of ${st.total}. Make your pick: ${location.origin + location.pathname}`);
     };
     const p = wrap.querySelector("[data-paid]");
     if (p) p.onclick = () => { write("week", w, { paid: { [me]: true } }); toast(pickJoke(JOKES.paid)); };

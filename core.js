@@ -188,6 +188,10 @@
     while (t < endMs) { const step = Math.min(STEP, endMs - t); if (!quietAt(t)) total += step; t += step; }
     return total;
   }
+  // Week numbers keep counting across seasons; this is the number people see
+  // (week 1 of the current season = config.seasonStartWeek).
+  function seasonWeek(w, cfg) { return w - ((cfg && cfg.seasonStartWeek) || 1) + 1; }
+
   // The pick clock never runs before 7am Central on the Wednesday of tournament week
   // (the day before a Thursday start). Picks made earlier are just early birds.
   function clockFloor(weekDoc) {
@@ -296,6 +300,6 @@
   }
 
   return { MEMBERS, RULES, amountFor, isMajor, nameKey, compactKey, rankLookup, matchPickNames, buildField,
-    parsePar, parseScoreboard, isoDay, draftOrder, draftState, needOf, activeMs, quietAt, clockFloor, clockStart, clockInfo,
+    parsePar, parseScoreboard, isoDay, draftOrder, draftState, needOf, activeMs, quietAt, clockFloor, seasonWeek, clockStart, clockInfo,
     chooseAutoPick, pickPatch, computeWeek, entriesOf, settlePatch };
 });

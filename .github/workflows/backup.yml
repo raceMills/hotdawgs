@@ -1,0 +1,44 @@
+name: Weekly backup
+
+on:
+  schedule:
+    # Mondays 6:17am Central (after the weekend's results are settled)
+    - cron: "17 12 * * 1"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Dump the database
+        run: node scripts/backup.mjs
+      # The repo is public, so the backup is encrypted (AES-256). The password is the
+      # BACKUP_KEY secret if you add one, otherwise the VAPID_PRIVATE_KEY secret.
+      # To restore: openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 -in FILE.enc -out backup.json -pass pass:YOUR_KEY
+      - name: Encrypt and save to the backups branch
+        env:
+          PASS: ${{ secrets.BACKUP_KEY || secrets.VAPID_PRIVATE_KEY }}
+        run: |
+          if [ -z "$PASS" ]; then echo "No BACKUP_KEY or VAPID_PRIVATE_KEY secret; refusing to save an unencrypted backup."; exit 1; fi
+          name="hotdawgs-$(date -u +%Y-%m-%d).json.enc"
+          openssl enc -aes-256-cbc -pbkdf2 -iter 200000 -salt -in backup.json -out "/tmp/$name" -pass env:PASS
+          rm backup.json
+          git config user.name "hotdawgs-bot"
+          git config user.email "hotdawgs-bot@users.noreply.github.com"
+          git fetch origin backups || true
+          if git rev-parse --verify origin/backups >/dev/null 2>&1; then git checkout -B backups origin/backups; else git checkout --orphan backups && git rm -rfq .; fi
+          cp "/tmp/$name" .
+          # Keep the 26 most recent (six months)
+          ls -1 hotdawgs-*.json.enc | sort | head -n -26 | xargs -r git rm -q
+          printf "Encrypted weekly backups of the Hotdawgs pool database.\nSee .github/workflows/backup.yml on main for how to restore.\n" > README.md
+          git add -A
+          git commit -qm "Backup $(date -u +%Y-%m-%d)" || echo "Nothing new"
+          git push -q origin backups
+          echo "Saved $name"

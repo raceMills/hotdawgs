@@ -26,7 +26,7 @@
     const ci = clock(week);
     if (weekOf(week).clockPaused) return "⏸ Pick clock paused by the commissioner";
     if (!ci) return config.autoPickHours === 0 ? "No pick clock this season" : "";
-    if (ci.waiting) return `⏱ No rush yet. The ${fmtLeft(ci.limitMs)} pick clock starts ${new Date(ci.startsAt).toLocaleString([], { weekday: "long", hour: "numeric", minute: "2-digit" }).replace(":00", "")}`;
+    if (ci.waiting) return `⏱ No rush yet. The ${Math.round(ci.limitMs / 360000) / 10}-hour pick clock starts ${new Date(ci.startsAt).toLocaleString([], { weekday: "long", hour: "numeric", minute: "2-digit" }).replace(":00", "")}`;
     if (ci.quiet) return `🌙 Clock paused overnight · ${fmtLeft(ci.leftMs)} left after 7am`;
     return ci.due ? "⏱ Time's up. Auto-picking…" : `⏱ Auto-pick in ${fmtLeft(ci.leftMs)}`;
   }
@@ -77,8 +77,8 @@
   async function nudge(who, week, st) {
     const ci = clock(week);
     const text = who === null
-      ? `🌭 Week ${week} draft is done! Picks are in: ${appLink()}`
-      : `🌭 @${who} you're on the clock! Week ${week} draft, pick ${st.clock + 1} of ${st.total}.${ci && !ci.due && !ci.waiting ? ` Auto-pick in ${fmtLeft(ci.leftMs)}.` : ""} Make your pick: ${appLink()}`;
+      ? `🌭 Week ${wk(week)} draft is done! Picks are in: ${appLink()}`
+      : `🌭 @${who} you're on the clock! Week ${wk(week)} draft, pick ${st.clock + 1} of ${st.total}.${ci && !ci.due && !ci.waiting ? ` Auto-pick in ${fmtLeft(ci.leftMs)}.` : ""} Make your pick: ${appLink()}`;
     if (navigator.share) {
       try { await navigator.share({ text }); return; } catch (e) { return; }
     }
@@ -130,7 +130,7 @@
     }
     const t = currentTourney();
     if (!t) {
-      card.innerHTML = `<div class="stub"><span>Week ${week} draft</span></div>
+      card.innerHTML = `<div class="stub"><span>Week ${wk(week)} draft</span></div>
         <div class="body"><div class="tname">Tournament TBA</div><p class="hint" style="margin:6px 0 0">Waiting on ESPN's schedule.</p></div>`;
       return;
     }
@@ -140,7 +140,7 @@
       : days === null ? "" : days <= 0 ? "Tees off today" : days === 1 ? "Tees off tomorrow"
       : `Tees off ${new Date(t.start + "T12:00:00").toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })}`;
     card.innerHTML = `
-      <div class="stub"><span>🏌️ Drafting for week ${week}</span><span>${fmtDates(t)}</span></div>
+      <div class="stub"><span>🏌️ Drafting for week ${wk(week)}</span><span>${fmtDates(t)}</span></div>
       <div class="body">
         <div class="tname">${n.main}</div>
         ${n.sponsor ? `<div class="spons">${n.sponsor}</div>` : ""}
@@ -149,6 +149,7 @@
           ${when ? `<span>⏰ ${when}</span>` : ""}
           ${fieldIsLive() ? `<span class="ok">✓ Field posted · ${live.players.length} golfers${live.fieldSource === "PGA Tour" ? " (PGA Tour)" : ""}</span>` : `<span class="warn">⏳ Field not posted yet</span>`}
         </div>
+        ${HD.weatherStrip ? HD.weatherStrip(true) : ""}
       </div>`;
   }
 
@@ -211,7 +212,7 @@
     if (!dataReady || openingWeek === week || weekOf(week).draftOpenAt || !draftOpen(week) || draftState(week).complete) return;
     openingWeek = week;
     write("week", week, { draftOpenAt: Date.now() });
-    toast(`🌭 The field is set. The week ${week} draft is open!`);
+    toast(`🌭 The field is set. The week ${wk(week)} draft is open!`);
   }
   setInterval(() => { if (!document.hidden) { markOpen(currentWeek()); autoPickIfDue(false); } }, 30000);
   window.HD.autoPickNow = () => autoPickIfDue(true);
@@ -423,7 +424,7 @@
     el.insertBefore(box, el.firstChild);
     const btn = document.getElementById("payTextBtn");
     if (btn) btn.onclick = async () => {
-      const text = `🌭 Week ${w} is final! ${s.winner} wins ${money(per * payers.length)}. `
+      const text = `🌭 Week ${wk(w)} is final! ${s.winner} wins ${money(per * payers.length)}. `
         + `${owing.map(p => "@" + p).join(" ")} each owe ${money(per)}. Pay on Venmo in the app: ${appLink()}`;
       if (navigator.share) { try { await navigator.share({ text }); } catch (e) {} return; }
       location.href = "sms:&body=" + encodeURIComponent(text);

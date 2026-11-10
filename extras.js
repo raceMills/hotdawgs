@@ -192,7 +192,7 @@
           <button class="btn small ghost" id="condolenceBtn">Send condolences 💬</button>`;
         el.appendChild(box);
         document.getElementById("condolenceBtn").onclick = () =>
-          shareText(`🌭 Bad beat report, week ${w}: ${beats.map(b => b.text).join(" ")} Thoughts, prayers, and one egg beer. ${appLink()}`);
+          shareText(`🌭 Bad beat report, week ${wk(w)}: ${beats.map(b => b.text).join(" ")} Thoughts, prayers, and one egg beer. ${appLink()}`);
       }
     }
   };
@@ -243,7 +243,7 @@
       <button class="btn small ghost" id="gradesBtn" style="margin-top:10px">Post grades to the group 💬</button>`;
     board.appendChild(box);
     document.getElementById("gradesBtn").onclick = () =>
-      shareText(`🌭 Week ${w} draft grades:\n${grades.map(g => `${g.grade} ${g.m}: ${g.line}`).join("\n")}\n${appLink()}`);
+      shareText(`🌭 Week ${wk(w)} draft grades:\n${grades.map(g => `${g.grade} ${g.m}: ${g.line}`).join("\n")}\n${appLink()}`);
   };
 
   // ===================== 1. Trophy card =====================
@@ -310,7 +310,7 @@
     for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
     const file = new File([bytes], `hotdawgs-week-${w}.png`, { type: "image/png" });
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
-      navigator.share({ files: [file], text: `🏆 ${weekOf(w).settle.winner} wins week ${w} of the Hotdawgs Golf Pool!` }).catch(() => {});
+      navigator.share({ files: [file], text: `🏆 ${weekOf(w).settle.winner} wins week ${wk(w)} of the Hotdawgs Golf Pool!` }).catch(() => {});
       return;
     }
     const ov = document.createElement("div");
@@ -327,7 +327,7 @@
     MEMBERS.forEach(a => { won[a] = 0; dawgMoney[a] = 0; flow[a] = {}; MEMBERS.forEach(b => flow[a][b] = 0); });
     let longest = null, choke = null;
     const h2h = {}; // h2h["A|B"] = { a: wins for A, b: wins for B }
-    for (let w = 1; w <= currentWeek(); w++) {
+    for (let w = seasonStart(); w <= currentWeek(); w++) {
       const d = weekOf(w), picks = d.picks || {}, fin = d.finishes || {}, s = d.settle;
       if (Object.keys(fin).length) {
         const bestPos = {};
@@ -420,7 +420,7 @@
         <h2>Trophy room 🏆</h2>
         ${f.settled.length ? f.settled.slice().reverse().map(x => `
           <div class="rule">
-            <span style="flex:1"><b>Week ${x.w}</b> · ${x.winner} won ${money(potOf(weekOf(x.w).settle))}</span>
+            <span style="flex:1"><b>Week ${wk(x.w)}</b> · ${x.winner} won ${money(potOf(weekOf(x.w).settle))}</span>
             <button class="btn small" data-trophy="${x.w}">Trophy card</button>
           </div>`).join("") : `<p class="hint">No champions yet. The first settled week gets a trophy card to share.</p>`}
       </div>
@@ -429,10 +429,10 @@
         <h2>Season awards</h2>
         <div class="award"><span class="ico">🔥</span><div><b>Hot hand</b><span class="hint" style="margin:0">${f.won ? `${f.won[0]}, ${f.won[1]} win${f.won[1] === 1 ? "" : "s"}` : "Up for grabs"}</span></div></div>
         <div class="award"><span class="ico">🐶</span><div><b>Dawg whisperer</b><span class="hint" style="margin:0">${f.dawg ? `${f.dawg[0]}, ${money(f.dawg[1])} won on dawg picks` : "No dawg has cashed yet"}</span></div></div>
-        <div class="award"><span class="ico">🎯</span><div><b>Longest shot cashed</b><span class="hint" style="margin:0">${f.longest ? `${f.longest.m} with ${f.longest.name} (${f.longest.rank < 999 ? "World #" + f.longest.rank : "unranked"}), week ${f.longest.w}` : "Nobody yet"}</span></div></div>
+        <div class="award"><span class="ico">🎯</span><div><b>Longest shot cashed</b><span class="hint" style="margin:0">${f.longest ? `${f.longest.m} with ${f.longest.name} (${f.longest.rank < 999 ? "World #" + f.longest.rank : "unranked"}), week ${wk(f.longest.w)}` : "Nobody yet"}</span></div></div>
         <div class="award"><span class="ico">💸</span><div><b>The Shooter award</b><span class="hint" style="margin:0">${f.shooter ? `${f.shooter.payer} is down ${money(f.shooter.net)} to ${f.shooter.to}` : "Everyone's even. For now."}</span></div></div>
         <div class="award"><span class="ico">🥶</span><div><b>Ice cold</b><span class="hint" style="margin:0">${f.dry ? `${f.dry[0]}, ${f.dry[1]} straight week${f.dry[1] === 1 ? "" : "s"} without a win` : "Nobody's cold yet"}</span></div></div>
-        <div class="award"><span class="ico">🧂</span><div><b>Biggest choke</b><span class="hint" style="margin:0">${f.choke ? `${f.choke.m}'s ${f.choke.name} (${f.choke.rank < 999 ? "World #" + f.choke.rank : "unranked"}) missed the cut, week ${f.choke.w}` : "No hots have missed the cut yet"}</span></div></div>
+        <div class="award"><span class="ico">🧂</span><div><b>Biggest choke</b><span class="hint" style="margin:0">${f.choke ? `${f.choke.m}'s ${f.choke.name} (${f.choke.rank < 999 ? "World #" + f.choke.rank : "unranked"}) missed the cut, week ${wk(f.choke.w)}` : "No hots have missed the cut yet"}</span></div></div>
         <button class="btn small ghost" id="awardsBtn" style="margin-top:10px">Post awards to the group 💬</button>
       </div>
 
@@ -451,7 +451,7 @@
 
       <div class="card">
         <h2>Ketchup Cam 📸</h2>
-        <p class="hint">Post your hot dog setup for week ${w}. Everyone votes, and the best dog wins bragging rights.${lastCam ? ` Last week's champ: <b>${lastCam.m}</b>${lastCam.tie ? " (tie)" : ""}.` : ""}</p>
+        <p class="hint">Post your hot dog setup for week ${wk(w)}. Everyone votes, and the best dog wins bragging rights.${lastCam ? ` Last week's champ: <b>${lastCam.m}</b>${lastCam.tie ? " (tie)" : ""}.` : ""}</p>
         ${me ? `<label class="btn" style="display:block;cursor:pointer">${photos[me] ? "Replace my photo" : "Add my hot dog photo"} 🌭
           <input type="file" accept="image/*" id="camIn" style="display:none"></label>` : `<p class="hint">Pick your name on the Me tab first.</p>`}
         <div class="photos" style="margin-top:12px">
