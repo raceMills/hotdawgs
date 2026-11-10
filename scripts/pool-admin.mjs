@@ -219,6 +219,14 @@ async function pin() {
   console.log(`Pinned week ${week} to ${nameArg} (${startArg}).`);
 }
 
-const run = { status, "start-week": startWeek, pin, field: fieldProbe, url: urlProbe }[mode];
+// Set the pick clock length in hours (0 = off)
+async function setClock() {
+  const before = ((await getRow("pool_config", "id", "main")) || { data: {} }).data.autoPickHours;
+  const hours = Number(weekArg);
+  if (!Number.isFinite(hours) || hours < 0) throw new Error("Give the hours in the week box, e.g. 4");
+  await patchRow("pool_config", { id: "main" }, { autoPickHours: hours });
+  console.log(`Pick clock: ${before == null ? "default" : before + "h"} -> ${hours}h`);
+}
+const run = { "set-clock": setClock, status, "start-week": startWeek, pin, field: fieldProbe, url: urlProbe }[mode];
 if (!run) { console.error(`Unknown mode "${mode}"`); process.exit(1); }
 run().catch(e => { console.error(e.message); process.exit(1); });
