@@ -492,7 +492,7 @@
       "watch": [
         {
           "round": 1,
-          "start": 1794493800000,
+          "start": 1794488400000,
           "end": 1794510000000,
           "kind": "Featured groups",
           "network": "ESPN+",
@@ -524,7 +524,7 @@
         },
         {
           "round": 2,
-          "start": 1794580200000,
+          "start": 1794574800000,
           "end": 1794596400000,
           "kind": "Featured groups",
           "network": "ESPN+",
@@ -706,7 +706,7 @@
         "city": "St. Simons Island",
         "state": "Georgia",
         "country": "USA",
-        "course": "Sea Island Golf Club (Seaside Course)",
+        "course": "Sea Island Golf Club - Seaside Course",
         "tz": "America/New_York"
       }
     }
