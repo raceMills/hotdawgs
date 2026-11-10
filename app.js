@@ -44,7 +44,7 @@
   const takenNames = (week) => C.entriesOf(weekOf(week).picks).map(e => e.name);
   const queueOf = (week, m) => (weekOf(week).queues || {})[m] || [];
 
-  window.HD = Object.assign(window.HD || {}, { draftState, draftOrder, draftOpen, clock, fmtLeft, clockLine });
+  window.HD = Object.assign(window.HD || {}, { draftState, draftOrder, draftOpen, clock, fmtLeft, clockLine, tellGroup: (w, pk) => tellGroup(w, pk) });
 
   // ----- Emoji reactions on picks (tap a pick on the board) -----
   const EMOJI = ["🔥", "🤡", "🥚", "🌭", "💀", "🐐"];
@@ -185,7 +185,37 @@
     if (mine[kind]) { toast(`${who === me ? "You" : who} already ${who === me ? "have" : "has"} a ${kind}. Pick a ${kind === "hot" ? "dawg" : "hot"}.`); return; }
     await savePick(week, who, g, false);
     if (who !== me) { toast(`Picked ${g.name} for ${who}`); window.HD_PROXY = null; }
-    else { justPickedWeek = week; celebrate(); }
+    else { justPickedWeek = week; celebrate(); setTimeout(() => tellGroup(week, { g: g.name, kind, rank: g.rank }), 1600); }
+  }
+  // Right after your pick: a pop-up to text the group who's up next, with a joke.
+  // (One tap opens Messages addressed to Hot Dawgs; Apple requires that tap.)
+  const esc = (x) => String(x == null ? "" : x).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  function tellGroup(week, pk) {
+    const st = draftState(week);
+    const roast = pk ? C.pickLine(me, pk.g, pk.kind, pk.rank) : "";
+    if (document.querySelector(".hd-tell")) return;
+    const next = st.complete ? null : st.onClock;
+    const line = (roast ? roast + " " : "") + (next ? C.nudgeLine(next) : `Week ${wk(week)} draft is done! All ${st.total} picks are in.`);
+    const ov = document.createElement("div");
+    ov.className = "hd-ov hd-tell";
+    ov.style.cssText = "display:flex;align-items:center;justify-content:center;padding:20px";
+    ov.innerHTML = `<div class="card" style="max-width:420px;width:100%;margin:0">
+      <h2>${next ? `📣 Tell the group ${esc(next)} is up` : "📣 Tell the group the draft's done"}</h2>
+      <p style="font-size:16px;margin:6px 0 12px">“${esc(line)}”</p>
+      <button class="btn" data-t="send">Send to Hot Dawgs 💬</button>
+      <button class="btn ghost" data-t="skip" style="margin-top:6px">Skip</button></div>`;
+    document.body.appendChild(ov);
+    ov.querySelector("[data-t=skip]").onclick = () => ov.remove();
+    ov.querySelector("[data-t=send]").onclick = () => {
+      ov.remove();
+      justPickedWeek = null;
+      const ci = clock(week);
+      if (!next) return HD.shareText(`🌭 ${line} ${appLink()}`);
+      const photo = (weekOf(-week).photos || {})[next];
+      const text = `🌭 ${line}\n${photo ? `📸 Exhibit A: ${next}'s Ketchup Cam dog.\n` : ""}Week ${wk(week)}, pick ${st.clock + 1} of ${st.total}.${ci && !ci.due && !ci.waiting ? ` Auto-pick in ${fmtLeft(ci.leftMs)}.` : ""} ${appLink()}`;
+      HD.shareText(text, photo ? { photo, photoName: `${next}-ketchup-cam` } : null);
+      renderActive();
+    };
   }
   // Auto-pick for whoever is on the clock when their time runs out. Any open phone
   // can do this; the background task does it too if no phone is open.
@@ -1872,6 +1902,7 @@
     const ph = config.phones || {}, have = MEMBERS.filter(m => ph[m]), missing = MEMBERS.filter(m => !ph[m]);
     return `<div class="card" id="hdPhones"><h2>💬 Group texts</h2>
       <p class="hint">Add how you show up in the Hot Dawgs group chat so texts from the app open Messages already addressed to everyone. You just tap Send.</p>
+      ${SETUP_NOTES[me] && !(config.phones || {})[me] ? `<p class="hint" style="color:var(--red)"><b>${esc(SETUP_NOTES[me])}</b></p>` : ""}
       <p class="hint"><b>Use exactly what the group chat shows for you</b>: your cell number, or your Apple ID email if that's what iMessage uses (check the chat's member list).</p>
       <div class="field"><label for="myPhone">Your iMessage number or email</label>
         <input type="text" id="myPhone" autocomplete="tel" inputmode="email" autocapitalize="off" spellcheck="false" placeholder="(512) 555-0123 or you@icloud.com" value="${esc(ph[me] || "")}"></div>
@@ -2024,8 +2055,35 @@
   const baseRender = renderActive;
   renderActive = function () {
     if (dataReady && me && !$("#appArea").hidden && !sessionValid()) { logOut(); return; }
-    return baseRender.apply(this, arguments);
+    const out = baseRender.apply(this, arguments);
+    setupCard();
+    return out;
   };
+  // Home nudge until you've added how you show up in the group chat
+  const SETUP_NOTES = {
+    Zach: "Heads up Zach: you're in the Hot Dawgs chat by your Yahoo email, not your phone number. Enter that email exactly, or the app's texts will start a new group instead of landing in Hot Dawgs."
+  };
+  function setupCard() {
+    if (!dataReady || !me || (config.phones || {})[me]) return;
+    const a = document.querySelector("section.active");
+    if (!a || a.id !== "home") return;
+    const wrap = document.getElementById("homeWrap");
+    if (!wrap || wrap.querySelector("#hdSetupTexts")) return;
+    const el = document.createElement("div");
+    el.className = "card";
+    el.id = "hdSetupTexts";
+    el.style.borderColor = "var(--red)";
+    el.innerHTML = `<h2>💬 One quick setup</h2>
+      <p style="margin:4px 0 8px">Add how you show up in the <b>Hot Dawgs</b> group chat so pick nudges and payout texts go straight to the group. Takes 10 seconds.</p>
+      ${SETUP_NOTES[me] ? `<p class="hint" style="color:var(--red);margin:0 0 8px"><b>${esc(SETUP_NOTES[me])}</b></p>` : `<p class="hint" style="margin:0 0 8px">Use the exact number (or email) the group chat shows for you.</p>`}
+      <button class="btn" id="hdSetupGo">Set it up</button>`;
+    const hero = [...wrap.querySelectorAll(".card.hd-hero")].pop();
+    hero ? hero.after(el) : wrap.prepend(el);
+    el.querySelector("#hdSetupGo").onclick = () => {
+      document.querySelector(".hd-avatar").click();
+      setTimeout(() => { const c = document.getElementById("hdPhones"); if (c) { c.scrollIntoView({ behavior: "smooth", block: "center" }); const i = c.querySelector("#myPhone"); if (i) i.focus(); } }, 400);
+    };
+  }
 
   window.HD = Object.assign(window.HD || {}, { pushState: () => subState, turnOnPush: turnOn });
 })();

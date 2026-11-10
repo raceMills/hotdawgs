@@ -41,7 +41,7 @@
   const takenNames = (week) => C.entriesOf(weekOf(week).picks).map(e => e.name);
   const queueOf = (week, m) => (weekOf(week).queues || {})[m] || [];
 
-  window.HD = Object.assign(window.HD || {}, { draftState, draftOrder, draftOpen, clock, fmtLeft, clockLine });
+  window.HD = Object.assign(window.HD || {}, { draftState, draftOrder, draftOpen, clock, fmtLeft, clockLine, tellGroup: (w, pk) => tellGroup(w, pk) });
 
   // ----- Emoji reactions on picks (tap a pick on the board) -----
   const EMOJI = ["🔥", "🤡", "🥚", "🌭", "💀", "🐐"];
@@ -182,7 +182,37 @@
     if (mine[kind]) { toast(`${who === me ? "You" : who} already ${who === me ? "have" : "has"} a ${kind}. Pick a ${kind === "hot" ? "dawg" : "hot"}.`); return; }
     await savePick(week, who, g, false);
     if (who !== me) { toast(`Picked ${g.name} for ${who}`); window.HD_PROXY = null; }
-    else { justPickedWeek = week; celebrate(); }
+    else { justPickedWeek = week; celebrate(); setTimeout(() => tellGroup(week, { g: g.name, kind, rank: g.rank }), 1600); }
+  }
+  // Right after your pick: a pop-up to text the group who's up next, with a joke.
+  // (One tap opens Messages addressed to Hot Dawgs; Apple requires that tap.)
+  const esc = (x) => String(x == null ? "" : x).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  function tellGroup(week, pk) {
+    const st = draftState(week);
+    const roast = pk ? C.pickLine(me, pk.g, pk.kind, pk.rank) : "";
+    if (document.querySelector(".hd-tell")) return;
+    const next = st.complete ? null : st.onClock;
+    const line = (roast ? roast + " " : "") + (next ? C.nudgeLine(next) : `Week ${wk(week)} draft is done! All ${st.total} picks are in.`);
+    const ov = document.createElement("div");
+    ov.className = "hd-ov hd-tell";
+    ov.style.cssText = "display:flex;align-items:center;justify-content:center;padding:20px";
+    ov.innerHTML = `<div class="card" style="max-width:420px;width:100%;margin:0">
+      <h2>${next ? `📣 Tell the group ${esc(next)} is up` : "📣 Tell the group the draft's done"}</h2>
+      <p style="font-size:16px;margin:6px 0 12px">“${esc(line)}”</p>
+      <button class="btn" data-t="send">Send to Hot Dawgs 💬</button>
+      <button class="btn ghost" data-t="skip" style="margin-top:6px">Skip</button></div>`;
+    document.body.appendChild(ov);
+    ov.querySelector("[data-t=skip]").onclick = () => ov.remove();
+    ov.querySelector("[data-t=send]").onclick = () => {
+      ov.remove();
+      justPickedWeek = null;
+      const ci = clock(week);
+      if (!next) return HD.shareText(`🌭 ${line} ${appLink()}`);
+      const photo = (weekOf(-week).photos || {})[next];
+      const text = `🌭 ${line}\n${photo ? `📸 Exhibit A: ${next}'s Ketchup Cam dog.\n` : ""}Week ${wk(week)}, pick ${st.clock + 1} of ${st.total}.${ci && !ci.due && !ci.waiting ? ` Auto-pick in ${fmtLeft(ci.leftMs)}.` : ""} ${appLink()}`;
+      HD.shareText(text, photo ? { photo, photoName: `${next}-ketchup-cam` } : null);
+      renderActive();
+    };
   }
   // Auto-pick for whoever is on the clock when their time runs out. Any open phone
   // can do this; the background task does it too if no phone is open.

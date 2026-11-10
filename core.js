@@ -208,6 +208,30 @@
   ];
   const nudgeLine = (m, seed) => NUDGES[Math.abs(seed == null ? Math.floor(Math.random() * 1e6) : seed) % NUDGES.length].replace("{m}", m);
 
+  // A joke about the golfer someone just drafted. {p} picker, {g} golfer, {r} world rank.
+  const PICK_JOKES = {
+    hot: [
+      "{p} took {g}. Pure chalk. Somewhere at Bushwood, a gopher yawned.",
+      "{p} went with {g}. No risk, no egg beer. Shooter McGavin would approve, which should worry {p}.",
+      "{p} drafted {g}. The rankings said to and {p} listened. Very country club of them.",
+      "{p} grabbed {g}. Judge Smails calls that a gentleman's pick. Nobody else does.",
+      "{p} locked in {g}. Safe as a hot dog at a ballpark."
+    ],
+    dawg: [
+      "{p} took {g}, world No. {r}. Carl the groundskeeper is already calling it a Cinderella story.",
+      "{p} rolled with {g}. Either genius or an egg beer waiting to happen.",
+      "{p} drafted {g}, ranked {r}. The gopher has been notified.",
+      "{p} took {g}. Bold. Putting-with-a-hockey-stick bold.",
+      "{p} went with {g}. Danny Noonan had better odds, and he needed a putt in a thunderstorm.",
+      "{p} picked {g}. Happy's grandma just felt a disturbance in the force."
+    ]
+  };
+  function pickLine(p, g, kind, rank, seed) {
+    const list = PICK_JOKES[kind === "hot" ? "hot" : "dawg"];
+    const n = Math.abs(seed == null ? Math.floor(Math.random() * 1e6) : seed) % list.length;
+    return list[n].replace(/\{p\}/g, p).replace(/\{g\}/g, g).replace(/\{r\}/g, rank && rank < 999 ? rank : "who-knows");
+  }
+
   // Week numbers keep counting across seasons; this is the number people see
   // (week 1 of the current season = config.seasonStartWeek).
   function seasonWeek(w, cfg) { return w - ((cfg && cfg.seasonStartWeek) || 1) + 1; }
@@ -320,6 +344,6 @@
   }
 
   return { MEMBERS, RULES, amountFor, isMajor, nameKey, compactKey, rankLookup, matchPickNames, buildField,
-    parsePar, parseScoreboard, isoDay, draftOrder, draftState, needOf, activeMs, quietAt, clockFloor, seasonWeek, NUDGES, nudgeLine, clockStart, clockInfo,
+    parsePar, parseScoreboard, isoDay, draftOrder, draftState, needOf, activeMs, quietAt, clockFloor, seasonWeek, NUDGES, nudgeLine, PICK_JOKES, pickLine, clockStart, clockInfo,
     chooseAutoPick, pickPatch, computeWeek, entriesOf, settlePatch };
 });

@@ -92,6 +92,7 @@
     const ph = config.phones || {}, have = MEMBERS.filter(m => ph[m]), missing = MEMBERS.filter(m => !ph[m]);
     return `<div class="card" id="hdPhones"><h2>💬 Group texts</h2>
       <p class="hint">Add how you show up in the Hot Dawgs group chat so texts from the app open Messages already addressed to everyone. You just tap Send.</p>
+      ${SETUP_NOTES[me] && !(config.phones || {})[me] ? `<p class="hint" style="color:var(--red)"><b>${esc(SETUP_NOTES[me])}</b></p>` : ""}
       <p class="hint"><b>Use exactly what the group chat shows for you</b>: your cell number, or your Apple ID email if that's what iMessage uses (check the chat's member list).</p>
       <div class="field"><label for="myPhone">Your iMessage number or email</label>
         <input type="text" id="myPhone" autocomplete="tel" inputmode="email" autocapitalize="off" spellcheck="false" placeholder="(512) 555-0123 or you@icloud.com" value="${esc(ph[me] || "")}"></div>
@@ -244,8 +245,35 @@
   const baseRender = renderActive;
   renderActive = function () {
     if (dataReady && me && !$("#appArea").hidden && !sessionValid()) { logOut(); return; }
-    return baseRender.apply(this, arguments);
+    const out = baseRender.apply(this, arguments);
+    setupCard();
+    return out;
   };
+  // Home nudge until you've added how you show up in the group chat
+  const SETUP_NOTES = {
+    Zach: "Heads up Zach: you're in the Hot Dawgs chat by your Yahoo email, not your phone number. Enter that email exactly, or the app's texts will start a new group instead of landing in Hot Dawgs."
+  };
+  function setupCard() {
+    if (!dataReady || !me || (config.phones || {})[me]) return;
+    const a = document.querySelector("section.active");
+    if (!a || a.id !== "home") return;
+    const wrap = document.getElementById("homeWrap");
+    if (!wrap || wrap.querySelector("#hdSetupTexts")) return;
+    const el = document.createElement("div");
+    el.className = "card";
+    el.id = "hdSetupTexts";
+    el.style.borderColor = "var(--red)";
+    el.innerHTML = `<h2>💬 One quick setup</h2>
+      <p style="margin:4px 0 8px">Add how you show up in the <b>Hot Dawgs</b> group chat so pick nudges and payout texts go straight to the group. Takes 10 seconds.</p>
+      ${SETUP_NOTES[me] ? `<p class="hint" style="color:var(--red);margin:0 0 8px"><b>${esc(SETUP_NOTES[me])}</b></p>` : `<p class="hint" style="margin:0 0 8px">Use the exact number (or email) the group chat shows for you.</p>`}
+      <button class="btn" id="hdSetupGo">Set it up</button>`;
+    const hero = [...wrap.querySelectorAll(".card.hd-hero")].pop();
+    hero ? hero.after(el) : wrap.prepend(el);
+    el.querySelector("#hdSetupGo").onclick = () => {
+      document.querySelector(".hd-avatar").click();
+      setTimeout(() => { const c = document.getElementById("hdPhones"); if (c) { c.scrollIntoView({ behavior: "smooth", block: "center" }); const i = c.querySelector("#myPhone"); if (i) i.focus(); } }, 400);
+    };
+  }
 
   window.HD = Object.assign(window.HD || {}, { pushState: () => subState, turnOnPush: turnOn });
 })();

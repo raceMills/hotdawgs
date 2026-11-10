@@ -154,8 +154,19 @@ async function draftTick(w) {
       const ci2 = C.clockInfo(doc, config, NOW);
       // The first picker already heard about it in the "draft is open" note
       if (st.clock === 0 && mark.open) mark["clock-0"] = NOW;
-      once(`clock-${st.clock}`, () => notify(st.onClock, "🌭 You're on the clock!",
-        `${(l => l[0].toUpperCase() + l.slice(1))(C.nudgeLine(st.onClock, NOW).replace(/^@\S+, /, ""))} Week ${C.seasonWeek(w, config)}, pick ${st.clock + 1} of ${st.total}.${ci2 && !ci2.waiting ? ` Auto-pick in ${Math.round(ci2.leftMs / 3600000 * 10) / 10}h.` : ci2 && ci2.waiting ? " No clock until Wednesday 7am, but early picks are welcome." : ""}`, `clock-${w}`));
+      const joke = C.nudgeLine(st.onClock, NOW);
+      const prev = st.clock > 0 ? ((doc.pickLog || {})[st.clock - 1] || null) : null;
+      const roast = prev && prev.name ? C.pickLine(prev.m, prev.name, prev.kind, (golfers.find(g => g.name === prev.name) || {}).rank, Math.floor(NOW / 60000) + 3) + " " : "";
+      const timing = ci2 && !ci2.waiting ? ` Auto-pick in ${Math.round(ci2.leftMs / 3600000 * 10) / 10}h.` : ci2 && ci2.waiting ? " No clock until Wednesday 7am, but early picks are welcome." : "";
+      once(`clock-${st.clock}`, () => {
+        // The person who's up
+        notify(st.onClock, "🌭 You're on the clock!",
+          `${(l => l[0].toUpperCase() + l.slice(1))(joke.replace(/^@\S+, /, ""))} Week ${C.seasonWeek(w, config)}, pick ${st.clock + 1} of ${st.total}.${timing}`, `clock-${w}`);
+        // Everyone else, so the whole group can heckle
+        notify(C.MEMBERS.filter(m => m !== st.onClock && !(prev && prev.m === m && !prev.auto)), `🌭 ${st.onClock} is up (pick ${st.clock + 1} of ${st.total})`, roast + joke, `clock-${w}`);
+        // The person who just picked gets the roast without the reminder
+        if (prev && prev.m !== st.onClock && !prev.auto) notify(prev.m, `🌭 ${st.onClock} is up`, roast + joke, `clock-${w}`);
+      });
     }
   }
   if (st.complete && C.entriesOf(doc.picks).length) {
@@ -325,4 +336,14 @@ try { await draftTick(cur); } catch (e) { log(`Week ${cur} draft: ${e.message}`)
 try { await liveTick(cur); } catch (e) { log(`Week ${cur} live: ${e.message}`); }
 try { await partyTick(cur); } catch (e) { log(`Week ${cur} party: ${e.message}`); }
 try { await nudgeTick(cur); } catch (e) { log(`Payment nudges: ${e.message}`); }
+// One-time ping for anyone who hasn't added their group-chat number/email yet
+try {
+  if (!QUIET) {
+    const need = C.MEMBERS.filter(m => !(config.phones || {})[m] && !(config.setupPinged || {})[m] && Object.keys((config.push || {})[m] || {}).length);
+    for (const m of need) notify(m, "💬 10-second setup", m === "Zach"
+      ? "Add your Hot Dawgs chat info in the app. Heads up: you're in the group by your Yahoo email, so enter that email, not your phone number."
+      : "Add the number the Hot Dawgs group chat uses for you, so nudges and payouts go straight to the group.", "setup");
+    if (need.length) await patchRow("pool_config", { id: "main" }, { setupPinged: Object.fromEntries(need.map(m => [m, NOW])) });
+  }
+} catch (e) { log(`Setup ping: ${e.message}`); }
 await flush();
