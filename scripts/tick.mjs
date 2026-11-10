@@ -255,6 +255,17 @@ async function liveTick(w) {
   if (Object.keys(patch).length) await saveWeek(w, patch);
 }
 
+// Someone started a watch party in the app: ping everyone else (once per party)
+async function partyTick(w) {
+  const doc = await loadWeek(w);
+  const p = doc.party;
+  if (!p || !p.at || NOW - p.at > 30 * 60000 || (doc.notified || {})[`party-${p.at}`] || QUIET) return;
+  const t = doc.tournament;
+  notify(C.MEMBERS.filter(m => m !== p.host), `🍿 ${p.host} started a watch party`,
+    `${t ? shortName(t.name) + " " : ""}${p.network ? `on ${p.network}` : "is on"}. Jump on the FaceTime and open the app for live pool standings.`, `party-${w}`);
+  await saveWeek(w, { notified: { [`party-${p.at}`]: NOW } });
+}
+
 async function settleTick(w) {
   const doc = await loadWeek(w);
   const t = doc.tournament;
@@ -286,4 +297,5 @@ for (const w of [cur - 1, cur]) {
 }
 try { await draftTick(cur); } catch (e) { log(`Week ${cur} draft: ${e.message}`); }
 try { await liveTick(cur); } catch (e) { log(`Week ${cur} live: ${e.message}`); }
+try { await partyTick(cur); } catch (e) { log(`Week ${cur} party: ${e.message}`); }
 await flush();

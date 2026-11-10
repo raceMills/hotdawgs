@@ -118,6 +118,7 @@
       else sec.appendChild(box.firstElementChild);
     }
   };
+  window.HD = Object.assign(window.HD || {}, { watchWindows: windows });
   // Keep "on now" fresh while the app sits open
   setInterval(() => { if (!document.hidden && dataReady) { const a = document.querySelector("section.active"); if (a && (a.id === "home" || a.id === "scores")) renderActive(); } }, 60000);
 })();

@@ -248,7 +248,7 @@
 <script>
   // App version. Bump it on every release: files load with it, and open phones notice
   // a new number and reload themselves.
-  const APP_VERSION = "2026-11-09.6";
+  const APP_VERSION = "2026-11-09.7";
   async function checkForUpdate() {
     try {
       const r = await fetch(location.pathname + "?check=" + Date.now(), { cache: "no-store" });
@@ -1368,7 +1368,7 @@
 </script>
 <script>
   // Load the feature files in order, tagged with the app version so they're never stale
-  ["draft", "stats", "extras", "history", "home", "club", "egg", "fun", "watch", "tips"].forEach(name => {
+  ["draft", "stats", "extras", "history", "home", "club", "egg", "fun", "watch", "party", "tips"].forEach(name => {
     document.write(`<script src="${name}.js?v=${encodeURIComponent(APP_VERSION)}"><\/script>`);
   });
 </script>
