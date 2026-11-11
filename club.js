@@ -133,18 +133,18 @@
           <button class="btn" data-club="pickFor">🌭 Pick for ${esc(st.onClock)}</button>
           <button class="btn ghost" data-club="autoNow">⏭ Skip ${esc(st.onClock)}: auto-pick now</button>
           <button class="btn ghost" data-club="pause">${doc.clockPaused ? "▶️ Resume the pick clock" : "⏸ Pause the pick clock"}</button>` : ""}
-        ${lp ? `<button class="btn ghost" data-club="undo">↩️ Undo last pick (${esc(lp.m)}: ${esc(lp.name)})</button>` : ""}
       </div>
 
-      ${C.entriesOf(picks).length ? `
-      <div class="field" style="margin-top:14px"><label>Fix a pick (withdrawals: anyone who hasn't teed off)</label>
-        <div style="display:flex;gap:6px;flex-wrap:wrap">
-          <select id="fixWho">${MEMBERS.filter(m => picks[m] && (picks[m].hot || picks[m].dawg)).map(m => `<option>${m}</option>`).join("")}</select>
-          <select id="fixKind"><option value="hot">Hot</option><option value="dawg">Dawg</option></select>
-        </div>
-        <input id="fixName" list="fixList" placeholder="Replacement golfer" style="margin-top:6px">
-        <datalist id="fixList">${golfers.filter(g => !taken.has(g.name) && (!HD.notTeedOff || HD.notTeedOff(g.name))).map(g => `<option value="${esc(g.name)}">`).join("")}</datalist>
-        <button class="btn ghost" data-club="fix" style="margin-top:6px">Save fix</button></div>` : ""}
+      ${C.entriesOf(picks).length ? (() => {
+        const es = C.entriesOf(picks), wd = es.filter(e => HD.isWD && HD.isWD(w, e.name));
+        return `<div class="field" style="margin-top:14px"><label>Withdrawals</label>
+          <p class="hint">Picks are final once made. The only change allowed: replacing a golfer who withdraws, with someone who hasn't teed off. The member can do it from their Home screen, or you can do it here.</p>
+          ${wd.length ? wd.map(e => `<div class="rule"><span style="flex:1"><b>${esc(e.name)}</b> withdrew<br><span class="hint" style="margin:0">${esc(e.who)}'s ${e.kind}</span></span>
+            <button class="btn" style="width:auto;margin:0;padding:6px 12px" data-wdswap="${esc(e.who)}|${esc(e.name)}">Replace</button></div>`).join("") : `<p class="hint" style="margin:0 0 6px">No withdrawals among this week's picks.</p>`}
+          <details style="margin-top:6px"><summary class="hint" style="cursor:pointer">A golfer withdrew mid-round and the app hasn't caught it?</summary>
+            <div style="display:flex;gap:6px;margin-top:6px"><select id="wdMark" style="flex:1">${es.filter(e => !wd.includes(e)).map(e => `<option value="${esc(e.name)}">${esc(e.name)} (${esc(e.who)})</option>`).join("")}</select>
+            <button class="btn ghost" style="width:auto;margin:0" data-club="markWD">Mark withdrawn</button></div></details></div>`;
+      })() : ""}
 
       <div class="field" style="margin-top:14px"><label>Reset a password</label>
         <div class="chips">${MEMBERS.filter(m => (config.auth || {})[m]).map(m => `<button class="chip" data-reset="${m}">${m}</button>`).join("") || `<span class="hint">Nobody has set one yet.</span>`}</div>
@@ -185,24 +185,11 @@
       if (HD.autoPickNow) await HD.autoPickNow();
       return;
     }
-    if (what === "undo") {
-      await loadWeek(w);
-      const lp = lastPick(w);
-      if (!lp || !confirmTap("undo")) return;
-      const patch = { picks: { [lp.m]: { [lp.kind]: null } }, pickLog: { [lp.idx]: null }, draftOpenAt: Date.now() };
-      if (!lp.other) patch.picks[lp.m].first = null;
-      await write("week", w, patch);
-      return toast(`↩️ Took back ${lp.name}. ${lp.m} is on the clock again.`);
-    }
-    if (what === "fix") {
-      const who = $("#fixWho").value, kind = $("#fixKind").value, typed = $("#fixName").value.trim();
-      const g = golfers.find(x => x.name.toLowerCase() === typed.toLowerCase());
-      if (!g) return toast("Pick a golfer from the list.");
-      if (C.entriesOf(weekOf(w).picks).some(e => e.name === g.name)) return toast(`${g.name} is already taken.`);
-      $("#fixName").value = "";
-      document.activeElement && document.activeElement.blur();
-      await write("week", w, { picks: { [who]: { [kind]: g.name } } });
-      return toast(`Fixed: ${who}'s ${kind} is now ${g.name}.`);
+    if (what === "markWD") {
+      const name = $("#wdMark").value;
+      if (!name || !confirmTap("wd-" + name)) return;
+      await write("week", w, { withdrawn: { [name]: { by: me, at: Date.now() } } });
+      return toast(`${name} marked withdrawn. His owner can now pick a replacement who hasn't teed off.`);
     }
   }
   // Two taps to confirm the risky buttons
@@ -219,6 +206,7 @@
     const wrap = document.getElementById("settingsWrap");
     if (!wrap) return;
     wrap.querySelectorAll("[data-club]").forEach(b => b.onclick = () => act(b.dataset.club));
+    wrap.querySelectorAll("[data-wdswap]").forEach(b => b.onclick = () => { const [who, name] = b.dataset.wdswap.split("|"); HD.openSwap(currentWeek(), who, name); });
     wrap.querySelectorAll("[data-hours]").forEach(b => b.onclick = () => isCommish() && write("config", 0, { autoPickHours: Number(b.dataset.hours) }));
     wrap.querySelectorAll("[data-reset]").forEach(b => b.onclick = async () => {
       const m = b.dataset.reset;

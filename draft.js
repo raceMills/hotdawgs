@@ -205,6 +205,7 @@
     await loadWeek(week); // latest picks, so two people can't grab the same golfer
     const st = draftState(week);
     if (st.onClock !== who) { toast("That turn is over. Someone already picked."); renderActive(); return; }
+    if (HD.notTeedOff && live.players.some(p => p.posText && p.posText !== "—") && !HD.notTeedOff(g.name)) { toast(`${g.name} has already teed off. Pick someone who hasn't.`); return; }
     if (takenNames(week).some(n => C.compactKey(n) === C.compactKey(g.name))) { toast(`${g.name} was just taken.`); renderActive(); return; }
     const mine = (weekOf(week).picks || {})[who] || {};
     if (mine[kind]) { toast(`${who === me ? "You" : who} already ${who === me ? "have" : "has"} a ${kind}. Pick a ${kind === "hot" ? "dawg" : "hot"}.`); return; }

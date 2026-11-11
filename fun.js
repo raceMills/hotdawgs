@@ -336,6 +336,9 @@
   // ===================== Withdrawals =====================
   // A pick that's no longer in a posted, not-yet-started field
   function isWD(week, name) {
+    if (((weekOf(week).withdrawn || {})[name])) return true; // marked by the commissioner
+    const lp = live.players.find(p => p.name === name);
+    if (week === currentWeek() && lp && lp.posText === "WD") return true;
     if (week !== currentWeek() || !live.event || live.players.length < 60) return false;
     if (live.players.some(p => p.posText && p.posText !== "—")) return false;
     const pin = weekTourney(week);
@@ -378,6 +381,8 @@
       await loadWeek(week);
       const cur = ((weekOf(week).picks || {})[who] || {})[e.kind];
       if (cur !== oldName) { ov.remove(); return toast("That pick already changed."); }
+      if (!isWD(week, oldName)) { ov.remove(); return toast(`${oldName} hasn't withdrawn, so that pick stays.`); }
+      if (!notTeedOff(n)) return toast(`${n} has already teed off. Pick someone who hasn't.`);
       if (C.entriesOf(weekOf(week).picks).some(x => x.name === n)) return toast(`${n} was just taken. Pick another.`);
       await write("week", week, { picks: { [who]: { [e.kind]: n } }, swaps: { [oldName]: { m: who, to: n, kind: e.kind, at: Date.now(), by: me } } });
       ov.remove();
