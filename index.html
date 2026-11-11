@@ -248,7 +248,7 @@
 <script>
   // App version. Bump it on every release: files load with it, and open phones notice
   // a new number and reload themselves.
-  const APP_VERSION = "2026-11-10.11";
+  const APP_VERSION = "2026-11-11.1";
   async function checkForUpdate() {
     try {
       const r = await fetch(location.pathname + "?check=" + Date.now(), { cache: "no-store" });
@@ -359,16 +359,41 @@
     renderActive();
   }
 
+  // Live updates. Realtime pushes changes instantly, but iPhones drop that
+  // connection when the app is in the background, so we also re-check the
+  // current week whenever the app comes back and every 20 seconds while it's open.
+  let rtChannel = null, rtOk = false;
   function startRealtime() {
-    sb.channel("pool")
+    if (rtChannel) { try { sb.removeChannel(rtChannel); } catch (e) {} }
+    rtChannel = sb.channel("pool")
       .on("postgres_changes", { event: "*", schema: "public", table: "pool_weeks" }, (p) => {
         if (p.new && p.new.week) { weekDocs[p.new.week] = p.new.data; renderActive(); }
       })
       .on("postgres_changes", { event: "*", schema: "public", table: "pool_config" }, (p) => {
         if (p.new && p.new.data) { applyConfig(p.new.data); renderActive(); }
       })
-      .subscribe();
+      .subscribe((status) => { rtOk = status === "SUBSCRIBED"; });
   }
+  let freshening = false;
+  async function freshen() {
+    if (!sb || !dataReady || freshening) return;
+    freshening = true;
+    try {
+      const before = JSON.stringify([config, weekDocs[currentWeek()], weekDocs[-currentWeek()]]);
+      const { data: cfg } = await sb.from("pool_config").select("data").eq("id", "main").maybeSingle();
+      if (cfg) applyConfig(cfg.data);
+      await loadWeek(currentWeek());
+      await loadWeek(-currentWeek());
+      if (JSON.stringify([config, weekDocs[currentWeek()], weekDocs[-currentWeek()]]) !== before) renderActive();
+    } catch (e) { /* offline: try again soon */ } finally { freshening = false; }
+  }
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden || !dataReady) return;
+    freshen();
+    if (!rtOk) startRealtime();
+  });
+  window.addEventListener("pageshow", () => { if (dataReady) freshen(); });
+  setInterval(() => { if (!document.hidden) freshen(); }, 20000);
 
   function claimedMap(week) {
     const m = {};
