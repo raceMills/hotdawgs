@@ -204,7 +204,28 @@
     "@{m}, the alligator on 12 makes decisions faster than you.",
     "@{m}, Danny Noonan needs this scholarship and you need a golfer. Go.",
     "@{m}, Happy just putted with a hockey stick. You can at least tap a name.",
-    "@{m}, the Bushwood snack bar is out of hot dogs because you're holding up the line. Pick."
+    "@{m}, the Bushwood snack bar is out of hot dogs because you're holding up the line. Pick.",
+    "@{m}, Al Czervik just bought the clubhouse in less time than you've spent on this pick.",
+    "@{m}, Carl's been stalking that gopher for weeks and still moved faster than you.",
+    "@{m}, Lacey Underall wouldn't keep a man waiting this long. Pick.",
+    "@{m}, Spaulding has eaten three club sandwiches waiting on you.",
+    "@{m}, Happy fought Bob Barker and won in less time than this. Your turn.",
+    "@{m}, Happy's ghost coach is waving from the lake. He says pick a golfer.",
+    "@{m}, Shooter McGavin just practiced his dance. He's ready to celebrate your auto-pick.",
+    "@{m}, the Gilmore family hockey team has finished a full season since you went on the clock.",
+    "@{m}, Danny Noonan caddied 36 holes in the time you've been thinking.",
+    "@{m}, Judge Smails is tapping his watch. He wants a ruling, and the ruling is: pick.",
+    "@{m}, Ty Webb says don't overthink it. He also says a lot of other things. Pick anyway.",
+    "@{m}, your egg is cracked and your beer is getting warm. Draft before it's a warm egg beer.",
+    "@{m}, the hot dogs are on the grill and they're burning. So is your clock.",
+    "@{m}, we've chugged two egg beers waiting on you. Don't make it three.",
+    "@{m}, even the dawgs are getting drafted faster than this, and nobody wants the dawgs.",
+    "@{m}, the mustard is out, the relish is out, the only thing missing is your pick.",
+    "@{m}, Coach Frank Furter has aged a full year. He's a hot dog. They don't last that long.",
+    "@{m}, the field is set, the odds are posted, and the group chat is staring at you.",
+    "@{m}, the gopher just texted the group asking if you're OK.",
+    "@{m}, pick fast or pick slow, but pick before Carl blows up the draft board.",
+    "@{m}, Happy Gilmore's swing has a running start. Your pick doesn't need one. Go."
   ];
   const nudgeLine = (m, seed) => NUDGES[Math.abs(seed == null ? Math.floor(Math.random() * 1e6) : seed) % NUDGES.length].replace("{m}", m);
 
