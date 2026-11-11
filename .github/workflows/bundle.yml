@@ -3,7 +3,7 @@ name: Bundle
 on:
   push:
     branches: [main]
-    paths: ["draft.js", "stats.js", "extras.js", "history.js", "home.js", "club.js", "egg.js", "fun.js", "records.js", "watch.js", "party.js", "tips.js", "scripts/bundle.mjs"]
+    paths: ["draft.js", "stats.js", "extras.js", "history.js", "home.js", "club.js", "egg.js", "fun.js", "records.js", "watch.js", "party.js", "tips.js", "settle.js", "scripts/bundle.mjs"]
   workflow_dispatch: {}
 
 permissions:

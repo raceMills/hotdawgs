@@ -248,7 +248,7 @@
 <script>
   // App version. Bump it on every release: files load with it, and open phones notice
   // a new number and reload themselves.
-  const APP_VERSION = "2026-11-11.3";
+  const APP_VERSION = "2026-11-11.4";
   async function checkForUpdate() {
     try {
       const r = await fetch(location.pathname + "?check=" + Date.now(), { cache: "no-store" });
@@ -1359,16 +1359,20 @@
     $("#appArea").hidden = false;
   }
   let liveTimers = false;
-  function enterApp(justLoggedIn) {
-    showApp();
-    renderActive();
+  async function enterApp(justLoggedIn) {
+    let firstLive = null;
     if (!liveTimers) {
       liveTimers = true;
       // Live scores: load now, then every 2 minutes while the app is open
-      fetchLive();
+      firstLive = fetchLive();
       setInterval(() => { if (!document.hidden) fetchLive(); }, 120000);
       document.addEventListener("visibilitychange", () => { if (!document.hidden) fetchLive(); });
     }
+    // Draw the app once with scores and the field in hand (up to 2.5 seconds),
+    // instead of drawing it empty and redrawing as each piece arrives
+    if (firstLive && !justLoggedIn) await Promise.race([firstLive.catch(() => {}), new Promise(r => setTimeout(r, 2500))]);
+    showApp();
+    if (window.HD && HD.renderNow) HD.renderNow(); else renderActive();
     if (justLoggedIn && window.HD && HD.eggBeer) HD.eggBeer(me);
   }
   async function start() {
