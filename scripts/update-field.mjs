@@ -12,11 +12,13 @@ const MONTHS = { jan: 1, feb: 2, mar: 3, apr: 4, may: 5, jun: 6, jul: 7, aug: 8,
 async function pageData(path) {
   const r = await fetch(SITE + path, { headers: HEADERS });
   if (!r.ok) throw new Error(`${path}: HTTP ${r.status}`);
-  const m = /<script id="__NEXT_DATA__" type="application\/json">([\s\S]*?)<\/script>/.exec(await r.text());
+  const html = await r.text();
+  const m = /<script id="__NEXT_DATA__" type="application\/json">([\s\S]*?)<\/script>/.exec(html);
   if (!m) throw new Error(`${path}: no page data`);
   const queries = ((((JSON.parse(m[1]).props || {}).pageProps || {}).dehydratedState) || {}).queries || [];
   const get = (name) => { const q = queries.find(x => Array.isArray(x.queryKey) && x.queryKey[0] === name); return q && q.state ? q.state.data : null; };
   get.all = queries;
+  get.html = html;
   return get;
 }
 
@@ -61,14 +63,27 @@ function oddsMap(data) {
     let o = r.odds ?? r.oddsToWin ?? r.currentOdds ?? r.oddsValue ?? r.value;
     if (o && typeof o === "object") o = o.odds ?? o.value ?? o.displayOdds;
     if (typeof o === "number") o = (o > 0 ? "+" : "") + o;
-    if (nm && typeof o === "string" && /^[+-]?\d+(\/\d+)?$/.test(o.trim())) out.set(nm.toLowerCase(), o.trim());
+    if (nm && typeof o === "string" && /^[+-]?\d+(\/\d+)?$/.test(o.trim())) out.set(normName(nm), o.trim());
   }
+  return out;
+}
+const normName = (n) => String(n).normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z ]/gi, "").replace(/\s+/g, " ").trim().toLowerCase();
+// The odds page lists each golfer as: aria-label="Odds to win for Jackson Koivun: +1300"
+function oddsFromHtml(html) {
+  const out = new Map(), re = /Odds to win for ([^":<]+): ([+-]?\d+)/g;
+  let x;
+  while ((x = re.exec(html || ""))) out.set(normName(x[1].replace(/&#x27;|&#39;/g, "'").replace(/&amp;/g, "&")), x[2]);
   return out;
 }
 async function oddsFor(t, get) {
   let m = oddsMap(get("oddsToWin"));
+  if (!m.size) m = oddsFromHtml(get.html);
   if (m.size) return m;
-  try { m = oddsMap((await pageData(`/tournaments/${t.start.slice(0, 4)}/x/${t.id}/odds`))("oddsToWin")); } catch (e) { m = new Map(); }
+  try {
+    const page = await pageData(`/tournaments/${t.start.slice(0, 4)}/x/${t.id}/odds`);
+    m = oddsMap(page("oddsToWin"));
+    if (!m.size) m = oddsFromHtml(page.html);
+  } catch (e) { m = new Map(); }
   return m;
 }
 
@@ -130,7 +145,7 @@ for (const t of targets) {
     const alternates = players.filter(p => !p.withdrawn && p.alternate).map(p => ({ name: name(p), owgr: rank(p) })).filter(p => p.name);
     let odds = new Map();
     try { odds = await oddsFor(t, get); } catch (e) { console.log(`odds: ${e.message}`); }
-    for (const p of inField.concat(alternates)) { const o = odds.get(p.name.toLowerCase()); if (o) p.odds = o; }
+    for (const p of inField.concat(alternates)) { const o = odds.get(normName(p.name)); if (o) p.odds = o; }
     events.push({ pgaTourId: t.id, name: t.name, start: t.start, updated: field && field.lastUpdated ? new Date(field.lastUpdated).toISOString() : null, players: inField, alternates, watch, where });
     console.log(`${t.name} (${t.start}): ${inField.length} in the field, ${alternates.length} alternates, ${odds.size} odds, ${watch.length} TV/stream windows, ${where && where.lat ? `${where.city} ${where.lat},${where.lon}` : "no location"}`);
   } catch (e) {
