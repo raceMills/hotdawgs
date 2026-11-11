@@ -106,6 +106,11 @@
       font-weight: 900; padding: 4px 8px; color: var(--ink); cursor: pointer; white-space: nowrap; }
     .hd-qbtn.on { background: var(--mustard); }
     .hd-odds { color: var(--teal); font-weight: 900; }
+    .golfer > div:first-child { min-width: 0; flex: 1; }
+    .hd-oddpill { display: inline-flex; flex-direction: column; align-items: center; line-height: 1.05; min-width: 52px; padding: 3px 7px; border-radius: 10px;
+      background: #e3f4ef; color: var(--teal); border: 2px solid var(--teal); font-weight: 900; font-size: 13px; font-variant-numeric: tabular-nums; }
+    .hd-oddpill small { font-size: 10px; font-weight: 800; opacity: .8; }
+    .hd-qmeta { font-size: 12px; font-weight: 700; opacity: .75; }
     .hd-proxy { background: var(--teal); color: #fff; border: 3px solid var(--shadow); border-radius: 12px; padding: 10px 12px;
       margin-bottom: 12px; display: flex; align-items: center; gap: 8px; font-weight: 900; }
     .hd-lock { background: var(--cream); border: 3px dashed var(--bun); border-radius: 12px; padding: 14px; text-align: center; }
@@ -173,7 +178,7 @@
     const kind = g.hot ? "hot" : "dawg";
     const t = currentTourney();
     const forWho = who === me ? "your" : `${who}'s`;
-    if (!confirm(`Draft ${g.name} as ${forWho} ${kind}${t ? ` for the ${splitName(t.name).main}` : ""}?`)) return;
+    if (!confirm(`Draft ${g.name} as ${forWho} ${kind}${t ? ` for the ${splitName(t.name).main}` : ""}${g.odds ? ` (${g.odds} to win)` : ""}?`)) return;
     await loadWeek(week); // latest picks, so two people can't grab the same golfer
     const st = draftState(week);
     if (st.onClock !== who) { toast("That turn is over. Someone already picked."); renderActive(); return; }
@@ -257,6 +262,10 @@
     setQueue(week, q);
     toast(i >= 0 ? `Removed ${name} from your queue` : `Added ${name} to your queue (#${q.length})`);
   }
+  // "+1300" -> "7%": the chance to win that the odds imply
+  const oddsPct = (o) => { const n = parseInt(o, 10); if (!n) return ""; const p = n > 0 ? 100 / (n + 100) : -n / (-n + 100); return p >= 0.095 ? Math.round(p * 100) + "%" : (p * 100).toFixed(1) + "%"; };
+  const oddsPill = (o) => o ? `<span class="hd-oddpill" title="Odds to win: about ${oddsPct(o)} chance">${o}<small>${oddsPct(o)}</small></span>` : "";
+  const golferOf = (n) => golfers.find(g => C.compactKey(g.name) === C.compactKey(n));
   function renderQueue(week, st, beforeEl) {
     const card = ensureCard("queueCard", beforeEl);
     const q = queueOf(week, me);
@@ -270,12 +279,12 @@
     card.innerHTML = `<h2>My queue ⭐</h2>
       <p class="hint">Star golfers to line them up. ${config.autoPickHours === 0 ? "" : "If your clock runs out, auto-pick takes the first one still available that fills a slot you need, or else the best-ranked golfer left."}</p>
       ${q.length ? q.map((n, i) => `<div class="hd-qrow"><span class="n">${i + 1}</span>
-          <span class="nm ${taken.has(C.compactKey(n)) ? "gone" : ""}">${n}</span>
+          <span class="nm ${taken.has(C.compactKey(n)) ? "gone" : ""}">${n}${(g => g ? `<br><span class="hd-qmeta">${g.hot ? "🔥 Hot" : "🐶 Dawg"} · ${g.rank < 999 ? "World #" + g.rank : "Unranked"}${g.odds ? ` · <span class="hd-odds">${g.odds}</span>` : ""}</span>` : `<br><span class="hd-qmeta">Not in this week's field</span>`)(golferOf(n))}</span>
           <button class="hd-mini" data-qup="${i}" ${i === 0 ? "disabled" : ""}>↑</button>
           <button class="hd-mini" data-qdown="${i}" ${i === q.length - 1 ? "disabled" : ""}>↓</button>
           <button class="hd-mini" data-qdel="${i}">✕</button></div>`).join("")
         : `<p class="hint" style="margin:0">Your queue is empty. Tap ☆ next to any golfer below.</p>`}
-      ${next ? `<p class="hint" style="margin:10px 0 0">Next up for you: <b>${next.golfer.name}</b> ${next.fromQueue ? "(from your queue)" : "(best-ranked available)"}</p>` : ""}
+      ${next ? `<p class="hint" style="margin:10px 0 0">Next up for you: <b>${next.golfer.name}</b> (${next.golfer.hot ? "🔥 hot" : "🐶 dawg"}, ${next.golfer.rank < 999 ? "#" + next.golfer.rank : "unranked"}${next.golfer.odds ? `, ${next.golfer.odds}` : ""}) ${next.fromQueue ? "from your queue" : "best-ranked available"}</p>` : ""}
       ${myTurn && next ? `<button class="btn" id="qPickBtn">Draft ${next.golfer.name}</button>` : ""}`;
     const move = (i, d) => { const a = q.slice(); [a[i], a[i + d]] = [a[i + d], a[i]]; setQueue(week, a); };
     card.querySelectorAll("[data-qup]").forEach(b => b.onclick = () => move(Number(b.dataset.qup), -1));
@@ -389,7 +398,7 @@
     const t = currentTourney();
     const hasOdds = golfers.some(g => g.odds);
     list.innerHTML = (fieldIsLive() ? "" : `<p class="hint" style="background:var(--cream);border:2px dashed var(--bun);border-radius:10px;padding:8px">⏳ The ${t ? splitName(t.name).main : "tournament"} field isn't posted yet, so this is the world top 200. Some of them may not be playing.</p>`)
-      + `<p class="hint">${myTurn ? `Tap a golfer to draft ${proxy ? "for " + who : "them"}.` : need ? "Browse and star golfers for your queue. You can pick when it's your turn." : "You're done this week. Browse the field below."}${hasOdds ? " Odds to win are in teal." : ""}</p>`;
+      + `<p class="hint">${myTurn ? `Tap a golfer to draft ${proxy ? "for " + who : "them"}.` : need ? "Browse and star golfers for your queue. You can pick when it's your turn." : "You're done this week. Browse the field below."}${hasOdds ? " Teal boxes are odds to win (and the chance they imply)." : " Odds to win show up here once sportsbooks post them, usually Tuesday or Wednesday."}</p>`;
     golfers.filter(g => (filter === "hot") === g.hot).forEach(g => {
       const key = C.compactKey(g.name);
       const owner = owners[key];
@@ -397,8 +406,9 @@
       const qi = queued.indexOf(key);
       const el = document.createElement("div");
       el.className = "golfer" + (isMine ? " selected" : "") + (owner && owner !== who ? " taken" : "");
-      el.innerHTML = `<div><div>${g.name}</div><div class="rank">${g.rank < 999 ? "World #" + g.rank : "Unranked"}${g.odds ? ` · <span class="hd-odds">${g.odds}</span>` : ""}</div></div>
+      el.innerHTML = `<div><div>${g.name}</div><div class="rank">${g.rank < 999 ? "World #" + g.rank : "Unranked"}</div></div>
         <div style="display:flex;gap:6px;align-items:center">
+          ${oddsPill(g.odds)}
           ${owner ? `<span class="owner">${owner === me ? "You ✓" : owner}</span>`
             : !proxy && C.needOf((weekOf(week).picks || {})[me]) ? `<button class="hd-qbtn ${qi >= 0 ? "on" : ""}" data-q="1">${qi >= 0 ? `★ #${qi + 1}` : "☆"}</button>` : ""}
         </div>`;
