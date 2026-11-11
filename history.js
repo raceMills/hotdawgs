@@ -154,7 +154,7 @@
     list.insertBefore(head, list.firstChild);
     // Form line under each golfer
     list.querySelectorAll(".golfer").forEach(row => {
-      const nameEl = row.querySelector("div > div");
+      const nameEl = row.querySelector(":scope > div > div"); // the name, so the form line sits under it
       if (!nameEl) return;
       const line = formLine(nameEl.textContent.trim());
       if (!line) return;

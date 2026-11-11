@@ -107,6 +107,8 @@
     .hd-qbtn.on { background: var(--mustard); }
     .hd-odds { color: var(--teal); font-weight: 900; }
     .golfer > div:first-child { min-width: 0; flex: 1; }
+    .golfer > div:last-child { margin-left: 10px; flex: none; }
+    .golfer .owner { margin-left: 2px; }
     .hd-oddpill { display: inline-flex; flex-direction: column; align-items: center; line-height: 1.05; min-width: 52px; padding: 3px 7px; border-radius: 10px;
       background: #e3f4ef; color: var(--teal); border: 2px solid var(--teal); font-weight: 900; font-size: 13px; font-variant-numeric: tabular-nums; }
     .hd-oddpill small { font-size: 10px; font-weight: 800; opacity: .8; }
