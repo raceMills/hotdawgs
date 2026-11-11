@@ -282,7 +282,11 @@
     card.innerHTML = `<h2>My queue ⭐</h2>
       <p class="hint">Star golfers to line them up. ${config.autoPickHours === 0 ? "" : "If your clock runs out, auto-pick takes the first one still available that fills a slot you need, or else the best-ranked golfer left."}</p>
       ${q.length ? q.map((n, i) => `<div class="hd-qrow"><span class="n">${i + 1}</span>
-          <span class="nm ${taken.has(C.compactKey(n)) ? "gone" : ""}">${n}${(g => g ? `<br><span class="hd-qmeta">${g.hot ? "🔥 Hot" : "🐶 Dawg"} · ${g.rank < 999 ? "World #" + g.rank : "Unranked"}${g.odds ? ` · <span class="hd-odds">${g.odds}</span>` : ""}</span>` : `<br><span class="hd-qmeta">Not in this week's field</span>`)(golferOf(n))}</span>
+          ${(g => {
+            const gone = taken.has(C.compactKey(n));
+            const noFit = g && !gone && need !== "either" && (need === "hot") !== !!g.hot;
+            return `<span class="nm ${gone ? "gone" : ""}" ${noFit ? `style="opacity:.55"` : ""}>${n}${g ? `<br><span class="hd-qmeta">${g.hot ? "🔥 Hot" : "🐶 Dawg"} · ${g.rank < 999 ? "World #" + g.rank : "Unranked"}${g.odds ? ` · <span class="hd-odds">${g.odds}</span>` : ""}</span>` : `<br><span class="hd-qmeta">Not in this week's field</span>`}${gone ? `<br><span class="hd-qmeta">Taken</span>` : noFit ? `<br><span class="hd-qmeta">Skipped: you already have a ${g.hot ? "hot" : "dawg"}</span>` : ""}</span>`;
+          })(golferOf(n))}
           <button class="hd-mini" data-qup="${i}" ${i === 0 ? "disabled" : ""}>↑</button>
           <button class="hd-mini" data-qdown="${i}" ${i === q.length - 1 ? "disabled" : ""}>↓</button>
           <button class="hd-mini" data-qdel="${i}">✕</button></div>`).join("")
