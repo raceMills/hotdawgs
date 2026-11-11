@@ -114,6 +114,7 @@
       background: #e3f4ef; color: var(--teal); border: 2px solid var(--teal); font-weight: 900; font-size: 13px; font-variant-numeric: tabular-nums; }
     .hd-oddpill small { font-size: 10px; font-weight: 800; opacity: .8; }
     .hd-qmeta { font-size: 12px; font-weight: 700; opacity: .75; }
+    .hd-qdraft { width: auto !important; padding: 0 10px !important; background: var(--red) !important; color: #fff !important; font-weight: 900; }
     .hd-proxy { background: var(--teal); color: #fff; border: 3px solid var(--shadow); border-radius: 12px; padding: 10px 12px;
       margin-bottom: 12px; display: flex; align-items: center; gap: 8px; font-weight: 900; }
     .hd-lock { background: var(--cream); border: 3px dashed var(--bun); border-radius: 12px; padding: 14px; text-align: center; }
@@ -176,12 +177,32 @@
     const kind = g.hot ? "hot" : "dawg";
     await write("week", week, C.pickPatch(weekOf(week), week, member, g.name, kind, auto, auto ? "auto" : me, Date.now()));
   }
+  // "Are you sure?" before every pick
+  function areYouSure(g, forWho, kind, t) {
+    return new Promise((resolve) => {
+      const ov = document.createElement("div");
+      ov.className = "hd-ov";
+      ov.style.cssText = "display:flex;align-items:center;justify-content:center;padding:20px";
+      ov.innerHTML = `<div class="card" style="max-width:420px;width:100%;margin:0;text-align:center">
+        <div style="font-size:40px">${kind === "hot" ? "🔥" : "🐶"}</div>
+        <h2 style="margin:4px 0">Are you sure?</h2>
+        <p style="font-size:17px;margin:6px 0 4px">Draft <b>${g.name}</b> as ${forWho} <b>${kind}</b>${t ? ` for the ${splitName(t.name).main}` : ""}?</p>
+        <p class="hint" style="margin:0 0 14px">${g.rank < 999 ? "World #" + g.rank : "Unranked"}${g.odds ? ` · ${g.odds} to win` : ""} · No take-backs (except by the commissioner)</p>
+        <button class="btn" data-y="1">Yes, draft ${g.name.split(" ").slice(-1)[0]}</button>
+        <button class="btn ghost" data-n="1" style="margin-top:6px">Cancel</button></div>`;
+      document.body.appendChild(ov);
+      const done = (v) => { ov.remove(); resolve(v); };
+      ov.querySelector("[data-y]").onclick = () => done(true);
+      ov.querySelector("[data-n]").onclick = () => done(false);
+      ov.addEventListener("click", (e) => { if (e.target === ov) done(false); });
+    });
+  }
   async function draftPick(g) {
     const week = currentWeek(), who = actor();
     const kind = g.hot ? "hot" : "dawg";
     const t = currentTourney();
     const forWho = who === me ? "your" : `${who}'s`;
-    if (!confirm(`Draft ${g.name} as ${forWho} ${kind}${t ? ` for the ${splitName(t.name).main}` : ""}${g.odds ? ` (${g.odds} to win)` : ""}?`)) return;
+    if (!(await areYouSure(g, forWho, kind, t))) return;
     await loadWeek(week); // latest picks, so two people can't grab the same golfer
     const st = draftState(week);
     if (st.onClock !== who) { toast("That turn is over. Someone already picked."); renderActive(); return; }
@@ -287,16 +308,18 @@
             const noFit = g && !gone && need !== "either" && (need === "hot") !== !!g.hot;
             return `<span class="nm ${gone ? "gone" : ""}" ${noFit ? `style="opacity:.55"` : ""}>${n}${g ? `<br><span class="hd-qmeta">${g.hot ? "🔥 Hot" : "🐶 Dawg"} · ${g.rank < 999 ? "World #" + g.rank : "Unranked"}${g.odds ? ` · <span class="hd-odds">${g.odds}</span>` : ""}</span>` : `<br><span class="hd-qmeta">Not in this week's field</span>`}${gone ? `<br><span class="hd-qmeta">Taken</span>` : noFit ? `<br><span class="hd-qmeta">Skipped: you already have a ${g.hot ? "hot" : "dawg"}</span>` : ""}</span>`;
           })(golferOf(n))}
+          ${myTurn && (g => g && !taken.has(C.compactKey(n)) && (need === "either" || (need === "hot") === !!g.hot))(golferOf(n)) ? `<button class="hd-mini hd-qdraft" data-qpick="${i}">Draft</button>` : ""}
           <button class="hd-mini" data-qup="${i}" ${i === 0 ? "disabled" : ""}>↑</button>
           <button class="hd-mini" data-qdown="${i}" ${i === q.length - 1 ? "disabled" : ""}>↓</button>
           <button class="hd-mini" data-qdel="${i}">✕</button></div>`).join("")
         : `<p class="hint" style="margin:0">Your queue is empty. Tap ☆ next to any golfer below.</p>`}
       ${next ? `<p class="hint" style="margin:10px 0 0">Next up for you: <b>${next.golfer.name}</b> (${next.golfer.hot ? "🔥 hot" : "🐶 dawg"}, ${next.golfer.rank < 999 ? "#" + next.golfer.rank : "unranked"}${next.golfer.odds ? `, ${next.golfer.odds}` : ""}) ${next.fromQueue ? "from your queue" : "best-ranked available"}</p>` : ""}
-      ${myTurn && next ? `<button class="btn" id="qPickBtn">Draft ${next.golfer.name}</button>` : ""}`;
+      ${myTurn && next ? `<button class="btn" id="qPickBtn">Draft ${next.golfer.name}</button><p class="hint" style="margin:6px 0 0;text-align:center">Or tap <b>Draft</b> on any golfer in your queue.</p>` : ""}`;
     const move = (i, d) => { const a = q.slice(); [a[i], a[i + d]] = [a[i + d], a[i]]; setQueue(week, a); };
     card.querySelectorAll("[data-qup]").forEach(b => b.onclick = () => move(Number(b.dataset.qup), -1));
     card.querySelectorAll("[data-qdown]").forEach(b => b.onclick = () => move(Number(b.dataset.qdown), 1));
     card.querySelectorAll("[data-qdel]").forEach(b => b.onclick = () => { const a = q.slice(); a.splice(Number(b.dataset.qdel), 1); setQueue(week, a); });
+    card.querySelectorAll("[data-qpick]").forEach(b => b.onclick = () => { const g = golferOf(q[Number(b.dataset.qpick)]); if (g) draftPick(g); });
     const qp = document.getElementById("qPickBtn");
     if (qp) qp.onclick = () => draftPick(next.golfer);
   }
