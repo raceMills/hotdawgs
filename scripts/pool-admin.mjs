@@ -227,6 +227,26 @@ async function setClock() {
   await patchRow("pool_config", { id: "main" }, { autoPickHours: hours });
   console.log(`Pick clock: ${before == null ? "default" : before + "h"} -> ${hours}h`);
 }
-const run = { "set-clock": setClock, status, "start-week": startWeek, pin, field: fieldProbe, url: urlProbe }[mode];
+// Draft report: picks with timing, queues, and who has set things up (no secrets printed)
+async function report() {
+  const cfg = ((await getRow("pool_config", "id", "main")) || { data: {} }).data;
+  const w = Number(weekArg) || cfg.currentWeek;
+  const d = ((await getRow("pool_weeks", "week", w)) || { data: {} }).data;
+  const t = (ms) => ms ? new Date(ms).toLocaleString("en-US", { timeZone: "America/Chicago", weekday: "short", hour: "numeric", minute: "2-digit" }) : "-";
+  console.log(`Week ${w}: ${d.tournament && d.tournament.name} | draftOpenAt ${t(d.draftOpenAt)} | paused ${!!d.clockPaused} | forceOpen ${!!d.forceOpen} | autoPickHours ${cfg.autoPickHours}`);
+  Object.entries(d.pickLog || {}).sort((a, b) => a[0] - b[0]).forEach(([i, x]) => x && console.log(`  pick ${Number(i) + 1}: ${x.m} ${x.kind} ${x.name} at ${t(x.at)}${x.auto ? " AUTO" : ""}${x.by && x.by !== x.m ? " by " + x.by : ""}`));
+  console.log("picks:", JSON.stringify(d.picks));
+  console.log("queues:", JSON.stringify(Object.fromEntries(Object.entries(d.queues || {}).map(([m, q]) => [m, (q || []).length]))));
+  console.log("reactions:", JSON.stringify(d.reactions || {}));
+  console.log("notified:", Object.keys(d.notified || {}).join(", "));
+  console.log("swaps:", JSON.stringify(d.swaps || {}), "party:", JSON.stringify(d.party || null));
+  const members = ["Jacob", "Michael", "Pat", "Ryan", "Zach", "Race"];
+  for (const m of members) console.log(`  ${m}: password ${!!(cfg.auth || {})[m]} | push devices ${Object.values((cfg.push || {})[m] || {}).filter(Boolean).length} | groupchat ${(cfg.phones || {})[m] ? ((cfg.phones[m].includes("@") ? "email" : "phone")) : "none"}`);
+  const prev = ((await getRow("pool_weeks", "week", w - 1)) || { data: {} }).data;
+  console.log(`Week ${w - 1} settle:`, JSON.stringify(prev.settle || null), "paid:", JSON.stringify(prev.paid || {}));
+  const cam = ((await getRow("pool_weeks", "week", -w)) || { data: {} }).data;
+  console.log("ketchup cam photos:", Object.keys(cam.photos || {}).join(", ") || "none");
+}
+const run = { report, "set-clock": setClock, status, "start-week": startWeek, pin, field: fieldProbe, url: urlProbe }[mode];
 if (!run) { console.error(`Unknown mode "${mode}"`); process.exit(1); }
 run().catch(e => { console.error(e.message); process.exit(1); });
