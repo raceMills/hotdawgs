@@ -101,6 +101,17 @@
       <p class="hint" style="margin:0">Numbers are only used for group texts and are visible to pool members.</p></div>`;
   }
 
+  // A phone number (+1 added for 10 digits) or an iMessage email; false if neither
+  function cleanContact(raw) {
+    raw = String(raw || "").trim();
+    if (!raw) return null;
+    if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(raw)) return raw.toLowerCase();
+    const digits = raw.replace(/\D/g, "");
+    if (digits.length < 10) return false;
+    return digits.length === 10 ? "+1" + digits : "+" + digits;
+  }
+  const prettyContact = (v) => !v ? "" : v.includes("@") ? v : /^\+1\d{10}$/.test(v) ? `(${v.slice(2, 5)}) ${v.slice(5, 8)}-${v.slice(8)}` : v;
+
   // ===================== Commissioner =====================
   function lastPick(week) {
     const st = HD.draftState(week);
@@ -146,6 +157,14 @@
             <button class="btn ghost" style="width:auto;margin:0" data-club="markWD">Mark withdrawn</button></div></details></div>`;
       })() : ""}
 
+      <div class="field" style="margin-top:14px"><label>Group chat contacts</label>
+        <p class="hint">Each person's number, or the email iMessage uses for them in Hot Dawgs (Zach's is his Yahoo email). Group texts from the app go to these.</p>
+        ${MEMBERS.map(m => `<div style="display:flex;gap:6px;align-items:center;margin:6px 0">
+          <span style="width:70px;font-weight:900">${esc(m)}</span>
+          <input data-contact="${esc(m)}" type="text" inputmode="email" autocapitalize="off" spellcheck="false" autocomplete="off"
+            placeholder="(512) 555-0123 or email" value="${esc(prettyContact((config.phones || {})[m]))}" style="flex:1;min-width:0"></div>`).join("")}
+        <button class="btn ghost" data-club="contacts">Save contacts</button></div>
+
       <div class="field" style="margin-top:14px"><label>Reset a password</label>
         <div class="chips">${MEMBERS.filter(m => (config.auth || {})[m]).map(m => `<button class="chip" data-reset="${m}">${m}</button>`).join("") || `<span class="hint">Nobody has set one yet.</span>`}</div>
         <p class="hint">They'll log in with the group password and set a new one.</p></div>
@@ -157,10 +176,8 @@
     if (what === "pushOn") return turnOn();
     if (what === "pushOff") return turnOff();
     if (what === "phone") {
-      const raw = $("#myPhone").value.trim(), digits = raw.replace(/\D/g, "");
-      const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(raw);
-      if (raw && !isEmail && digits.length < 10) return toast("Use your number with the area code, or your iMessage email.");
-      const num = !raw ? null : isEmail ? raw.toLowerCase() : digits.length === 10 ? "+1" + digits : "+" + digits;
+      const num = cleanContact($("#myPhone").value);
+      if (num === false) return toast("Use your number with the area code, or your iMessage email.");
       document.activeElement && document.activeElement.blur();
       await write("config", 0, { phones: { [me]: num } });
       return toast(num ? "📱 Saved. Group texts will go straight to everyone once they've all added theirs." : "Number removed.");
@@ -184,6 +201,19 @@
     if (what === "autoNow") {
       if (HD.autoPickNow) await HD.autoPickNow();
       return;
+    }
+    if (what === "contacts") {
+      const patch = {}, bad = [];
+      document.querySelectorAll("[data-contact]").forEach(inp => {
+        const m = inp.dataset.contact, v = cleanContact(inp.value);
+        if (v === false) bad.push(m);
+        else if (v !== ((config.phones || {})[m] || null)) patch[m] = v;
+      });
+      if (bad.length) return toast(`Check ${bad.join(", ")}: use a number with area code or an email.`);
+      document.activeElement && document.activeElement.blur();
+      if (!Object.keys(patch).length) return toast("No changes.");
+      await write("config", 0, { phones: patch });
+      return toast(`📱 Saved ${Object.keys(patch).join(", ")}.`);
     }
     if (what === "markWD") {
       const name = $("#wdMark").value;
