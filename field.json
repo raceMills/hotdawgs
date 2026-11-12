@@ -5,7 +5,7 @@
       "pgaTourId": "R2026558",
       "name": "Austin Championship presented by Compliance Solutions",
       "start": "2026-11-12",
-      "updated": "2026-11-10T00:06:12.891Z",
+      "updated": "2026-11-12T18:21:09.399Z",
       "players": [
         {
           "name": "Zach Bauchou",
@@ -116,6 +116,10 @@
           "owgr": 331
         },
         {
+          "name": "Will Gordon",
+          "owgr": 431
+        },
+        {
           "name": "Max Greyserman",
           "owgr": 99
         },
@@ -210,10 +214,6 @@
         {
           "name": "Matt Kuchar",
           "owgr": 254
-        },
-        {
-          "name": "Christo Lamprecht",
-          "owgr": 441
         },
         {
           "name": "Hank Lebioda",
@@ -490,14 +490,6 @@
       ],
       "alternates": [],
       "watch": [
-        {
-          "round": 1,
-          "start": 1794488400000,
-          "end": 1794510000000,
-          "kind": "Featured groups",
-          "network": "ESPN+",
-          "url": "https://espn.smart.link/88r9d3tmo"
-        },
         {
           "round": 1,
           "start": 1794499200000,
