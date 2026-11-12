@@ -279,5 +279,5 @@
     if (inParty) renderParty();
   };
 
-  window.HD = Object.assign(window.HD || {}, { openParty, closeParty, startParty, watchingNow });
+  window.HD = Object.assign(window.HD || {}, { openParty, closeParty, startParty, watchingNow, liveStandings: standings });
 })();
