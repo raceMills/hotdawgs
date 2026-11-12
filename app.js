@@ -3522,6 +3522,34 @@
       <button class="btn ghost" data-notify="no" style="margin-top:6px">Not now</button></div>`;
   }
 
+  // ---------- One card for the week while it's live ----------
+  // The live Home card (your chances, your golfers) absorbs the "where to watch"
+  // card: what's on now, course weather, and the TV schedule button.
+  function mergeTournament(wrap) {
+    const hero = [...wrap.querySelectorAll(".card.hd-hero")].find(c => !c.classList.contains("hot") && c.querySelector('[data-go="scores"]'));
+    const tv = wrap.querySelector("#tvHome");
+    if (!hero || !tv) return;
+    const watch = document.createElement("div");
+    watch.className = "mw-watch";
+    watch.style.cssText = "margin-top:12px;padding-top:10px;border-top:2px dashed var(--bun)";
+    const nows = [...tv.querySelectorAll(".tv-now")];
+    const wx = [...tv.querySelectorAll("p.hint")].find(p => /At the course/.test(p.textContent));
+    if (!nows.length && !wx) return;
+    watch.innerHTML = `<div class="hd-kicker" style="margin-bottom:2px">📺 Watch</div>`;
+    nows.forEach(n => watch.appendChild(n));
+    if (wx) { wx.style.margin = "8px 0 0"; watch.appendChild(wx); }
+    const lb = hero.querySelector('[data-go="scores"]');
+    lb.before(watch);
+    const tvBtn = tv.querySelector("[data-tv=all]");
+    const btns = document.createElement("div");
+    btns.style.cssText = "display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px";
+    lb.replaceWith(btns);
+    lb.style.margin = "0";
+    btns.appendChild(lb);
+    if (tvBtn) { tvBtn.style.margin = "0"; tvBtn.textContent = "TV & weather"; btns.appendChild(tvBtn); }
+    tv.remove();
+  }
+
   // ---------- Arrange Home ----------
   function score(el) {
     const txt = el.textContent || "";
@@ -3555,8 +3583,8 @@
     });
     const hello = wrap.querySelector(".hd-hello");
     const add = (html) => { if (!html) return; const b = document.createElement("div"); b.innerHTML = html; wrap.appendChild(b.firstElementChild); };
-    add(myWeekendCard());
     add(notifyCard());
+    mergeTournament(wrap);
     // Group-text setup only nags once notifications are sorted
     const setup = wrap.querySelector("#hdSetupTexts");
     if (setup && wrap.querySelector("#hdNotify")) setup.remove();
