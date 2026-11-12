@@ -116,7 +116,15 @@
         order: c.order || i + 1,
         toPar: c.score && typeof c.score === "object" ? (c.score.displayValue || "") : String(c.score == null ? "" : c.score),
         round: last ? last.period : 0,
-        holes: last ? (last.linescores || []).length : 0
+        holes: last ? (last.linescores || []).length : 0,
+        // The hole they're playing now: one after the last hole scored (ESPN numbers each
+        // hole score by hole, so 10th-tee starters work too). Empty before they start.
+        hole: (() => {
+          const hs = last ? (last.linescores || []) : [];
+          if (!hs.length || hs.length >= 18) return "";
+          const lastHole = Number(hs[hs.length - 1].period) || hs.length;
+          return lastHole % 18 + 1;
+        })()
       };
     }).filter(p => p.name).sort((x, y) => x.order - y.order);
     const maxRound = raw.reduce((m, p) => Math.max(m, p.round), 0);
@@ -135,7 +143,7 @@
         if (p === inPlay[0]) tied = false;
         else { pos = 2; tied = inPlay.filter(q => q !== inPlay[0] && score(q) === s).length > 1; }
       }
-      return { name: p.name, pos, posText: (tied ? "T" : "") + pos, toPar: p.toPar, thru: final ? "" : (p.holes >= 18 ? "F" : p.holes ? String(p.holes) : "") };
+      return { name: p.name, pos, posText: (tied ? "T" : "") + pos, toPar: p.toPar, thru: final ? "" : (p.holes >= 18 ? "F" : p.holes ? String(p.holes) : ""), hole: final ? "" : p.hole };
     });
     const calendar = ((((data && data.leagues) || [])[0] || {}).calendar || []).map(e => ({
       name: e.label || e.name || "", start: isoDay(e.startDate), end: isoDay(e.endDate), where: ""
@@ -253,6 +261,15 @@
     return list[n].replace(/\{p\}/g, p).replace(/\{g\}/g, g).replace(/\{r\}/g, rank && rank < 999 ? rank : "who-knows");
   }
 
+  // "On 7 · thru 6", "Finished", "Hasn't teed off": where a golfer is right now
+  function holeLabel(p) {
+    if (!p || p.pos >= 999) return p && p.posText === "MC" ? "Missed cut" : p && p.posText === "WD" ? "Withdrew" : "";
+    if (p.hole) return `On ${p.hole} · thru ${p.thru}`;
+    if (p.thru === "F") return "Done for the day";
+    if (p.posText && p.posText !== "—" && !p.thru) return "Hasn't teed off";
+    return "";
+  }
+
   // Week numbers keep counting across seasons; this is the number people see
   // (week 1 of the current season = config.seasonStartWeek).
   function seasonWeek(w, cfg) { return w - ((cfg && cfg.seasonStartWeek) || 1) + 1; }
@@ -365,6 +382,6 @@
   }
 
   return { MEMBERS, RULES, amountFor, isMajor, nameKey, compactKey, rankLookup, matchPickNames, buildField,
-    parsePar, parseScoreboard, isoDay, draftOrder, draftState, needOf, activeMs, quietAt, clockFloor, seasonWeek, NUDGES, nudgeLine, PICK_JOKES, pickLine, clockStart, clockInfo,
+    parsePar, parseScoreboard, isoDay, draftOrder, draftState, needOf, activeMs, quietAt, clockFloor, seasonWeek, holeLabel, NUDGES, nudgeLine, PICK_JOKES, pickLine, clockStart, clockInfo,
     chooseAutoPick, pickPatch, computeWeek, entriesOf, settlePatch };
 });

@@ -248,7 +248,7 @@
 <script>
   // App version. Bump it on every release: files load with it, and open phones notice
   // a new number and reload themselves.
-  const APP_VERSION = "2026-11-11.5";
+  const APP_VERSION = "2026-11-12.1";
   async function checkForUpdate() {
     try {
       const r = await fetch(location.pathname + "?check=" + Date.now(), { cache: "no-store" });
@@ -1156,7 +1156,7 @@
     const fin = weekOf(w).finishes || {};
     const entries = entriesFor(w).map(e => {
       const lp = livePlayer(e.name);
-      return { ...e, pos: lp ? lp.pos : (fin[e.name] || 999), posText: lp ? lp.posText : (fin[e.name] && fin[e.name] !== 999 ? String(fin[e.name]) : "—"), toPar: lp ? lp.toPar : "", thru: lp ? lp.thru : "" };
+      return { ...e, pos: lp ? lp.pos : (fin[e.name] || 999), posText: lp ? lp.posText : (fin[e.name] && fin[e.name] !== 999 ? String(fin[e.name]) : "—"), toPar: lp ? lp.toPar : "", thru: lp ? lp.thru : "", hole: lp ? lp.hole : "", lp };
     }).sort((a, b) => a.pos - b.pos);
     const stamp = live.fetchedAt ? `Live from ESPN · updated ${live.fetchedAt.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}` : (live.error || "Loading live scores…");
     if (!t) {
@@ -1175,12 +1175,12 @@
       ${entries.length ? entries.map(e => `
         <div class="rule">
           <span style="flex:1">${e.name} <span class="hint" style="margin:0">(${e.who}, ${e.kind})</span></span>
-          <span class="hint" style="margin:0 6px 0 0">${e.toPar}${e.thru ? " · " + e.thru : ""}</span>
+          <span class="hint" style="margin:0 6px 0 0;text-align:right">${e.toPar}${e.lp && HDCore.holeLabel(e.lp) ? `<br><b>${HDCore.holeLabel(e.lp)}</b>` : ""}</span>
           <span class="amt">${e.posText}</span>
         </div>`).join("") : `<p class="hint">No picks this week yet.</p>`}
 
       ${leaders.length ? `<h2 style="margin-top:14px">Tournament leaders</h2>
-        ${leaders.map(p => `<div class="rule"><span style="flex:1">${p.name}</span><span class="hint" style="margin:0 6px 0 0">${p.toPar}</span><span class="amt">${p.posText}</span></div>`).join("")}` : ""}
+        ${leaders.map(p => `<div class="rule"><span style="flex:1">${p.name}</span><span class="hint" style="margin:0 6px 0 0;text-align:right">${p.toPar}${HDCore.holeLabel(p) ? `<br><b>${HDCore.holeLabel(p)}</b>` : ""}</span><span class="amt">${p.posText}</span></div>`).join("")}` : ""}
       <button class="btn small ghost" id="refreshLive" style="margin-top:10px">Refresh scores</button>`;
     const r = $("#refreshLive");
     if (r) r.onclick = fetchLive;

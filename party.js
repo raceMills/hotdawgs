@@ -195,7 +195,7 @@
           <div class="wp-money">${esc(st.winner || "Nobody")} ${st.winner ? `wins $${st.per} from everyone` : ""}</div>
           ${st.rows.map((r, i) => `<div class="wp-row ${r.m === st.winner ? "lead" : ""}"><span class="p">${i + 1}</span>
             <span class="n"><b>${esc(r.m)}</b>${r.m === me ? " (you)" : ""}<br>
-            ${r.mine.map(e => `<span class="g">${e.kind === "hot" ? "🔥" : "🐶"} ${esc(e.name)} <span class="wp-sc ${scoreCls(e.p && e.p.toPar)}">${e.p ? `${esc(e.p.posText)} ${esc(e.p.toPar || "")}${e.p.thru ? ` (${esc(e.p.thru)})` : ""}` : "—"}</span></span>`).join("<br>")}</span></div>`).join("")}
+            ${r.mine.map(e => `<span class="g">${e.kind === "hot" ? "🔥" : "🐶"} ${esc(e.name)} <span class="wp-sc ${scoreCls(e.p && e.p.toPar)}">${e.p ? `${esc(e.p.posText)} ${esc(e.p.toPar || "")}${e.p.hole ? ` (on ${e.p.hole})` : e.p.thru === "F" ? " (F)" : ""}` : "—"}</span></span>`).join("<br>")}</span></div>`).join("")}
         </div>` : `<div class="wp-sec"><h4>Pool standings</h4><p class="hint" style="color:#cfe3d4;margin:0">Shows up once the picks are in and play starts${t ? ` at the ${esc(t.name.replace(/\s+pres.*$/i, ""))}` : ""}.</p></div>`}
         <div class="wp-sec"><h4>Play-by-play</h4><div class="wp-feed">${feed.length ? feed.map(f => `<div><small>${new Date(f.t).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}</small>${esc(f.text)}</div>`).join("") : `<div style="opacity:.7">Birdies, bogeys and lead changes for pool golfers show up here. Scores refresh every minute.</div>`}</div></div>
         <div class="wp-sec wp-how"><h4>Watch together on FaceTime</h4><ol>

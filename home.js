@@ -264,7 +264,7 @@
       if (!name) return "";
       const p = livePlayer(name);
       return `<div class="hd-pickrow"><span class="pos">${p ? p.posText : "—"}</span>
-        <span style="flex:1"><b>${name}</b><br><span class="hint" style="margin:0">${kind === "hot" ? "🔥 Hot" : "🐶 Dawg"}${p && p.toPar ? ` · ${p.toPar}${p.thru ? " · thru " + p.thru : ""}` : ""}</span></span></div>`;
+        <span style="flex:1"><b>${name}</b><br><span class="hint" style="margin:0">${kind === "hot" ? "🔥 Hot" : "🐶 Dawg"}${p && p.toPar ? ` · ${p.toPar}${HDCore.holeLabel(p) ? " · " + HDCore.holeLabel(p) : ""}` : ""}</span></span></div>`;
     };
     const sw = HD.sweat ? HD.sweat(w) : null;
     const myOdds = sw ? (sw.odds.find(o => o.m === me) || { pct: 0 }).pct : null;
