@@ -187,7 +187,10 @@
     const st = standings(), air = onAir(), t = weekTourney(currentWeek());
     const faces = watchingNow();
     ov.innerHTML = `
-      <div class="wp-top"><h3>🍿 Watch party</h3><button class="wp-x" aria-label="Close">✕</button></div>
+      <div class="wp-top"><h3>🍿 Watch party</h3>
+        <button class="wp-x" data-wpx="invite" aria-label="Send invite" style="width:auto;padding:0 12px;border-radius:999px;font-size:13px">💬 Invite</button>
+        ${weekOf(currentWeek()).party ? `<button class="wp-x" data-wpx="end" aria-label="End party" style="width:auto;padding:0 12px;border-radius:999px;font-size:13px;border-color:#ffb3b3;color:#ffb3b3">End</button>` : ""}
+        <button class="wp-x" aria-label="Close">✕</button></div>
       <div class="wp-faces">${faces.length ? faces.map(m => `<span class="wp-face"><i>${initial(m)}</i>${esc(m)}</span>`).join("") : `<span class="hint" style="color:#cfe3d4">Just you so far. Ping the group.</span>`}</div>
       <div class="wp-scroll">
         ${air.length ? `<div class="wp-sec"><h4>On now</h4>${air.map(w => `<div class="wp-row"><span class="wp-live"></span><span class="n"><b>${esc(w.network)}</b> · ${esc(w.kind)}</span>${w.url ? `<a class="btn" style="margin:0;padding:6px 14px;font-size:13px;width:auto;flex:none" href="${esc(w.url)}" target="_blank" rel="noopener">Open</a>` : ""}</div>`).join("")}</div>` : ""}
@@ -205,21 +208,32 @@
           <li>Keep this screen open beside the call. Reactions below fly across everyone's screen.</li></ol></div>
       </div>
       <div class="wp-bar">${REACTS.map(e => `<button data-rx="${e}">${e}</button>`).join("")}</div>`;
-    ov.querySelector(".wp-x").onclick = closeParty;
+    ov.querySelector('.wp-x[aria-label="Close"]').onclick = closeParty;
+    const ix = ov.querySelector("[data-wpx=invite]"); if (ix) ix.onclick = sendInvite;
+    const ex = ov.querySelector("[data-wpx=end]"); if (ex) ex.onclick = endParty;
     ov.querySelectorAll("[data-rx]").forEach(b => b.onclick = () => sendReact(b.dataset.rx));
     const sc = ov.querySelector(".wp-scroll");
     if (sc) sc.scrollTop = top;
   }
 
   // ---------- Starting a party ----------
+  function inviteText() {
+    const air = onAir()[0], t = weekTourney(currentWeek());
+    return `🍿 Hotdawgs watch party! ${t ? t.name.replace(/\s+pres.*$/i, "") + " " : ""}is on ${air ? air.network : "the stream"}. I'm starting a FaceTime: jump on, and open the app for live pool standings: ${location.origin + location.pathname}`;
+  }
+  const sendInvite = () => { if (HD.shareText) HD.shareText(inviteText()); };
   async function startParty() {
     const air = onAir()[0];
-    const net = air ? air.network : "the stream";
-    const t = weekTourney(currentWeek());
     try { await write("week", currentWeek(), { party: { host: me, at: Date.now(), network: air ? air.network : "" } }); } catch (e) {}
     openParty();
-    const text = `🍿 Hotdawgs watch party! ${t ? t.name.replace(/\s+pres.*$/i, "") + " " : ""}is on ${net}. I'm starting a FaceTime: jump on, and open the app for live pool standings: ${location.origin + location.pathname}`;
-    if (HD.shareText) HD.shareText(text);
+    sendInvite();
+  }
+  // End the party for everyone (clears "Join the party" and stops its ping)
+  async function endParty() {
+    try { await write("week", currentWeek(), { party: null }); } catch (e) {}
+    if (inParty) closeParty();
+    toast("🍿 Watch party ended.");
+    renderActive();
   }
 
   // ---------- Cards ----------
@@ -227,20 +241,28 @@
     const air = onAir(), faces = watchingNow();
     const party = weekOf(currentWeek()).party;
     const fresh = party && Date.now() - party.at < 4 * 3600000;
-    if (!air.length && !isLiveGolf() && !faces.length && !compact) return "";
+    if (!air.length && !isLiveGolf() && !faces.length && !fresh && !compact) return "";
+    const when = fresh ? new Date(party.at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) : "";
     return `<div class="card wp-card" id="${compact ? "wpLive" : "wpHome"}">
       <h2>🍿 Watch party</h2>
       ${faces.length ? `<p style="margin:2px 0"><span class="wp-live"></span><b>Watching now</b></p><div class="wp-faces">${faces.map(m => `<span class="wp-face"><i>${initial(m)}</i>${esc(m)}</span>`).join("")}</div>`
         : `<p class="hint" style="margin:2px 0 10px">${air.length ? `${esc(air[0].network)} is ${air[0].start > Date.now() ? "about to start" : "live"}. ` : ""}Watch together on FaceTime with live pool standings on the side.${fresh && party.host !== me ? ` ${esc(party.host)} started one.` : ""}</p>`}
+      ${fresh ? `<p class="hint" style="margin:0 0 8px">Started by ${party.host === me ? "you" : esc(party.host)} at ${when}${party.network ? ` · ${esc(party.network)}` : ""}</p>` : ""}
       <div class="wp-btns">
         <button class="btn" data-wp="${faces.length || fresh ? "join" : "start"}">${faces.length || fresh ? "Join the party" : "Start a party"}</button>
         <button class="btn ghost" data-wp="open" style="background:transparent;color:#fff;border-color:#fff">Second screen</button>
-      </div></div>`;
+      </div>
+      ${fresh ? `<div class="wp-btns" style="margin-top:8px">
+        <button class="btn ghost" data-wp="invite" style="background:transparent;color:#fff;border-color:#fff;font-size:13px">💬 Send invite</button>
+        <button class="btn ghost" data-wp="end" style="background:transparent;color:#ffb3b3;border-color:#ffb3b3;font-size:13px">End party</button>
+      </div>` : ""}</div>`;
   }
   function wire(el) {
     el.querySelectorAll("[data-wp]").forEach(b => b.onclick = () => {
       const a = b.dataset.wp;
       if (a === "start") startParty();
+      else if (a === "invite") sendInvite();
+      else if (a === "end") endParty();
       else openParty();
     });
   }
@@ -279,5 +301,5 @@
     if (inParty) renderParty();
   };
 
-  window.HD = Object.assign(window.HD || {}, { openParty, closeParty, startParty, watchingNow, liveStandings: standings });
+  window.HD = Object.assign(window.HD || {}, { openParty, closeParty, startParty, endParty, sendInvite, watchingNow, liveStandings: standings });
 })();
