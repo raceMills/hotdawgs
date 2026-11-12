@@ -183,7 +183,7 @@
       ov.className = "hd-ov";
       ov.style.cssText = "display:flex;align-items:center;justify-content:center;padding:20px";
       ov.innerHTML = `<div class="card" style="max-width:420px;width:100%;margin:0;text-align:center">
-        <div style="font-size:40px">${kind === "hot" ? "🔥" : "🐶"}</div>
+        <div style="font-size:40px">${kind === "hot" ? "🔥" : "🌭"}</div>
         <h2 style="margin:4px 0">Are you sure?</h2>
         <p style="font-size:17px;margin:6px 0 4px">Draft <b>${g.name}</b> as ${forWho} <b>${kind}</b>${t ? ` for the ${splitName(t.name).main}` : ""}?</p>
         <p class="hint" style="margin:0 0 14px">${g.rank < 999 ? "World #" + g.rank : "Unranked"}${g.odds ? ` · ${g.odds} to win` : ""} · No take-backs (except by the commissioner)</p>
@@ -310,14 +310,14 @@
           ${(g => {
             const gone = taken.has(C.compactKey(n));
             const noFit = g && !gone && need !== "either" && (need === "hot") !== !!g.hot;
-            return `<span class="nm ${gone ? "gone" : ""}" ${noFit ? `style="opacity:.55"` : ""}>${n}${g ? `<br><span class="hd-qmeta">${g.hot ? "🔥 Hot" : "🐶 Dawg"} · ${g.rank < 999 ? "World #" + g.rank : "Unranked"}${g.odds ? ` · <span class="hd-odds">${g.odds}</span>` : ""}</span>` : `<br><span class="hd-qmeta">Not in this week's field</span>`}${gone ? `<br><span class="hd-qmeta">Taken</span>` : noFit ? `<br><span class="hd-qmeta">Skipped: you already have a ${g.hot ? "hot" : "dawg"}</span>` : ""}</span>`;
+            return `<span class="nm ${gone ? "gone" : ""}" ${noFit ? `style="opacity:.55"` : ""}>${n}${g ? `<br><span class="hd-qmeta">${g.hot ? "🔥" : "🌭"} · ${g.rank < 999 ? "World #" + g.rank : "Unranked"}${g.odds ? ` · <span class="hd-odds">${g.odds}</span>` : ""}</span>` : `<br><span class="hd-qmeta">Not in this week's field</span>`}${gone ? `<br><span class="hd-qmeta">Taken</span>` : noFit ? `<br><span class="hd-qmeta">Skipped: you already have a ${g.hot ? "hot" : "dawg"}</span>` : ""}</span>`;
           })(golferOf(n))}
           ${myTurn && (g => g && !taken.has(C.compactKey(n)) && (need === "either" || (need === "hot") === !!g.hot))(golferOf(n)) ? `<button class="hd-mini hd-qdraft" data-qpick="${i}">Draft</button>` : ""}
           <button class="hd-mini" data-qup="${i}" ${i === 0 ? "disabled" : ""}>↑</button>
           <button class="hd-mini" data-qdown="${i}" ${i === q.length - 1 ? "disabled" : ""}>↓</button>
           <button class="hd-mini" data-qdel="${i}">✕</button></div>`).join("")
         : `<p class="hint" style="margin:0">Your queue is empty. Tap ☆ next to any golfer below.</p>`}
-      ${next ? `<p class="hint" style="margin:10px 0 0">Next up for you: <b>${next.golfer.name}</b> (${next.golfer.hot ? "🔥 hot" : "🐶 dawg"}, ${next.golfer.rank < 999 ? "#" + next.golfer.rank : "unranked"}${next.golfer.odds ? `, ${next.golfer.odds}` : ""}) ${next.fromQueue ? "from your queue" : "best-ranked available"}</p>` : ""}
+      ${next ? `<p class="hint" style="margin:10px 0 0">Next up for you: <b>${next.golfer.name}</b> (${next.golfer.hot ? "🔥 hot" : "🌭 dawg"}, ${next.golfer.rank < 999 ? "#" + next.golfer.rank : "unranked"}${next.golfer.odds ? `, ${next.golfer.odds}` : ""}) ${next.fromQueue ? "from your queue" : "best-ranked available"}</p>` : ""}
       ${myTurn && next ? `<button class="btn" id="qPickBtn">Draft ${next.golfer.name}</button><p class="hint" style="margin:6px 0 0;text-align:center">Or tap <b>Draft</b> on any golfer in your queue.</p>` : ""}`;
     const move = (i, d) => { const a = q.slice(); [a[i], a[i + d]] = [a[i + d], a[i]]; setQueue(week, a); };
     card.querySelectorAll("[data-qup]").forEach(b => b.onclick = () => move(Number(b.dataset.qup), -1));
@@ -364,7 +364,7 @@
       return `<div class="rule ${p ? "hd-reactable" : ""}" ${p ? `data-react="${p.name.replace(/"/g, "&quot;")}"` : ""} style="flex-wrap:wrap;${now ? "background:var(--mustard);border-radius:10px;padding:8px;" : ""}">
         <span style="width:26px;font-weight:900">${s.i + 1}</span>
         <span style="flex:1">${s.m}${s.m === me ? " (you)" : ""}</span>
-        <span class="hint" style="margin:0">${p ? `${p.name} · ${p.kind === "hot" ? "🔥" : "🐶"}${log.auto ? " ⏱" : ""}${wd ? ` <b style="color:var(--red)">⚠️ WD</b>` : ""}` : (now ? "On the clock" : "")}</span>
+        <span class="hint" style="margin:0">${p ? `${p.name} · ${p.kind === "hot" ? "🔥" : "🌭"}${log.auto ? " ⏱" : ""}${wd ? ` <b style="color:var(--red)">⚠️ WD</b>` : ""}` : (now ? "On the clock" : "")}</span>
         ${p ? reactionsHtml(week, p.name) : ""}
       </div>`;
     };
@@ -412,8 +412,8 @@
 
     // ----- Your picks -----
     $("#draftTitle").innerHTML = `${proxy ? `${who}'s picks` : "Your picks"}<small>${need ? (myTurn ? (proxy ? "Their turn" : "Your turn") : "Waiting for your turn") : "Both picks in"}</small>`;
-    fillSlot($("#slotHot"), mine.hot, "Hot", "Pick a top 10");
-    fillSlot($("#slotDawg"), mine.dawg, "Dawg", "Pick a field golfer");
+    fillSlot($("#slotHot"), mine.hot, "🔥", "Pick a top 10");
+    fillSlot($("#slotDawg"), mine.dawg, "🌭", "Pick a field golfer");
 
     // ----- Queue (your own, not in commissioner mode) -----
     const listCard = $("#golferList").closest(".card");

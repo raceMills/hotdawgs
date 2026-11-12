@@ -186,7 +186,7 @@
       ov.className = "hd-ov";
       ov.style.cssText = "display:flex;align-items:center;justify-content:center;padding:20px";
       ov.innerHTML = `<div class="card" style="max-width:420px;width:100%;margin:0;text-align:center">
-        <div style="font-size:40px">${kind === "hot" ? "🔥" : "🐶"}</div>
+        <div style="font-size:40px">${kind === "hot" ? "🔥" : "🌭"}</div>
         <h2 style="margin:4px 0">Are you sure?</h2>
         <p style="font-size:17px;margin:6px 0 4px">Draft <b>${g.name}</b> as ${forWho} <b>${kind}</b>${t ? ` for the ${splitName(t.name).main}` : ""}?</p>
         <p class="hint" style="margin:0 0 14px">${g.rank < 999 ? "World #" + g.rank : "Unranked"}${g.odds ? ` · ${g.odds} to win` : ""} · No take-backs (except by the commissioner)</p>
@@ -313,14 +313,14 @@
           ${(g => {
             const gone = taken.has(C.compactKey(n));
             const noFit = g && !gone && need !== "either" && (need === "hot") !== !!g.hot;
-            return `<span class="nm ${gone ? "gone" : ""}" ${noFit ? `style="opacity:.55"` : ""}>${n}${g ? `<br><span class="hd-qmeta">${g.hot ? "🔥 Hot" : "🐶 Dawg"} · ${g.rank < 999 ? "World #" + g.rank : "Unranked"}${g.odds ? ` · <span class="hd-odds">${g.odds}</span>` : ""}</span>` : `<br><span class="hd-qmeta">Not in this week's field</span>`}${gone ? `<br><span class="hd-qmeta">Taken</span>` : noFit ? `<br><span class="hd-qmeta">Skipped: you already have a ${g.hot ? "hot" : "dawg"}</span>` : ""}</span>`;
+            return `<span class="nm ${gone ? "gone" : ""}" ${noFit ? `style="opacity:.55"` : ""}>${n}${g ? `<br><span class="hd-qmeta">${g.hot ? "🔥" : "🌭"} · ${g.rank < 999 ? "World #" + g.rank : "Unranked"}${g.odds ? ` · <span class="hd-odds">${g.odds}</span>` : ""}</span>` : `<br><span class="hd-qmeta">Not in this week's field</span>`}${gone ? `<br><span class="hd-qmeta">Taken</span>` : noFit ? `<br><span class="hd-qmeta">Skipped: you already have a ${g.hot ? "hot" : "dawg"}</span>` : ""}</span>`;
           })(golferOf(n))}
           ${myTurn && (g => g && !taken.has(C.compactKey(n)) && (need === "either" || (need === "hot") === !!g.hot))(golferOf(n)) ? `<button class="hd-mini hd-qdraft" data-qpick="${i}">Draft</button>` : ""}
           <button class="hd-mini" data-qup="${i}" ${i === 0 ? "disabled" : ""}>↑</button>
           <button class="hd-mini" data-qdown="${i}" ${i === q.length - 1 ? "disabled" : ""}>↓</button>
           <button class="hd-mini" data-qdel="${i}">✕</button></div>`).join("")
         : `<p class="hint" style="margin:0">Your queue is empty. Tap ☆ next to any golfer below.</p>`}
-      ${next ? `<p class="hint" style="margin:10px 0 0">Next up for you: <b>${next.golfer.name}</b> (${next.golfer.hot ? "🔥 hot" : "🐶 dawg"}, ${next.golfer.rank < 999 ? "#" + next.golfer.rank : "unranked"}${next.golfer.odds ? `, ${next.golfer.odds}` : ""}) ${next.fromQueue ? "from your queue" : "best-ranked available"}</p>` : ""}
+      ${next ? `<p class="hint" style="margin:10px 0 0">Next up for you: <b>${next.golfer.name}</b> (${next.golfer.hot ? "🔥 hot" : "🌭 dawg"}, ${next.golfer.rank < 999 ? "#" + next.golfer.rank : "unranked"}${next.golfer.odds ? `, ${next.golfer.odds}` : ""}) ${next.fromQueue ? "from your queue" : "best-ranked available"}</p>` : ""}
       ${myTurn && next ? `<button class="btn" id="qPickBtn">Draft ${next.golfer.name}</button><p class="hint" style="margin:6px 0 0;text-align:center">Or tap <b>Draft</b> on any golfer in your queue.</p>` : ""}`;
     const move = (i, d) => { const a = q.slice(); [a[i], a[i + d]] = [a[i + d], a[i]]; setQueue(week, a); };
     card.querySelectorAll("[data-qup]").forEach(b => b.onclick = () => move(Number(b.dataset.qup), -1));
@@ -367,7 +367,7 @@
       return `<div class="rule ${p ? "hd-reactable" : ""}" ${p ? `data-react="${p.name.replace(/"/g, "&quot;")}"` : ""} style="flex-wrap:wrap;${now ? "background:var(--mustard);border-radius:10px;padding:8px;" : ""}">
         <span style="width:26px;font-weight:900">${s.i + 1}</span>
         <span style="flex:1">${s.m}${s.m === me ? " (you)" : ""}</span>
-        <span class="hint" style="margin:0">${p ? `${p.name} · ${p.kind === "hot" ? "🔥" : "🐶"}${log.auto ? " ⏱" : ""}${wd ? ` <b style="color:var(--red)">⚠️ WD</b>` : ""}` : (now ? "On the clock" : "")}</span>
+        <span class="hint" style="margin:0">${p ? `${p.name} · ${p.kind === "hot" ? "🔥" : "🌭"}${log.auto ? " ⏱" : ""}${wd ? ` <b style="color:var(--red)">⚠️ WD</b>` : ""}` : (now ? "On the clock" : "")}</span>
         ${p ? reactionsHtml(week, p.name) : ""}
       </div>`;
     };
@@ -415,8 +415,8 @@
 
     // ----- Your picks -----
     $("#draftTitle").innerHTML = `${proxy ? `${who}'s picks` : "Your picks"}<small>${need ? (myTurn ? (proxy ? "Their turn" : "Your turn") : "Waiting for your turn") : "Both picks in"}</small>`;
-    fillSlot($("#slotHot"), mine.hot, "Hot", "Pick a top 10");
-    fillSlot($("#slotDawg"), mine.dawg, "Dawg", "Pick a field golfer");
+    fillSlot($("#slotHot"), mine.hot, "🔥", "Pick a top 10");
+    fillSlot($("#slotDawg"), mine.dawg, "🌭", "Pick a field golfer");
 
     // ----- Queue (your own, not in commissioner mode) -----
     const listCard = $("#golferList").closest(".card");
@@ -660,11 +660,11 @@
       </div>
 
       <div class="card">
-        <h2>Best picks 🐶</h2>
+        <h2>Best picks 🌭</h2>
         <p class="hint">Money-winning picks, longest shots first, by current world rank.</p>
         ${best.length ? best.slice(0, 10).map(b => `
           <div class="rule">
-            <span style="flex:1">${b.name} <span class="hint" style="margin:0">(${b.who}, week ${wk(b.w)}, ${b.kind})</span></span>
+            <span style="flex:1">${b.kind === "hot" ? "🔥" : "🌭"} ${b.name} <span class="hint" style="margin:0">(${b.who}, week ${wk(b.w)})</span></span>
             <span class="hint" style="margin:0 8px 0 0">${b.rank < 999 ? "World #" + b.rank : "Unranked"} · ${ord(b.pos)}</span>
             <span class="amt">${money(b.won)}</span>
           </div>`).join("") : `<p class="hint">No winning picks yet. Check back after the first payout.</p>`}
@@ -681,7 +681,7 @@
               const won = h.settle && h.settle.winner === m;
               return `<div class="rule" style="${won ? "background:var(--mustard);border-radius:8px;padding:6px;" : ""}">
                 <span style="width:64px;font-weight:900">${m}</span>
-                <span style="flex:1;font-size:13px">🔥 ${cell("hot")}<br>🐶 ${cell("dawg")}</span>
+                <span style="flex:1;font-size:13px">🔥 ${cell("hot")}<br>🌭 ${cell("dawg")}</span>
               </div>`;
             }).join("")}
           </div>`).join("") : `<p class="hint">No picks yet this season.</p>`}
@@ -1157,7 +1157,7 @@
       <div class="card">
         <h2>Season awards</h2>
         <div class="award"><span class="ico">🔥</span><div><b>Hot hand</b><span class="hint" style="margin:0">${f.won ? `${f.won[0]}, ${f.won[1]} win${f.won[1] === 1 ? "" : "s"}` : "Up for grabs"}</span></div></div>
-        <div class="award"><span class="ico">🐶</span><div><b>Dawg whisperer</b><span class="hint" style="margin:0">${f.dawg ? `${f.dawg[0]}, ${money(f.dawg[1])} won on dawg picks` : "No dawg has cashed yet"}</span></div></div>
+        <div class="award"><span class="ico">🌭</span><div><b>Dawg whisperer</b><span class="hint" style="margin:0">${f.dawg ? `${f.dawg[0]}, ${money(f.dawg[1])} won on dawg picks` : "No dawg has cashed yet"}</span></div></div>
         <div class="award"><span class="ico">🎯</span><div><b>Longest shot cashed</b><span class="hint" style="margin:0">${f.longest ? `${f.longest.m} with ${f.longest.name} (${f.longest.rank < 999 ? "World #" + f.longest.rank : "unranked"}), week ${wk(f.longest.w)}` : "Nobody yet"}</span></div></div>
         <div class="award"><span class="ico">💸</span><div><b>The Shooter award</b><span class="hint" style="margin:0">${f.shooter ? `${f.shooter.payer} is down ${money(f.shooter.net)} to ${f.shooter.to}` : "Everyone's even. For now."}</span></div></div>
         <div class="award"><span class="ico">🥶</span><div><b>Ice cold</b><span class="hint" style="margin:0">${f.dry ? `${f.dry[0]}, ${f.dry[1]} straight week${f.dry[1] === 1 ? "" : "s"} without a win` : "Nobody's cold yet"}</span></div></div>
@@ -1195,7 +1195,7 @@
 
     wrap.querySelectorAll("[data-trophy]").forEach(b => b.onclick = () => shareTrophy(Number(b.dataset.trophy)));
     document.getElementById("awardsBtn").onclick = () => shareText(
-      `🌭 Hotdawgs season awards:\n🔥 Hot hand: ${f.won ? f.won[0] : "TBD"}\n🐶 Dawg whisperer: ${f.dawg ? f.dawg[0] : "TBD"}\n💸 Shooter award: ${f.shooter ? `${f.shooter.payer} (down ${money(f.shooter.net)} to ${f.shooter.to})` : "TBD"}\n🥶 Ice cold: ${f.dry ? f.dry[0] : "TBD"}\n${appLink()}`);
+      `🌭 Hotdawgs season awards:\n🔥 Hot hand: ${f.won ? f.won[0] : "TBD"}\n🌭 Dawg whisperer: ${f.dawg ? f.dawg[0] : "TBD"}\n💸 Shooter award: ${f.shooter ? `${f.shooter.payer} (down ${money(f.shooter.net)} to ${f.shooter.to})` : "TBD"}\n🥶 Ice cold: ${f.dry ? f.dry[0] : "TBD"}\n${appLink()}`);
     wrap.querySelectorAll("[data-vote]").forEach(b => b.onclick = () => write("week", -w, { votes: { [me]: b.dataset.vote } }));
     const cam = document.getElementById("camIn");
     if (cam) cam.onchange = async () => {
@@ -1669,7 +1669,7 @@
       if (!name) return "";
       const p = livePlayer(name);
       return `<div class="hd-pickrow"><span class="pos">${p ? p.posText : "—"}</span>
-        <span style="flex:1"><b>${name}</b><br><span class="hint" style="margin:0">${kind === "hot" ? "🔥 Hot" : "🐶 Dawg"}${p && p.toPar ? ` · ${p.toPar}${HDCore.holeLabel(p) ? " · " + HDCore.holeLabel(p) : ""}` : ""}</span></span></div>`;
+        <span style="flex:1"><b>${name}</b><br><span class="hint" style="margin:0">${kind === "hot" ? "🔥" : "🌭"}${p && p.toPar ? ` · ${p.toPar}${HDCore.holeLabel(p) ? " · " + HDCore.holeLabel(p) : ""}` : ""}</span></span></div>`;
     };
     const sw = HD.sweat ? HD.sweat(w) : null;
     const myOdds = sw ? (sw.odds.find(o => o.m === me) || { pct: 0 }).pct : null;
@@ -2494,7 +2494,7 @@
       place === 1 && st.net > 0 ? ["🦈", "The Shark", "Top of the table. Everyone else is just paying your rent."]
       : debts.length && mostEggs && mostEggs[0] === m ? ["🥚", "Egg Beer Champion", "Nobody has chugged more for this pool. Your doctor has questions."]
       : st.unpaid > 0 ? ["🧾", "The Slow Pay", "You owe money right now. The group has noticed. Coach Frank has noticed."]
-      : dawgs.length && avg(dawgs) < avg(hots) ? ["🐶", "Dawg Whisperer", "Your dawgs outplayed your hots. You see things the rankings don't."]
+      : dawgs.length && avg(dawgs) < avg(hots) ? ["🌭", "Dawg Whisperer", "Your dawgs outplayed your hots. You see things the rankings don't."]
       : !st.wins ? ["⛏️", "The Grinder", "No wins yet, but you keep showing up. Respect. Mild pity, but respect."]
       : ["🌭", "Steady Eddie", "Not flashy. Not broke. Just a hot dog doing hot dog things."];
     const slides = [
@@ -2629,7 +2629,7 @@
     ov.innerHTML = `<button class="hd-x" aria-label="Close">✕</button>
       <div class="card" style="max-width:520px;margin:0 auto">
         <h2>Replace ${esc(oldName)}</h2>
-        <p class="hint">${esc(oldName)} withdrew. Pick any ${e.kind === "hot" ? "🔥 hot" : "🐶 dawg"} who hasn't teed off and isn't already taken.</p>
+        <p class="hint">${esc(oldName)} withdrew. Pick any ${e.kind === "hot" ? "🔥 hot" : "🌭 dawg"} who hasn't teed off and isn't already taken.</p>
         ${opts.length ? opts.slice(0, 60).map(g => `<div class="rule" data-swapto="${esc(g.name)}" style="cursor:pointer"><span style="flex:1"><b>${esc(g.name)}</b><br>
           <span class="hint" style="margin:0">World No. ${g.rank >= 999 ? "—" : g.rank}${g.odds ? ` · ${esc(g.odds)}` : ""}</span></span><b>Pick ›</b></div>`).join("")
           : `<p><b>Nobody eligible is left.</b> Ask ${esc(config.commissioner || "Race")} to sort it out.</p>`}
@@ -2690,7 +2690,7 @@
       if (prev && thru === prev[1] + 1 && prev[0] - score >= 2 && prev[0] - score <= 3) {
         const big = prev[0] - score >= 3;
         const mineTxt = e.who === me ? "Your" : `${e.who}'s`;
-        confetti(big ? "🤯 ALBATROSS!" : "🦅 EAGLE!", `${e.name} (${mineTxt} ${e.kind}) on hole ${thru}. Now ${p.toPar}.`);
+        confetti(big ? "🤯 ALBATROSS!" : "🦅 EAGLE!", `${e.name} (${mineTxt} ${e.kind === "hot" ? "🔥" : "🌭"}) on hole ${thru}. Now ${p.toPar}.`);
       }
     }
     snap = next;
@@ -3244,10 +3244,10 @@
       const prev = snap[e.name];
       if (!prev || thru !== prev[1] + 1) continue;
       const d = prev[0] - s, who = e.who === me ? "your" : `${e.who}'s`;
-      if (d === 1) addFeed(`🐦 ${e.name} (${who} ${e.kind}) birdies ${thru}. ${p.toPar}, ${p.posText}`, true);
-      else if (d >= 2) addFeed(`🦅 ${e.name} (${who} ${e.kind}) EAGLES ${thru}! ${p.toPar}, ${p.posText}`, true);
-      else if (d === -1) addFeed(`😬 ${e.name} (${who} ${e.kind}) bogeys ${thru}. ${p.toPar}`, true);
-      else if (d <= -2) addFeed(`💀 ${e.name} (${who} ${e.kind}) makes a double or worse on ${thru}. ${p.toPar}`, true);
+      if (d === 1) addFeed(`🐦 ${e.name} (${who} ${e.kind === "hot" ? "🔥" : "🌭"}) birdies ${thru}. ${p.toPar}, ${p.posText}`, true);
+      else if (d >= 2) addFeed(`🦅 ${e.name} (${who} ${e.kind === "hot" ? "🔥" : "🌭"}) EAGLES ${thru}! ${p.toPar}, ${p.posText}`, true);
+      else if (d === -1) addFeed(`😬 ${e.name} (${who} ${e.kind === "hot" ? "🔥" : "🌭"}) bogeys ${thru}. ${p.toPar}`, true);
+      else if (d <= -2) addFeed(`💀 ${e.name} (${who} ${e.kind === "hot" ? "🔥" : "🌭"}) makes a double or worse on ${thru}. ${p.toPar}`, true);
     }
     snap = next;
     const st = standings();
@@ -3345,7 +3345,7 @@
           <div class="wp-money">${esc(st.winner || "Nobody")} ${st.winner ? `wins $${st.per} from everyone` : ""}</div>
           ${st.rows.map((r, i) => `<div class="wp-row ${r.m === st.winner ? "lead" : ""}"><span class="p">${i + 1}</span>
             <span class="n"><b>${esc(r.m)}</b>${r.m === me ? " (you)" : ""}<br>
-            ${r.mine.map(e => `<span class="g">${e.kind === "hot" ? "🔥" : "🐶"} ${esc(e.name)} <span class="wp-sc ${scoreCls(e.p && e.p.toPar)}">${e.p ? `${esc(e.p.posText)} ${esc(e.p.toPar || "")}${e.p.hole ? ` (on ${e.p.hole})` : e.p.thru === "F" ? " (F)" : ""}` : "—"}</span></span>`).join("<br>")}</span></div>`).join("")}
+            ${r.mine.map(e => `<span class="g">${e.kind === "hot" ? "🔥" : "🌭"} ${esc(e.name)} <span class="wp-sc ${scoreCls(e.p && e.p.toPar)}">${e.p ? `${esc(e.p.posText)} ${esc(e.p.toPar || "")}${e.p.hole ? ` (on ${e.p.hole})` : e.p.thru === "F" ? " (F)" : ""}` : "—"}</span></span>`).join("<br>")}</span></div>`).join("")}
         </div>` : `<div class="wp-sec"><h4>Pool standings</h4><p class="hint" style="color:#cfe3d4;margin:0">Shows up once the picks are in and play starts${t ? ` at the ${esc(t.name.replace(/\s+pres.*$/i, ""))}` : ""}.</p></div>`}
         <div class="wp-sec"><h4>Play-by-play</h4><div class="wp-feed">${feed.length ? feed.map(f => `<div><small>${new Date(f.t).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}</small>${esc(f.text)}</div>`).join("") : `<div style="opacity:.7">Birdies, bogeys and lead changes for pool golfers show up here. Scores refresh every minute.</div>`}</div></div>
         <div class="wp-sec wp-how"><h4>How to watch together</h4>${HOWTO}</div>
@@ -3500,7 +3500,7 @@
     return `<div class="card hd-hero" id="hdMyWeekend">
       <div class="hd-kicker">My weekend · ${esc(round)}</div>
       ${rows.map(e => `<div class="mw-row"><span class="mw-pos">${e.p ? esc(e.p.posText) : "—"}</span>
-        <span style="flex:1"><b>${e.kind === "hot" ? "🔥" : "🐶"} ${esc(e.name)}</b><br>
+        <span style="flex:1"><b>${e.kind === "hot" ? "🔥" : "🌭"} ${esc(e.name)}</b><br>
         <span class="hint" style="margin:0"><span class="mw-sc ${/^-/.test(e.p && e.p.toPar || "") ? "under" : ""}">${e.p && e.p.toPar ? esc(e.p.toPar) : "E"}</span>${e.p && HDCore.holeLabel(e.p) ? ` · <b>${esc(HDCore.holeLabel(e.p))}</b>` : ""}</span></span></div>`).join("")}
       ${line}
       <div class="wp-btns" style="margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:8px">

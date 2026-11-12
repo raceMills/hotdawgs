@@ -232,7 +232,7 @@
       place === 1 && st.net > 0 ? ["🦈", "The Shark", "Top of the table. Everyone else is just paying your rent."]
       : debts.length && mostEggs && mostEggs[0] === m ? ["🥚", "Egg Beer Champion", "Nobody has chugged more for this pool. Your doctor has questions."]
       : st.unpaid > 0 ? ["🧾", "The Slow Pay", "You owe money right now. The group has noticed. Coach Frank has noticed."]
-      : dawgs.length && avg(dawgs) < avg(hots) ? ["🐶", "Dawg Whisperer", "Your dawgs outplayed your hots. You see things the rankings don't."]
+      : dawgs.length && avg(dawgs) < avg(hots) ? ["🌭", "Dawg Whisperer", "Your dawgs outplayed your hots. You see things the rankings don't."]
       : !st.wins ? ["⛏️", "The Grinder", "No wins yet, but you keep showing up. Respect. Mild pity, but respect."]
       : ["🌭", "Steady Eddie", "Not flashy. Not broke. Just a hot dog doing hot dog things."];
     const slides = [
@@ -367,7 +367,7 @@
     ov.innerHTML = `<button class="hd-x" aria-label="Close">✕</button>
       <div class="card" style="max-width:520px;margin:0 auto">
         <h2>Replace ${esc(oldName)}</h2>
-        <p class="hint">${esc(oldName)} withdrew. Pick any ${e.kind === "hot" ? "🔥 hot" : "🐶 dawg"} who hasn't teed off and isn't already taken.</p>
+        <p class="hint">${esc(oldName)} withdrew. Pick any ${e.kind === "hot" ? "🔥 hot" : "🌭 dawg"} who hasn't teed off and isn't already taken.</p>
         ${opts.length ? opts.slice(0, 60).map(g => `<div class="rule" data-swapto="${esc(g.name)}" style="cursor:pointer"><span style="flex:1"><b>${esc(g.name)}</b><br>
           <span class="hint" style="margin:0">World No. ${g.rank >= 999 ? "—" : g.rank}${g.odds ? ` · ${esc(g.odds)}` : ""}</span></span><b>Pick ›</b></div>`).join("")
           : `<p><b>Nobody eligible is left.</b> Ask ${esc(config.commissioner || "Race")} to sort it out.</p>`}
@@ -428,7 +428,7 @@
       if (prev && thru === prev[1] + 1 && prev[0] - score >= 2 && prev[0] - score <= 3) {
         const big = prev[0] - score >= 3;
         const mineTxt = e.who === me ? "Your" : `${e.who}'s`;
-        confetti(big ? "🤯 ALBATROSS!" : "🦅 EAGLE!", `${e.name} (${mineTxt} ${e.kind}) on hole ${thru}. Now ${p.toPar}.`);
+        confetti(big ? "🤯 ALBATROSS!" : "🦅 EAGLE!", `${e.name} (${mineTxt} ${e.kind === "hot" ? "🔥" : "🌭"}) on hole ${thru}. Now ${p.toPar}.`);
       }
     }
     snap = next;

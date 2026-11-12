@@ -454,7 +454,7 @@
       <div class="card">
         <h2>Season awards</h2>
         <div class="award"><span class="ico">🔥</span><div><b>Hot hand</b><span class="hint" style="margin:0">${f.won ? `${f.won[0]}, ${f.won[1]} win${f.won[1] === 1 ? "" : "s"}` : "Up for grabs"}</span></div></div>
-        <div class="award"><span class="ico">🐶</span><div><b>Dawg whisperer</b><span class="hint" style="margin:0">${f.dawg ? `${f.dawg[0]}, ${money(f.dawg[1])} won on dawg picks` : "No dawg has cashed yet"}</span></div></div>
+        <div class="award"><span class="ico">🌭</span><div><b>Dawg whisperer</b><span class="hint" style="margin:0">${f.dawg ? `${f.dawg[0]}, ${money(f.dawg[1])} won on dawg picks` : "No dawg has cashed yet"}</span></div></div>
         <div class="award"><span class="ico">🎯</span><div><b>Longest shot cashed</b><span class="hint" style="margin:0">${f.longest ? `${f.longest.m} with ${f.longest.name} (${f.longest.rank < 999 ? "World #" + f.longest.rank : "unranked"}), week ${wk(f.longest.w)}` : "Nobody yet"}</span></div></div>
         <div class="award"><span class="ico">💸</span><div><b>The Shooter award</b><span class="hint" style="margin:0">${f.shooter ? `${f.shooter.payer} is down ${money(f.shooter.net)} to ${f.shooter.to}` : "Everyone's even. For now."}</span></div></div>
         <div class="award"><span class="ico">🥶</span><div><b>Ice cold</b><span class="hint" style="margin:0">${f.dry ? `${f.dry[0]}, ${f.dry[1]} straight week${f.dry[1] === 1 ? "" : "s"} without a win` : "Nobody's cold yet"}</span></div></div>
@@ -492,7 +492,7 @@
 
     wrap.querySelectorAll("[data-trophy]").forEach(b => b.onclick = () => shareTrophy(Number(b.dataset.trophy)));
     document.getElementById("awardsBtn").onclick = () => shareText(
-      `🌭 Hotdawgs season awards:\n🔥 Hot hand: ${f.won ? f.won[0] : "TBD"}\n🐶 Dawg whisperer: ${f.dawg ? f.dawg[0] : "TBD"}\n💸 Shooter award: ${f.shooter ? `${f.shooter.payer} (down ${money(f.shooter.net)} to ${f.shooter.to})` : "TBD"}\n🥶 Ice cold: ${f.dry ? f.dry[0] : "TBD"}\n${appLink()}`);
+      `🌭 Hotdawgs season awards:\n🔥 Hot hand: ${f.won ? f.won[0] : "TBD"}\n🌭 Dawg whisperer: ${f.dawg ? f.dawg[0] : "TBD"}\n💸 Shooter award: ${f.shooter ? `${f.shooter.payer} (down ${money(f.shooter.net)} to ${f.shooter.to})` : "TBD"}\n🥶 Ice cold: ${f.dry ? f.dry[0] : "TBD"}\n${appLink()}`);
     wrap.querySelectorAll("[data-vote]").forEach(b => b.onclick = () => write("week", -w, { votes: { [me]: b.dataset.vote } }));
     const cam = document.getElementById("camIn");
     if (cam) cam.onchange = async () => {

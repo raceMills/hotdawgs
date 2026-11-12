@@ -58,6 +58,9 @@
   /* Nothing but the login form until you're in */
   body:has(#gate:not([hidden])) .hd-tabbar, body:has(#gate:not([hidden])) .hd-coachbtn,
   body:has(#gate:not([hidden])) .hd-coach, body:has(#gate:not([hidden])) .hd-tip { display: none !important; }
+  /* Your picks stand out on leaderboards */
+  .rule.hd-mine { background: var(--mustard); border-radius: 12px; padding: 8px 10px; margin: 2px -4px; border-bottom: 0; }
+  .hd-youtag { display: inline-block; font-size: 10px; font-weight: 900; letter-spacing: .5px; background: var(--red); color: #fff; border-radius: 999px; padding: 1px 7px; vertical-align: 2px; }
   .card {
     background: var(--paper); border: 3px solid var(--shadow); border-radius: var(--radius);
     padding: 16px; margin-bottom: 16px; box-shadow: 5px 5px 0 var(--shadow); position: relative; overflow: hidden;
@@ -226,7 +229,7 @@
       <div class="card">
         <div class="chips">
           <button class="chip on" data-filter="hot">🔥 Hots</button>
-          <button class="chip" data-filter="dawg">🐶 Dawgs</button>
+          <button class="chip" data-filter="dawg">🌭 Dawgs</button>
         </div>
         <div id="golferList"></div>
         <button class="btn" id="submitBtn" disabled>Serve it up</button>
@@ -248,7 +251,7 @@
 <script>
   // App version. Bump it on every release: files load with it, and open phones notice
   // a new number and reload themselves.
-  const APP_VERSION = "2026-11-12.5";
+  const APP_VERSION = "2026-11-12.6";
   async function checkForUpdate() {
     try {
       const r = await fetch(location.pathname + "?check=" + Date.now(), { cache: "no-store" });
@@ -455,8 +458,8 @@
     const taken = claimedMap(week);
 
     $("#draftTitle").innerHTML = `Week ${wk(week)}<small>${locked ? "Picks locked" : "Draft open"}</small>`;
-    fillSlot($("#slotHot"), sel.hot, "Hot", "Pick a top 10");
-    fillSlot($("#slotDawg"), sel.dawg, "Dawg", "Pick a field golfer");
+    fillSlot($("#slotHot"), sel.hot, "🔥", "Pick a top 10");
+    fillSlot($("#slotDawg"), sel.dawg, "🌭", "Pick a field golfer");
 
     const list = $("#golferList");
     list.innerHTML = "";
@@ -570,7 +573,7 @@
     const rows = entries.length ? entries.map(e => {
       const p = fin[e.name];
       const shown = p && p !== 999 ? p : "";
-      return `<div class="rule"><span style="flex:1">${e.name} <span class="hint" style="margin:0">(${e.who}, ${e.kind})</span></span>
+      return `<div class="rule"><span style="flex:1">${e.kind === "hot" ? "🔥" : "🌭"} ${e.name} <span class="hint" style="margin:0">(${e.who === me ? "you" : e.who})</span></span>
         <input type="number" min="1" max="200" value="${shown}" placeholder="finish" data-fin="${e.name}" style="width:72px;padding:6px;border:2px solid var(--shadow);border-radius:8px;font:inherit"></div>`;
     }).join("") : `<p class="hint">No picks for this week yet.</p>`;
     return `<h2>Week ${wk(w)} results</h2>
@@ -1173,14 +1176,14 @@
       <h2 style="margin-top:14px">Live results: pool picks</h2>
       <p class="hint">${stamp}</p>
       ${entries.length ? entries.map(e => `
-        <div class="rule">
-          <span style="flex:1">${e.name} <span class="hint" style="margin:0">(${e.who}, ${e.kind})</span></span>
+        <div class="rule ${e.who === me ? "hd-mine" : ""}">
+          <span style="flex:1">${e.kind === "hot" ? "🔥" : "🌭"} ${e.who === me ? `<b>${e.name}</b> <span class="hd-youtag">YOU</span>` : `${e.name} <span class="hint" style="margin:0">(${e.who})</span>`}</span>
           <span class="hint" style="margin:0 6px 0 0;text-align:right">${e.toPar}${e.lp && HDCore.holeLabel(e.lp) ? `<br><b>${HDCore.holeLabel(e.lp)}</b>` : ""}</span>
           <span class="amt">${e.posText}</span>
         </div>`).join("") : `<p class="hint">No picks this week yet.</p>`}
 
       ${leaders.length ? `<h2 style="margin-top:14px">Tournament leaders</h2>
-        ${leaders.map(p => `<div class="rule"><span style="flex:1">${p.name}</span><span class="hint" style="margin:0 6px 0 0;text-align:right">${p.toPar}${HDCore.holeLabel(p) ? `<br><b>${HDCore.holeLabel(p)}</b>` : ""}</span><span class="amt">${p.posText}</span></div>`).join("")}` : ""}
+        ${leaders.map(p => { const mine = entries.find(e => e.name === p.name && e.who === me); return `<div class="rule ${mine ? "hd-mine" : ""}"><span style="flex:1">${mine ? `${mine.kind === "hot" ? "🔥" : "🌭"} <b>${p.name}</b> <span class="hd-youtag">YOU</span>` : p.name}</span><span class="hint" style="margin:0 6px 0 0;text-align:right">${p.toPar}${HDCore.holeLabel(p) ? `<br><b>${HDCore.holeLabel(p)}</b>` : ""}</span><span class="amt">${p.posText}</span></div>`; }).join("")}` : ""}
       <button class="btn small ghost" id="refreshLive" style="margin-top:10px">Refresh scores</button>`;
     const r = $("#refreshLive");
     if (r) r.onclick = fetchLive;

@@ -147,11 +147,11 @@
       </div>
 
       <div class="card">
-        <h2>Best picks 🐶</h2>
+        <h2>Best picks 🌭</h2>
         <p class="hint">Money-winning picks, longest shots first, by current world rank.</p>
         ${best.length ? best.slice(0, 10).map(b => `
           <div class="rule">
-            <span style="flex:1">${b.name} <span class="hint" style="margin:0">(${b.who}, week ${wk(b.w)}, ${b.kind})</span></span>
+            <span style="flex:1">${b.kind === "hot" ? "🔥" : "🌭"} ${b.name} <span class="hint" style="margin:0">(${b.who}, week ${wk(b.w)})</span></span>
             <span class="hint" style="margin:0 8px 0 0">${b.rank < 999 ? "World #" + b.rank : "Unranked"} · ${ord(b.pos)}</span>
             <span class="amt">${money(b.won)}</span>
           </div>`).join("") : `<p class="hint">No winning picks yet. Check back after the first payout.</p>`}
@@ -168,7 +168,7 @@
               const won = h.settle && h.settle.winner === m;
               return `<div class="rule" style="${won ? "background:var(--mustard);border-radius:8px;padding:6px;" : ""}">
                 <span style="width:64px;font-weight:900">${m}</span>
-                <span style="flex:1;font-size:13px">🔥 ${cell("hot")}<br>🐶 ${cell("dawg")}</span>
+                <span style="flex:1;font-size:13px">🔥 ${cell("hot")}<br>🌭 ${cell("dawg")}</span>
               </div>`;
             }).join("")}
           </div>`).join("") : `<p class="hint">No picks yet this season.</p>`}

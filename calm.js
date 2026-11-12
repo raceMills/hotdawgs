@@ -48,7 +48,7 @@
     return `<div class="card hd-hero" id="hdMyWeekend">
       <div class="hd-kicker">My weekend · ${esc(round)}</div>
       ${rows.map(e => `<div class="mw-row"><span class="mw-pos">${e.p ? esc(e.p.posText) : "—"}</span>
-        <span style="flex:1"><b>${e.kind === "hot" ? "🔥" : "🐶"} ${esc(e.name)}</b><br>
+        <span style="flex:1"><b>${e.kind === "hot" ? "🔥" : "🌭"} ${esc(e.name)}</b><br>
         <span class="hint" style="margin:0"><span class="mw-sc ${/^-/.test(e.p && e.p.toPar || "") ? "under" : ""}">${e.p && e.p.toPar ? esc(e.p.toPar) : "E"}</span>${e.p && HDCore.holeLabel(e.p) ? ` · <b>${esc(HDCore.holeLabel(e.p))}</b>` : ""}</span></span></div>`).join("")}
       ${line}
       <div class="wp-btns" style="margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:8px">
