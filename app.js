@@ -3277,6 +3277,26 @@
   async function keepAwake() {
     try { if ("wakeLock" in navigator) wake = await navigator.wakeLock.request("screen"); } catch (e) { wake = null; }
   }
+  // The short version, shown once when you start or join, and kept at the bottom of the party screen
+  const HOWTO = `<ol>
+    <li><b>FaceTime the group</b> (Messages → Hot Dawgs → FaceTime).</li>
+    <li><b>Play the stream</b> in the ESPN app and tap <b>SharePlay</b>.</li>
+    <li><b>Swipe up.</b> The video and FaceTime shrink to floating windows.</li>
+    <li><b>Open Hotdawgs.</b> Standings full screen, everything else floats.</li></ol>
+    <p style="margin:6px 0 0;opacity:.8">📺 Easier: stream on the TV, FaceTime + Hotdawgs on your phone.</p>`;
+  let howtoBox = null;
+  function showHowTo() {
+    let seen = false; try { seen = !!localStorage.getItem("hd-party-howto"); } catch (e) {}
+    if (seen || !ov) return;
+    const box = document.createElement("div");
+    box.style.cssText = "position:absolute;inset:0;z-index:2;background:rgba(8,14,10,.88);display:flex;align-items:center;justify-content:center;padding:20px";
+    box.innerHTML = `<div class="wp-sec wp-how" style="max-width:380px;width:100%;margin:0;background:#16241b">
+      <h4 style="font-size:14px">🍿 Watch together in 4 steps</h4>${HOWTO}
+      <button class="btn" style="margin-top:12px" data-howto="ok">Got it</button></div>`;
+    ov.appendChild(box);
+    howtoBox = box;
+    box.querySelector("[data-howto]").onclick = () => { try { localStorage.setItem("hd-party-howto", "1"); } catch (e) {} box.remove(); howtoBox = null; };
+  }
   function openParty() {
     if (ov) return;
     joinChannel();
@@ -3289,6 +3309,7 @@
     fetchLive();
     pollTimer = setInterval(() => { if (!document.hidden) fetchLive(); }, 60000);
     renderParty();
+    showHowTo();
   }
   function closeParty() {
     inParty = false;
@@ -3327,13 +3348,10 @@
             ${r.mine.map(e => `<span class="g">${e.kind === "hot" ? "🔥" : "🐶"} ${esc(e.name)} <span class="wp-sc ${scoreCls(e.p && e.p.toPar)}">${e.p ? `${esc(e.p.posText)} ${esc(e.p.toPar || "")}${e.p.hole ? ` (on ${e.p.hole})` : e.p.thru === "F" ? " (F)" : ""}` : "—"}</span></span>`).join("<br>")}</span></div>`).join("")}
         </div>` : `<div class="wp-sec"><h4>Pool standings</h4><p class="hint" style="color:#cfe3d4;margin:0">Shows up once the picks are in and play starts${t ? ` at the ${esc(t.name.replace(/\s+pres.*$/i, ""))}` : ""}.</p></div>`}
         <div class="wp-sec"><h4>Play-by-play</h4><div class="wp-feed">${feed.length ? feed.map(f => `<div><small>${new Date(f.t).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}</small>${esc(f.text)}</div>`).join("") : `<div style="opacity:.7">Birdies, bogeys and lead changes for pool golfers show up here. Scores refresh every minute.</div>`}</div></div>
-        <div class="wp-sec wp-how"><h4>Watch together on FaceTime</h4><ol>
-          <li>Start a FaceTime with the group (in your Messages group, tap the group name, then FaceTime).</li>
-          <li>While on the call, open the ESPN app and play the stream. Tap <b>SharePlay</b> when it asks, so everyone's video stays in sync.</li>
-          <li>Everyone needs their own subscription. GOLF Channel and other apps: look for the SharePlay button; if there isn't one, everyone plays it on their own.</li>
-          <li>Keep this screen open beside the call. Reactions below fly across everyone's screen.</li></ol></div>
+        <div class="wp-sec wp-how"><h4>How to watch together</h4>${HOWTO}</div>
       </div>
       <div class="wp-bar">${REACTS.map(e => `<button data-rx="${e}">${e}</button>`).join("")}</div>`;
+    if (howtoBox) ov.appendChild(howtoBox); // keep the how-to up through live refreshes
     ov.querySelector('.wp-x[aria-label="Close"]').onclick = closeParty;
     const ix = ov.querySelector("[data-wpx=invite]"); if (ix) ix.onclick = sendInvite;
     const ex = ov.querySelector("[data-wpx=end]"); if (ex) ex.onclick = endParty;
