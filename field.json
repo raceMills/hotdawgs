@@ -40,7 +40,7 @@
         {
           "name": "Rafael Campos",
           "owgr": 621,
-          "odds": "+35000"
+          "odds": "+50000"
         },
         {
           "name": "Ricky Castillo",
@@ -105,7 +105,7 @@
         {
           "name": "Austin Eckroat",
           "owgr": 235,
-          "odds": "+5000"
+          "odds": "+5500"
         },
         {
           "name": "A.J. Ewart",
@@ -130,7 +130,7 @@
         {
           "name": "Doug Ghim",
           "owgr": 91,
-          "odds": "+1600"
+          "odds": "+1500"
         },
         {
           "name": "Lucas Glover",
@@ -195,7 +195,7 @@
         {
           "name": "Max Homa",
           "owgr": 81,
-          "odds": "+6000"
+          "odds": "+6500"
         },
         {
           "name": "Billy Horschel",
@@ -205,22 +205,22 @@
         {
           "name": "Rikuya Hoshino",
           "owgr": 583,
-          "odds": "+50000"
+          "odds": "+75000"
         },
         {
           "name": "Mark Hubbard",
           "owgr": 187,
-          "odds": "+22500"
+          "odds": "+25000"
         },
         {
           "name": "Mackenzie Hughes",
           "owgr": 159,
-          "odds": "+5500"
+          "odds": "+5000"
         },
         {
           "name": "Stephan Jaeger",
           "owgr": 110,
-          "odds": "+5500"
+          "odds": "+6000"
         },
         {
           "name": "Takumi Kanaya",
@@ -230,7 +230,7 @@
         {
           "name": "Jeffrey Kang",
           "owgr": 361,
-          "odds": "+35000"
+          "odds": "+25000"
         },
         {
           "name": "Johnny Keefer",
@@ -260,7 +260,7 @@
         {
           "name": "Matt Kuchar",
           "owgr": 254,
-          "odds": "+25000"
+          "odds": "+22500"
         },
         {
           "name": "Christo Lamprecht",
@@ -275,7 +275,7 @@
         {
           "name": "Haotong Li",
           "owgr": 133,
-          "odds": "+7000"
+          "odds": "+8000"
         },
         {
           "name": "Nicholas Lindheim",
@@ -285,7 +285,7 @@
         {
           "name": "David Lipsky",
           "owgr": 147,
-          "odds": "+22500"
+          "odds": "+17500"
         },
         {
           "name": "Justin Lower",
@@ -295,7 +295,7 @@
         {
           "name": "Christiaan Maas",
           "owgr": 578,
-          "odds": "+12500"
+          "odds": "+15000"
         },
         {
           "name": "Peter Malnati",
@@ -314,7 +314,7 @@
         {
           "name": "Max McGreevy",
           "owgr": 146,
-          "odds": "+7000"
+          "odds": "+6500"
         },
         {
           "name": "Mac Meissner",
@@ -324,12 +324,12 @@
         {
           "name": "Taylor Moore",
           "owgr": 179,
-          "odds": "+8000"
+          "odds": "+10000"
         },
         {
           "name": "Tommy Morrison",
           "owgr": 161,
-          "odds": "+7000"
+          "odds": "+8000"
         },
         {
           "name": "William Mouw",
@@ -339,7 +339,7 @@
         {
           "name": "Rasmus Neergaard-Petersen",
           "owgr": 82,
-          "odds": "+6000"
+          "odds": "+5500"
         },
         {
           "name": "Andrew Novak",
@@ -349,7 +349,7 @@
         {
           "name": "Pontus Nyholm",
           "owgr": 337,
-          "odds": "+25000"
+          "odds": "+22500"
         },
         {
           "name": "Alvaro Ortiz",
@@ -394,7 +394,7 @@
         {
           "name": "Seamus Power",
           "owgr": 137,
-          "odds": "+3500"
+          "odds": "+4000"
         },
         {
           "name": "Andrew Putnam",
@@ -474,7 +474,7 @@
         {
           "name": "William Sides",
           "owgr": 373,
-          "odds": "+10000"
+          "odds": "+12500"
         },
         {
           "name": "David Skinns",
@@ -499,7 +499,7 @@
         {
           "name": "Jimmy Stanger",
           "owgr": 391,
-          "odds": "+75000"
+          "odds": "+100000"
         },
         {
           "name": "Sam Stevens",
@@ -509,7 +509,7 @@
         {
           "name": "Kevin Streelman",
           "owgr": 327,
-          "odds": "+17500"
+          "odds": "+22500"
         },
         {
           "name": "Jackson Suber",
@@ -519,7 +519,7 @@
         {
           "name": "Adam Svensson",
           "owgr": 548,
-          "odds": "+50000"
+          "odds": "+35000"
         },
         {
           "name": "Jesper Svensson",
@@ -554,7 +554,7 @@
         {
           "name": "Sami Valimaki",
           "owgr": 89,
-          "odds": "+8000"
+          "odds": "+10000"
         },
         {
           "name": "Erik van Rooyen",
@@ -564,7 +564,7 @@
         {
           "name": "John VanDerLaan",
           "owgr": 319,
-          "odds": "+15000"
+          "odds": "+12500"
         },
         {
           "name": "Kristoffer Ventura",
@@ -574,7 +574,7 @@
         {
           "name": "Karl Vilips",
           "owgr": 241,
-          "odds": "+10000"
+          "odds": "+8000"
         },
         {
           "name": "Danny Walker",
@@ -720,7 +720,7 @@
       "pgaTourId": "R2026493",
       "name": "The RSM Classic",
       "start": "2026-11-19",
-      "updated": "2026-11-05T00:00:57.455Z",
+      "updated": "2026-11-12T00:00:58.807Z",
       "players": [],
       "alternates": [],
       "watch": [
