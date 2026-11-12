@@ -6,7 +6,7 @@ on:
       mode:
         description: "What to do"
         type: choice
-        options: [status, start-week, pin, field, url, set-clock, report]
+        options: [status, start-week, pin, field, url, set-clock, report, espn]
         default: status
       week:
         description: "Week number (start-week: blank = next week; pin: required)"

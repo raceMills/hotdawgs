@@ -247,6 +247,20 @@ async function report() {
   const cam = ((await getRow("pool_weeks", "week", -w)) || { data: {} }).data;
   console.log("ketchup cam photos:", Object.keys(cam.photos || {}).join(", ") || "none");
 }
-const run = { report, "set-clock": setClock, status, "start-week": startWeek, pin, field: fieldProbe, url: urlProbe }[mode];
+// Raw look at ESPN's live data for a few golfers (to see hole-by-hole fields)
+async function espnRaw() {
+  const r = await fetch("https://site.api.espn.com/apis/site/v2/sports/golf/pga/scoreboard");
+  const j = await r.json();
+  const ev = j.events[0], comp = ev.competitions[0];
+  console.log("event:", ev.name, JSON.stringify(ev.status).slice(0, 300));
+  console.log("competition keys:", Object.keys(comp).join(","));
+  for (const c of comp.competitors.slice(0, 4).concat(comp.competitors.slice(-3))) {
+    const { linescores, athlete, ...rest } = c;
+    console.log("--", athlete && athlete.displayName, JSON.stringify(rest).slice(0, 400));
+    const last = (linescores || []).filter(l => (l.linescores || []).length || l.value != null).pop();
+    if (last) { const { linescores: holes, ...lr } = last; console.log("   round:", JSON.stringify(lr).slice(0, 300)); console.log("   holes:", JSON.stringify(holes || []).slice(0, 700)); }
+  }
+}
+const run = { espn: espnRaw, report, "set-clock": setClock, status, "start-week": startWeek, pin, field: fieldProbe, url: urlProbe }[mode];
 if (!run) { console.error(`Unknown mode "${mode}"`); process.exit(1); }
 run().catch(e => { console.error(e.message); process.exit(1); });
