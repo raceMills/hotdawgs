@@ -258,7 +258,7 @@ async function espnRaw() {
     const { linescores, athlete, ...rest } = c;
     console.log("--", athlete && athlete.displayName, JSON.stringify(rest).slice(0, 400));
     const last = (linescores || []).filter(l => (l.linescores || []).length || l.value != null).pop();
-    if (last) { const { linescores: holes, ...lr } = last; console.log("   round:", JSON.stringify(lr).slice(0, 300)); console.log("   holes:", JSON.stringify(holes || []).slice(0, 700)); }
+    if (last) { const { linescores: holes, ...lr } = last; console.log("   round:", JSON.stringify(lr).slice(0, 300)); console.log("   tee:", JSON.stringify(lr).match(/"displayValue":"[A-Z][a-z]{2} [A-Z][a-z]{2}[^"]*"/g)); console.log("   holes:", JSON.stringify(holes || []).slice(0, 700)); }
   }
 }
 const run = { espn: espnRaw, report, "set-clock": setClock, status, "start-week": startWeek, pin, field: fieldProbe, url: urlProbe }[mode];
