@@ -3188,13 +3188,22 @@
     chan.on("presence", { event: "sync" }, () => {
       const st = chan.presenceState();
       watchers = {};
-      Object.entries(st).forEach(([k, metas]) => { if (metas.some(x => x.watching)) watchers[k] = metas[0]; });
+      // Only people actively in the party screen recently (a heartbeat refreshes "at")
+      Object.entries(st).forEach(([k, metas]) => { const m = metas.find(x => x.watching && Date.now() - (x.at || 0) < 3 * 60000); if (m) watchers[k] = m; });
       if (inParty) renderParty(); else refreshCards();
     });
+    // Someone ended the party: close it on every phone
+    chan.on("broadcast", { event: "end" }, () => { if (inParty) closeParty(); watchers = {}; renderActive(); });
     chan.on("broadcast", { event: "rx" }, ({ payload }) => { if (payload) { fly(payload.e, payload.m); if (inParty) addFeed(`${payload.m} ${payload.e}`, true); } });
     chan.subscribe((status) => { if (status === "SUBSCRIBED" && inParty) chan.track({ watching: true, at: Date.now() }); });
   }
-  const watchingNow = () => Object.keys(watchers).filter(m => MEMBERS.includes(m));
+  const watchingNow = () => Object.keys(watchers).filter(m => MEMBERS.includes(m) && (m !== me || inParty));
+  // While in the party, keep telling everyone you're still here
+  setInterval(() => { if (inParty && chan && !document.hidden) chan.track({ watching: true, at: Date.now() }); }, 60000);
+  // Re-check who's watching every so often so stale faces drop off
+  setInterval(() => { if (!inParty && chan) { const before = JSON.stringify(Object.keys(watchers)); const st = chan.presenceState(); watchers = {};
+    Object.entries(st).forEach(([k, metas]) => { const m = metas.find(x => x.watching && Date.now() - (x.at || 0) < 3 * 60000); if (m) watchers[k] = m; });
+    if (JSON.stringify(Object.keys(watchers)) !== before) refreshCards(); } }, 30000);
 
   // ---------- What's on ----------
   function onAir() {
@@ -3375,6 +3384,8 @@
   // End the party for everyone (clears "Join the party" and stops its ping)
   async function endParty() {
     try { await write("week", currentWeek(), { party: null }); } catch (e) {}
+    if (chan) { try { chan.send({ type: "broadcast", event: "end", payload: { by: me } }); chan.untrack(); } catch (e) {} }
+    watchers = {};
     if (inParty) closeParty();
     toast("🍿 Watch party ended.");
     renderActive();
