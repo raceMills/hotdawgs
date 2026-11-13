@@ -491,30 +491,6 @@
       "alternates": [],
       "watch": [
         {
-          "round": 1,
-          "start": 1794499200000,
-          "end": 1794520800000,
-          "kind": "Radio",
-          "network": "SiriusXM",
-          "url": "https://sxm.app.link/LB0419510CMPMGfndfdpdd"
-        },
-        {
-          "round": 1,
-          "start": 1794510000000,
-          "end": 1794520800000,
-          "kind": "TV",
-          "network": "GOLF Channel",
-          "url": "https://www.golfchannel.com/watch/live"
-        },
-        {
-          "round": 1,
-          "start": 1794510000000,
-          "end": 1794520800000,
-          "kind": "Featured groups",
-          "network": "ESPN+",
-          "url": "https://espn.smart.link/88r9d3tmo"
-        },
-        {
           "round": 2,
           "start": 1794574800000,
           "end": 1794596400000,
