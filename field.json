@@ -10,12 +10,11 @@
         {
           "name": "Zach Bauchou",
           "owgr": 135,
-          "odds": "+2700"
+          "odds": "+2500"
         },
         {
           "name": "Daniel Berger",
-          "owgr": 72,
-          "odds": "+75000"
+          "owgr": 72
         },
         {
           "name": "Christiaan Bezuidenhout",
@@ -24,27 +23,26 @@
         {
           "name": "Zac Blair",
           "owgr": 136,
-          "odds": "+17500"
+          "odds": "+25000"
         },
         {
           "name": "Chandler Blanchet",
           "owgr": 140,
-          "odds": "+10000"
+          "odds": "+75000"
         },
         {
           "name": "Blades Brown",
           "owgr": 62,
-          "odds": "+500"
+          "odds": "+1500"
         },
         {
           "name": "Rafael Campos",
           "owgr": 621,
-          "odds": "+22500"
+          "odds": "+10000"
         },
         {
           "name": "Ricky Castillo",
-          "owgr": 88,
-          "odds": "0"
+          "owgr": 88
         },
         {
           "name": "Davis Chatfield",
@@ -53,8 +51,7 @@
         },
         {
           "name": "Luke Clanton",
-          "owgr": 263,
-          "odds": "+100000"
+          "owgr": 263
         },
         {
           "name": "Eric Cole",
@@ -63,12 +60,12 @@
         {
           "name": "Pierceson Coody",
           "owgr": 74,
-          "odds": "+22500"
+          "odds": "+17500"
         },
         {
           "name": "Trace Crowe",
           "owgr": 162,
-          "odds": "+550"
+          "odds": "+350"
         },
         {
           "name": "Joel Dahmen",
@@ -77,23 +74,21 @@
         },
         {
           "name": "Cam Davis",
-          "owgr": 405,
-          "odds": "+100000"
+          "owgr": 405
         },
         {
           "name": "Zecheng Dou",
           "owgr": 197,
-          "odds": "+10000"
+          "odds": "+5500"
         },
         {
           "name": "Adrien Dumont de Chassart",
-          "owgr": 219,
-          "odds": "+100000"
+          "owgr": 219
         },
         {
           "name": "Tyler Duncan",
           "owgr": 412,
-          "odds": "+75000"
+          "odds": "+100000"
         },
         {
           "name": "Nick Dunlap",
@@ -121,17 +116,16 @@
         {
           "name": "Brice Garnett",
           "owgr": 313,
-          "odds": "+22500"
+          "odds": "+100000"
         },
         {
           "name": "Doug Ghim",
           "owgr": 91,
-          "odds": "+35000"
+          "odds": "+12500"
         },
         {
           "name": "Lucas Glover",
-          "owgr": 143,
-          "odds": "+100000"
+          "owgr": 143
         },
         {
           "name": "Emilio Gonzalez",
@@ -146,22 +140,21 @@
         {
           "name": "Max Greyserman",
           "owgr": 99,
-          "odds": "+3300"
+          "odds": "+2700"
         },
         {
           "name": "Emiliano Grillo",
           "owgr": 126,
-          "odds": "+12500"
+          "odds": "+35000"
         },
         {
           "name": "Nick Hardy",
-          "owgr": 686,
-          "odds": "+75000"
+          "owgr": 686
         },
         {
           "name": "Brian Harman",
           "owgr": 70,
-          "odds": "+850"
+          "odds": "+750"
         },
         {
           "name": "Frankie Harris",
@@ -169,8 +162,7 @@
         },
         {
           "name": "Joe Highsmith",
-          "owgr": 308,
-          "odds": "+100000"
+          "owgr": 308
         },
         {
           "name": "Kensei Hirata",
@@ -179,7 +171,7 @@
         {
           "name": "Lee Hodges",
           "owgr": 154,
-          "odds": "+10000"
+          "odds": "+50000"
         },
         {
           "name": "Rico Hoey",
@@ -188,17 +180,17 @@
         {
           "name": "Rasmus Højgaard",
           "owgr": 84,
-          "odds": "+5000"
+          "odds": "+10000"
         },
         {
           "name": "Max Homa",
           "owgr": 81,
-          "odds": "+6500"
+          "odds": "+75000"
         },
         {
           "name": "Billy Horschel",
           "owgr": 173,
-          "odds": "+22500"
+          "odds": "+100000"
         },
         {
           "name": "Rikuya Hoshino",
@@ -207,22 +199,19 @@
         {
           "name": "Mark Hubbard",
           "owgr": 187,
-          "odds": "+22500"
+          "odds": "+17500"
         },
         {
           "name": "Mackenzie Hughes",
-          "owgr": 159,
-          "odds": "+50000"
+          "owgr": 159
         },
         {
           "name": "Stephan Jaeger",
-          "owgr": 110,
-          "odds": "+100000"
+          "owgr": 110
         },
         {
           "name": "Takumi Kanaya",
-          "owgr": 200,
-          "odds": "+100000"
+          "owgr": 200
         },
         {
           "name": "Jeffrey Kang",
@@ -246,7 +235,7 @@
         {
           "name": "Ben Kohles",
           "owgr": 92,
-          "odds": "+3000"
+          "odds": "+2500"
         },
         {
           "name": "Jackson Koivun",
@@ -264,11 +253,12 @@
         {
           "name": "Haotong Li",
           "owgr": 133,
-          "odds": "+4000"
+          "odds": "+6500"
         },
         {
           "name": "Nicholas Lindheim",
-          "owgr": null
+          "owgr": null,
+          "odds": "+100000"
         },
         {
           "name": "David Lipsky",
@@ -283,7 +273,7 @@
         {
           "name": "Christiaan Maas",
           "owgr": 578,
-          "odds": "+17500"
+          "odds": "+15000"
         },
         {
           "name": "Peter Malnati",
@@ -301,17 +291,16 @@
         {
           "name": "Max McGreevy",
           "owgr": 146,
-          "odds": "+12500"
+          "odds": "+10000"
         },
         {
           "name": "Mac Meissner",
           "owgr": 98,
-          "odds": "+15000"
+          "odds": "+5000"
         },
         {
           "name": "Taylor Moore",
-          "owgr": 179,
-          "odds": "+100000"
+          "owgr": 179
         },
         {
           "name": "Tommy Morrison",
@@ -326,12 +315,11 @@
         {
           "name": "Rasmus Neergaard-Petersen",
           "owgr": 82,
-          "odds": "+4000"
+          "odds": "+3300"
         },
         {
           "name": "Andrew Novak",
-          "owgr": 61,
-          "odds": "+100000"
+          "owgr": 61
         },
         {
           "name": "Pontus Nyholm",
@@ -339,8 +327,7 @@
         },
         {
           "name": "Alvaro Ortiz",
-          "owgr": 117,
-          "odds": "+75000"
+          "owgr": 117
         },
         {
           "name": "C.T. Pan",
@@ -349,12 +336,11 @@
         {
           "name": "John Parry",
           "owgr": 112,
-          "odds": "+75000"
+          "odds": "+100000"
         },
         {
           "name": "Matthieu Pavon",
-          "owgr": 243,
-          "odds": "+75000"
+          "owgr": 243
         },
         {
           "name": "Taylor Pendrith",
@@ -372,7 +358,7 @@
         {
           "name": "Chandler Phillips",
           "owgr": 149,
-          "odds": "+22500"
+          "odds": "+50000"
         },
         {
           "name": "Seamus Power",
@@ -380,8 +366,7 @@
         },
         {
           "name": "Andrew Putnam",
-          "owgr": 120,
-          "odds": "+100000"
+          "owgr": 120
         },
         {
           "name": "Chad Ramey",
@@ -390,8 +375,7 @@
         },
         {
           "name": "Davis Riley",
-          "owgr": 150,
-          "odds": "+100000"
+          "owgr": 150
         },
         {
           "name": "Patrick Rodgers",
@@ -408,7 +392,7 @@
         {
           "name": "Marcelo Rozo",
           "owgr": 681,
-          "odds": "+22500"
+          "odds": "+100000"
         },
         {
           "name": "Casey Russell",
@@ -417,7 +401,7 @@
         {
           "name": "Miles Russell",
           "owgr": 831,
-          "odds": "+15000"
+          "odds": "+4000"
         },
         {
           "name": "Adrien Saddier",
@@ -427,7 +411,7 @@
         {
           "name": "Isaiah Salinda",
           "owgr": 356,
-          "odds": "+100000"
+          "odds": "+75000"
         },
         {
           "name": "Gordon Sargent",
@@ -436,8 +420,7 @@
         },
         {
           "name": "Adam Schenk",
-          "owgr": 256,
-          "odds": "+100000"
+          "owgr": 256
         },
         {
           "name": "Cole Sherwood",
@@ -446,7 +429,7 @@
         {
           "name": "Neal Shipley",
           "owgr": 163,
-          "odds": "+4000"
+          "odds": "+1600"
         },
         {
           "name": "William Sides",
@@ -454,23 +437,22 @@
         },
         {
           "name": "David Skinns",
-          "owgr": 297,
-          "odds": "+100000"
+          "owgr": 297
         },
         {
           "name": "Jordan Smith",
           "owgr": 67,
-          "odds": "+1200"
+          "odds": "+1000"
         },
         {
           "name": "Austin Smotherman",
           "owgr": 51,
-          "odds": "+12500"
+          "odds": "+10000"
         },
         {
           "name": "Hayden Springer",
           "owgr": 295,
-          "odds": "+35000"
+          "odds": "+25000"
         },
         {
           "name": "Jimmy Stanger",
@@ -484,7 +466,7 @@
         {
           "name": "Kevin Streelman",
           "owgr": 327,
-          "odds": "+12500"
+          "odds": "+100000"
         },
         {
           "name": "Jackson Suber",
@@ -497,7 +479,7 @@
         {
           "name": "Jesper Svensson",
           "owgr": 202,
-          "odds": "+10000"
+          "odds": "+12500"
         },
         {
           "name": "Nick Taylor",
@@ -505,8 +487,7 @@
         },
         {
           "name": "Davis Thompson",
-          "owgr": 138,
-          "odds": "+100000"
+          "owgr": 138
         },
         {
           "name": "Michael Thompson",
@@ -525,22 +506,22 @@
         {
           "name": "Sami Valimaki",
           "owgr": 89,
-          "odds": "+5500"
+          "odds": "+2200"
         },
         {
           "name": "Erik van Rooyen",
           "owgr": 220,
-          "odds": "+1300"
+          "odds": "+2200"
         },
         {
           "name": "John VanDerLaan",
           "owgr": 319,
-          "odds": "+75000"
+          "odds": "+6000"
         },
         {
           "name": "Kristoffer Ventura",
           "owgr": 142,
-          "odds": "+1200"
+          "odds": "+1000"
         },
         {
           "name": "Karl Vilips",
@@ -553,12 +534,12 @@
         {
           "name": "Vince Whaley",
           "owgr": 248,
-          "odds": "+75000"
+          "odds": "+100000"
         },
         {
           "name": "Aaron Wise",
           "owgr": 506,
-          "odds": "+10000"
+          "odds": "+17500"
         },
         {
           "name": "Dylan Wu",
@@ -568,40 +549,16 @@
         {
           "name": "Sudarshan Yellamaraju",
           "owgr": 116,
-          "odds": "+8000"
+          "odds": "+22500"
         },
         {
           "name": "Kevin Yu",
           "owgr": 115,
-          "odds": "+480"
+          "odds": "+600"
         }
       ],
       "alternates": [],
       "watch": [
-        {
-          "round": 2,
-          "start": 1794585600000,
-          "end": 1794607200000,
-          "kind": "Radio",
-          "network": "SiriusXM",
-          "url": "https://sxm.app.link/LB0419510CMPMGfndfdpdd"
-        },
-        {
-          "round": 2,
-          "start": 1794596400000,
-          "end": 1794607200000,
-          "kind": "TV",
-          "network": "GOLF Channel",
-          "url": "https://www.golfchannel.com/watch/live"
-        },
-        {
-          "round": 2,
-          "start": 1794596400000,
-          "end": 1794607200000,
-          "kind": "Featured groups",
-          "network": "ESPN+",
-          "url": "https://espn.smart.link/88r9d3tmo"
-        },
         {
           "round": 3,
           "start": 1794675600000,
@@ -649,8 +606,565 @@
       "pgaTourId": "R2026493",
       "name": "The RSM Classic",
       "start": "2026-11-19",
-      "updated": "2026-11-12T00:00:58.807Z",
-      "players": [],
+      "updated": "2026-11-13T22:20:56.597Z",
+      "players": [
+        {
+          "name": "Ludvig Åberg",
+          "owgr": 21
+        },
+        {
+          "name": "Zach Bauchou",
+          "owgr": 135
+        },
+        {
+          "name": "Daniel Berger",
+          "owgr": 72
+        },
+        {
+          "name": "Christiaan Bezuidenhout",
+          "owgr": 109
+        },
+        {
+          "name": "Francisco Bidé",
+          "owgr": null
+        },
+        {
+          "name": "Zac Blair",
+          "owgr": 136
+        },
+        {
+          "name": "Chandler Blanchet",
+          "owgr": 140
+        },
+        {
+          "name": "Keegan Bradley",
+          "owgr": 56
+        },
+        {
+          "name": "Michael Brennan",
+          "owgr": 18
+        },
+        {
+          "name": "Blades Brown",
+          "owgr": 62
+        },
+        {
+          "name": "Rafael Campos",
+          "owgr": 621
+        },
+        {
+          "name": "Ricky Castillo",
+          "owgr": 88
+        },
+        {
+          "name": "Bud Cauley",
+          "owgr": 47
+        },
+        {
+          "name": "Davis Chatfield",
+          "owgr": 298
+        },
+        {
+          "name": "Luke Clanton",
+          "owgr": 263
+        },
+        {
+          "name": "Eric Cole",
+          "owgr": 83
+        },
+        {
+          "name": "Tyler Collet",
+          "owgr": null
+        },
+        {
+          "name": "Pierceson Coody",
+          "owgr": 74
+        },
+        {
+          "name": "Trace Crowe",
+          "owgr": 162
+        },
+        {
+          "name": "Joel Dahmen",
+          "owgr": 264
+        },
+        {
+          "name": "Cam Davis",
+          "owgr": 405
+        },
+        {
+          "name": "Zecheng Dou",
+          "owgr": 197
+        },
+        {
+          "name": "Adrien Dumont de Chassart",
+          "owgr": 219
+        },
+        {
+          "name": "Tyler Duncan",
+          "owgr": 412
+        },
+        {
+          "name": "Nick Dunlap",
+          "owgr": 471
+        },
+        {
+          "name": "Austin Eckroat",
+          "owgr": 235
+        },
+        {
+          "name": "Harris English",
+          "owgr": 46
+        },
+        {
+          "name": "A.J. Ewart",
+          "owgr": 206
+        },
+        {
+          "name": "Tony Finau",
+          "owgr": 182
+        },
+        {
+          "name": "Patrick Fishburn",
+          "owgr": 286
+        },
+        {
+          "name": "Steven Fisk",
+          "owgr": 69
+        },
+        {
+          "name": "David Ford",
+          "owgr": 177
+        },
+        {
+          "name": "Brice Garnett",
+          "owgr": 313
+        },
+        {
+          "name": "Doug Ghim",
+          "owgr": 91
+        },
+        {
+          "name": "Lucas Glover",
+          "owgr": 143
+        },
+        {
+          "name": "Emilio Gonzalez",
+          "owgr": 331
+        },
+        {
+          "name": "Will Gordon",
+          "owgr": 431
+        },
+        {
+          "name": "Max Greyserman",
+          "owgr": 99
+        },
+        {
+          "name": "Emiliano Grillo",
+          "owgr": 126
+        },
+        {
+          "name": "Adam Hadwin",
+          "owgr": 338
+        },
+        {
+          "name": "Harry Hall",
+          "owgr": 71
+        },
+        {
+          "name": "Brian Harman",
+          "owgr": 70
+        },
+        {
+          "name": "Garrick Higgo",
+          "owgr": 152
+        },
+        {
+          "name": "Harry Higgs",
+          "owgr": 418
+        },
+        {
+          "name": "Joe Highsmith",
+          "owgr": 308
+        },
+        {
+          "name": "Kensei Hirata",
+          "owgr": 281
+        },
+        {
+          "name": "Ryo Hisatsune",
+          "owgr": 78
+        },
+        {
+          "name": "Lee Hodges",
+          "owgr": 154
+        },
+        {
+          "name": "Rico Hoey",
+          "owgr": 106
+        },
+        {
+          "name": "Rasmus Højgaard",
+          "owgr": 84
+        },
+        {
+          "name": "Billy Horschel",
+          "owgr": 173
+        },
+        {
+          "name": "Rikuya Hoshino",
+          "owgr": 583
+        },
+        {
+          "name": "Mark Hubbard",
+          "owgr": 187
+        },
+        {
+          "name": "Mackenzie Hughes",
+          "owgr": 159
+        },
+        {
+          "name": "Ben James",
+          "owgr": 54
+        },
+        {
+          "name": "Takumi Kanaya",
+          "owgr": 200
+        },
+        {
+          "name": "Jeffrey Kang",
+          "owgr": 361
+        },
+        {
+          "name": "Johnny Keefer",
+          "owgr": 73
+        },
+        {
+          "name": "Chris Kirk",
+          "owgr": 105
+        },
+        {
+          "name": "Kevin Kisner",
+          "owgr": null
+        },
+        {
+          "name": "Patton Kizzire",
+          "owgr": 507
+        },
+        {
+          "name": "Brooks Koepka",
+          "owgr": 114
+        },
+        {
+          "name": "Ben Kohles",
+          "owgr": 92
+        },
+        {
+          "name": "Jackson Koivun",
+          "owgr": 60
+        },
+        {
+          "name": "Matt Kuchar",
+          "owgr": 254
+        },
+        {
+          "name": "Christo Lamprecht",
+          "owgr": 441
+        },
+        {
+          "name": "Hank Lebioda",
+          "owgr": 345
+        },
+        {
+          "name": "K.H. Lee",
+          "owgr": null
+        },
+        {
+          "name": "Haotong Li",
+          "owgr": 133
+        },
+        {
+          "name": "Nicholas Lindheim",
+          "owgr": null
+        },
+        {
+          "name": "David Lingmerth",
+          "owgr": null
+        },
+        {
+          "name": "David Lipsky",
+          "owgr": 147
+        },
+        {
+          "name": "Luke List",
+          "owgr": 574
+        },
+        {
+          "name": "Justin Lower",
+          "owgr": 367
+        },
+        {
+          "name": "Peter Malnati",
+          "owgr": 460
+        },
+        {
+          "name": "Ben Martin",
+          "owgr": 496
+        },
+        {
+          "name": "Stefano Mazzoli",
+          "owgr": 224
+        },
+        {
+          "name": "Denny McCarthy",
+          "owgr": 102
+        },
+        {
+          "name": "Max McGreevy",
+          "owgr": 146
+        },
+        {
+          "name": "Maverick McNealy",
+          "owgr": 50
+        },
+        {
+          "name": "Mac Meissner",
+          "owgr": 98
+        },
+        {
+          "name": "Troy Merritt",
+          "owgr": 433
+        },
+        {
+          "name": "Keith Mitchell",
+          "owgr": 55
+        },
+        {
+          "name": "Taylor Moore",
+          "owgr": 179
+        },
+        {
+          "name": "William Mouw",
+          "owgr": 170
+        },
+        {
+          "name": "Rasmus Neergaard-Petersen",
+          "owgr": 82
+        },
+        {
+          "name": "S.Y. Noh",
+          "owgr": 385
+        },
+        {
+          "name": "Andrew Novak",
+          "owgr": 61
+        },
+        {
+          "name": "Pontus Nyholm",
+          "owgr": 337
+        },
+        {
+          "name": "John Parry",
+          "owgr": 112
+        },
+        {
+          "name": "Jeremy Paul",
+          "owgr": 344
+        },
+        {
+          "name": "Matthieu Pavon",
+          "owgr": 243
+        },
+        {
+          "name": "Taylor Pendrith",
+          "owgr": 134
+        },
+        {
+          "name": "Marco Penge",
+          "owgr": 57
+        },
+        {
+          "name": "Paul Peterson",
+          "owgr": 307
+        },
+        {
+          "name": "Chandler Phillips",
+          "owgr": 149
+        },
+        {
+          "name": "J.T. Poston",
+          "owgr": 36
+        },
+        {
+          "name": "Andrew Putnam",
+          "owgr": 120
+        },
+        {
+          "name": "Chad Ramey",
+          "owgr": 211
+        },
+        {
+          "name": "Davis Riley",
+          "owgr": 150
+        },
+        {
+          "name": "Patrick Rodgers",
+          "owgr": 132
+        },
+        {
+          "name": "Kevin Roy",
+          "owgr": 122
+        },
+        {
+          "name": "Marcelo Rozo",
+          "owgr": 681
+        },
+        {
+          "name": "Adrien Saddier",
+          "owgr": 174
+        },
+        {
+          "name": "Calen Sanderson",
+          "owgr": null
+        },
+        {
+          "name": "Gordon Sargent",
+          "owgr": 312
+        },
+        {
+          "name": "Adam Schenk",
+          "owgr": 256
+        },
+        {
+          "name": "Neal Shipley",
+          "owgr": 163
+        },
+        {
+          "name": "Greyson Sigg",
+          "owgr": 486
+        },
+        {
+          "name": "Ben Silverman",
+          "owgr": 231
+        },
+        {
+          "name": "Webb Simpson",
+          "owgr": 519
+        },
+        {
+          "name": "David Skinns",
+          "owgr": 297
+        },
+        {
+          "name": "Alex Smalley",
+          "owgr": 48
+        },
+        {
+          "name": "Jordan Smith",
+          "owgr": 67
+        },
+        {
+          "name": "Austin Smotherman",
+          "owgr": 51
+        },
+        {
+          "name": "Hayden Springer",
+          "owgr": 295
+        },
+        {
+          "name": "Jimmy Stanger",
+          "owgr": 391
+        },
+        {
+          "name": "Sam Stevens",
+          "owgr": 76
+        },
+        {
+          "name": "Sepp Straka",
+          "owgr": 39
+        },
+        {
+          "name": "Kevin Streelman",
+          "owgr": 327
+        },
+        {
+          "name": "Jackson Suber",
+          "owgr": 107
+        },
+        {
+          "name": "Adam Svensson",
+          "owgr": 548
+        },
+        {
+          "name": "Jesper Svensson",
+          "owgr": 202
+        },
+        {
+          "name": "Davis Thompson",
+          "owgr": 138
+        },
+        {
+          "name": "Michael Thorbjornsen",
+          "owgr": 40
+        },
+        {
+          "name": "Brendon Todd",
+          "owgr": null
+        },
+        {
+          "name": "Alejandro Tosti",
+          "owgr": 449
+        },
+        {
+          "name": "Sami Valimaki",
+          "owgr": 89
+        },
+        {
+          "name": "Erik van Rooyen",
+          "owgr": 220
+        },
+        {
+          "name": "John VanDerLaan",
+          "owgr": 319
+        },
+        {
+          "name": "Kristoffer Ventura",
+          "owgr": 142
+        },
+        {
+          "name": "Karl Vilips",
+          "owgr": 241
+        },
+        {
+          "name": "Danny Walker",
+          "owgr": 334
+        },
+        {
+          "name": "Matt Wallace",
+          "owgr": 58
+        },
+        {
+          "name": "Vince Whaley",
+          "owgr": 248
+        },
+        {
+          "name": "Aaron Wise",
+          "owgr": 506
+        },
+        {
+          "name": "Dylan Wu",
+          "owgr": 430
+        },
+        {
+          "name": "Sudarshan Yellamaraju",
+          "owgr": 116
+        },
+        {
+          "name": "Kevin Yu",
+          "owgr": 115
+        }
+      ],
       "alternates": [],
       "watch": [
         {
