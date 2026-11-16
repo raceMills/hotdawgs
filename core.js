@@ -104,6 +104,22 @@
   const parsePar = (v) => { const s = String(v == null ? "" : v).trim(); if (!s || /^e$/i.test(s)) return 0; const n = parseInt(s.replace("+", ""), 10); return Number.isFinite(n) ? n : 0; };
   // ESPN gives each golfer an order and round-by-round scores but no printed
   // position, so ties, missed cuts and holes played are worked out here
+  // ESPN puts each round's tee time in its stats as text like "Mon Nov 16 10:31:00 PST 2026".
+  // The clock numbers are Eastern time (checked against published tee sheets) even
+  // though the label says PST, so read them as Eastern.
+  const MON = { Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5, Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11 };
+  let nyFmt = null;
+  function teeTimeOf(round) {
+    if (!round || !round.statistics) return null;
+    const m = /"displayValue":"[A-Z][a-z]{2} ([A-Z][a-z]{2}) (\d{1,2}) (\d{2}):(\d{2}):\d{2} [A-Z]{2,4} (\d{4})"/.exec(JSON.stringify(round.statistics));
+    if (!m || MON[m[1]] == null) return null;
+    nyFmt = nyFmt || new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", hour: "numeric", hourCycle: "h23" });
+    for (const off of [5, 4]) {
+      const ms = Date.UTC(Number(m[5]), MON[m[1]], Number(m[2]), Number(m[3]) + off, Number(m[4]));
+      if (Number(nyFmt.formatToParts(new Date(ms)).find(x => x.type === "hour").value) % 24 === Number(m[3])) return ms;
+    }
+    return null;
+  }
   function parseScoreboard(data) {
     const ev = ((data && data.events) || [])[0];
     const comp = ev && (ev.competitions || [])[0];
@@ -117,6 +133,7 @@
         toPar: c.score && typeof c.score === "object" ? (c.score.displayValue || "") : String(c.score == null ? "" : c.score),
         round: last ? last.period : 0,
         holes: last ? (last.linescores || []).length : 0,
+        tee: teeTimeOf(last),
         // The hole they're playing now: one after the last hole scored (ESPN numbers each
         // hole score by hole, so 10th-tee starters work too). Empty before they start.
         hole: (() => {
@@ -143,7 +160,7 @@
         if (p === inPlay[0]) tied = false;
         else { pos = 2; tied = inPlay.filter(q => q !== inPlay[0] && score(q) === s).length > 1; }
       }
-      return { name: p.name, pos, posText: (tied ? "T" : "") + pos, toPar: p.toPar, thru: final ? "" : (p.holes >= 18 ? "F" : p.holes ? String(p.holes) : ""), hole: final ? "" : p.hole };
+      return { name: p.name, pos, posText: (tied ? "T" : "") + pos, toPar: p.toPar, thru: final ? "" : (p.holes >= 18 ? "F" : p.holes ? String(p.holes) : ""), hole: final ? "" : p.hole, tee: !final && !p.holes ? p.tee : null };
     });
     const calendar = ((((data && data.leagues) || [])[0] || {}).calendar || []).map(e => ({
       name: e.label || e.name || "", start: isoDay(e.startDate), end: isoDay(e.endDate), where: ""
@@ -266,6 +283,10 @@
     if (!p || p.pos >= 999) return p && p.posText === "MC" ? "Missed cut" : p && p.posText === "WD" ? "Withdrew" : "";
     if (p.hole) return `On ${p.hole} · thru ${p.thru}`;
     if (p.thru === "F") return "Done for the day";
+    if (p.tee && !p.thru) {
+      const d = new Date(p.tee), today = new Date().toDateString() === d.toDateString();
+      return `${p.tee > Date.now() ? "Tees off" : "Tee time"} ${today ? "" : d.toLocaleDateString([], { weekday: "short" }) + " "}${d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`;
+    }
     if (p.posText && p.posText !== "—" && !p.thru) return "Hasn't teed off";
     return "";
   }
