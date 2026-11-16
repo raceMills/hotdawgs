@@ -228,7 +228,7 @@
     ov.innerHTML = `<div class="card" style="max-width:420px;width:100%;margin:0">
       <h2>${next ? `📣 Tell the group ${esc(next)} is up` : "📣 Tell the group the draft's done"}</h2>
       <p style="font-size:16px;margin:6px 0 12px">“${esc(line)}”</p>
-      <button class="btn" data-t="send">Send to Hot Dawgs 💬</button>
+      <button class="btn" data-t="send">Text the group 💬</button>
       <button class="btn ghost" data-t="skip" style="margin-top:6px">Skip</button>
       ${HD.pushState && ["off", "needs-home", "blocked"].includes(HD.pushState()) ? `<p class="hint" style="margin:12px 0 0;text-align:center">🔔 Want a ping when it's your turn or your golfer makes a move?
         ${HD.pushState() === "off" ? `<br><button class="hd-mini" data-t="push" style="width:auto;padding:4px 12px;margin-top:6px">Turn on pings</button>` : HD.pushState() === "needs-home" ? "<br>Add Hotdawgs to your Home Screen first (Share → Add to Home Screen)." : "<br>Allow them in iPhone Settings → Notifications → Hotdawgs."}</p>` : ""}</div>`;

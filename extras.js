@@ -91,8 +91,7 @@
     if (photo && navigator.share && navigator.canShare && navigator.canShare({ files: [photo] })) {
       try { await navigator.share({ files: [photo], text }); return; } catch (e) { if (e && e.name === "AbortError") return; }
     }
-    const nums = groupNumbers();
-    if (nums.length >= 2) { location.href = `sms://open?addresses=${nums.join(",")}&body=${encodeURIComponent(text)}`; return; }
+    // Always the iPhone share sheet, so you pick the group chat yourself
     if (navigator.share) { try { await navigator.share({ text }); } catch (e) {} return; }
     location.href = "sms:&body=" + encodeURIComponent(text);
   }

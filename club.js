@@ -157,14 +157,6 @@
             <button class="btn ghost" style="width:auto;margin:0" data-club="markWD">Mark withdrawn</button></div></details></div>`;
       })() : ""}
 
-      <div class="field" style="margin-top:14px"><label>Group chat contacts</label>
-        <p class="hint">Each person's number, or the email iMessage uses for them in Hot Dawgs (Zach's is his Yahoo email). Group texts from the app go to these.</p>
-        ${MEMBERS.map(m => `<div style="display:flex;gap:6px;align-items:center;margin:6px 0">
-          <span style="width:70px;font-weight:900">${esc(m)}</span>
-          <input data-contact="${esc(m)}" type="text" inputmode="email" autocapitalize="off" spellcheck="false" autocomplete="off"
-            placeholder="(512) 555-0123 or email" value="${esc(prettyContact((config.phones || {})[m]))}" style="flex:1;min-width:0"></div>`).join("")}
-        <button class="btn ghost" data-club="contacts">Save contacts</button></div>
-
       <div class="field" style="margin-top:14px"><label>Reset a password</label>
         <div class="chips">${MEMBERS.filter(m => (config.auth || {})[m]).map(m => `<button class="chip" data-reset="${m}">${m}</button>`).join("") || `<span class="hint">Nobody has set one yet.</span>`}</div>
         <p class="hint">They'll log in with the group password and set a new one.</p></div>
@@ -253,7 +245,7 @@
     if (!me || wrap.querySelector("#hdClub")) return; // still being edited
     const box = document.createElement("div");
     box.id = "hdClub";
-    box.innerHTML = phoneCard() + pushCard() + (isCommish() ? commishCard() : "");
+    box.innerHTML = pushCard() + (isCommish() ? commishCard() : "");
     wrap.insertBefore(box, wrap.children[1] || null);
     wire();
     if (subState === "unknown") refreshSubState();
@@ -272,6 +264,7 @@
     Zach: "Heads up Zach: you're in the Hot Dawgs chat by your Yahoo email, not your phone number. Enter that email exactly, or the app's texts will start a new group instead of landing in Hot Dawgs."
   };
   function setupCard() {
+    return; // group texts use the share sheet now, so no contact setup needed
     if (!dataReady || !me || (config.phones || {})[me]) return;
     const a = document.querySelector("section.active");
     if (!a || a.id !== "home") return;

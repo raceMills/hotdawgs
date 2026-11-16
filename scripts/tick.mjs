@@ -339,7 +339,7 @@ try { await nudgeTick(cur); } catch (e) { log(`Payment nudges: ${e.message}`); }
 // One-time ping for anyone who hasn't added their group-chat number/email yet
 try {
   if (!QUIET) {
-    const need = C.MEMBERS.filter(m => !(config.phones || {})[m] && !(config.setupPinged || {})[m] && Object.keys((config.push || {})[m] || {}).length);
+    const need = []; // retired: group texts use the share sheet, no contacts needed
     for (const m of need) notify(m, "💬 10-second setup", m === "Zach"
       ? "Add your Hot Dawgs chat info in the app. Heads up: you're in the group by your Yahoo email, so enter that email, not your phone number."
       : "Add the number the Hot Dawgs group chat uses for you, so nudges and payouts go straight to the group.", "setup");
