@@ -5,19 +5,11 @@
       "pgaTourId": "R2026493",
       "name": "The RSM Classic",
       "start": "2026-11-19",
-      "updated": "2026-11-13T22:20:56.597Z",
+      "updated": "2026-11-16T19:00:57.675Z",
       "players": [
-        {
-          "name": "Ludvig Åberg",
-          "owgr": 21
-        },
         {
           "name": "Zach Bauchou",
           "owgr": 135
-        },
-        {
-          "name": "Daniel Berger",
-          "owgr": 72
         },
         {
           "name": "Christiaan Bezuidenhout",
@@ -46,6 +38,10 @@
         {
           "name": "Blades Brown",
           "owgr": 62
+        },
+        {
+          "name": "Jonathan Byrd",
+          "owgr": 629
         },
         {
           "name": "Rafael Campos",
@@ -170,6 +166,10 @@
         {
           "name": "Harry Hall",
           "owgr": 71
+        },
+        {
+          "name": "Nick Hardy",
+          "owgr": 686
         },
         {
           "name": "Brian Harman",
@@ -536,6 +536,10 @@
           "owgr": 241
         },
         {
+          "name": "Camilo Villegas",
+          "owgr": 603
+        },
+        {
           "name": "Danny Walker",
           "owgr": 334
         },
@@ -558,6 +562,10 @@
         {
           "name": "Sudarshan Yellamaraju",
           "owgr": 116
+        },
+        {
+          "name": "Carson Young",
+          "owgr": 209
         },
         {
           "name": "Kevin Yu",
