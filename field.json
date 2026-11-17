@@ -5,8 +5,12 @@
       "pgaTourId": "R2026493",
       "name": "The RSM Classic",
       "start": "2026-11-19",
-      "updated": "2026-11-16T19:00:57.675Z",
+      "updated": "2026-11-16T22:30:57.001Z",
       "players": [
+        {
+          "name": "Matt Atkins",
+          "owgr": 592
+        },
         {
           "name": "Zach Bauchou",
           "owgr": 135
@@ -30,6 +34,10 @@
         {
           "name": "Keegan Bradley",
           "owgr": 56
+        },
+        {
+          "name": "Ryan Brehm",
+          "owgr": null
         },
         {
           "name": "Michael Brennan",
@@ -86,6 +94,10 @@
         {
           "name": "Cam Davis",
           "owgr": 405
+        },
+        {
+          "name": "Muzzy Donohue",
+          "owgr": null
         },
         {
           "name": "Zecheng Dou",
@@ -228,6 +240,10 @@
           "owgr": 54
         },
         {
+          "name": "Michael Johnson",
+          "owgr": 251
+        },
+        {
           "name": "Takumi Kanaya",
           "owgr": 200
         },
@@ -356,12 +372,20 @@
           "owgr": 385
         },
         {
+          "name": "Henrik Norlander",
+          "owgr": 608
+        },
+        {
           "name": "Andrew Novak",
           "owgr": 61
         },
         {
           "name": "Pontus Nyholm",
           "owgr": 337
+        },
+        {
+          "name": "Jeff Overton",
+          "owgr": 907
         },
         {
           "name": "John Parry",
@@ -516,6 +540,10 @@
           "owgr": 449
         },
         {
+          "name": "Shad Tuten",
+          "owgr": 595
+        },
+        {
           "name": "Sami Valimaki",
           "owgr": 89
         },
@@ -558,10 +586,6 @@
         {
           "name": "Dylan Wu",
           "owgr": 430
-        },
-        {
-          "name": "Sudarshan Yellamaraju",
-          "owgr": 116
         },
         {
           "name": "Carson Young",
@@ -640,8 +664,8 @@
         },
         {
           "round": 3,
-          "start": 1795280400000,
-          "end": 1795298400000,
+          "start": 1795276800000,
+          "end": 1795294800000,
           "kind": "Radio",
           "network": "SiriusXM",
           "url": "https://sxm.app.link/LB0419510CMPMGfndfdpdd"
