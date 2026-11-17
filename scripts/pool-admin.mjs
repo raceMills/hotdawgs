@@ -236,6 +236,7 @@ async function report() {
   console.log(`Week ${w}: ${d.tournament && d.tournament.name} | draftOpenAt ${t(d.draftOpenAt)} | paused ${!!d.clockPaused} | forceOpen ${!!d.forceOpen} | autoPickHours ${cfg.autoPickHours}`);
   Object.entries(d.pickLog || {}).sort((a, b) => a[0] - b[0]).forEach(([i, x]) => x && console.log(`  pick ${Number(i) + 1}: ${x.m} ${x.kind} ${x.name} at ${t(x.at)}${x.auto ? " AUTO" : ""}${x.by && x.by !== x.m ? " by " + x.by : ""}`));
   console.log("picks:", JSON.stringify(d.picks));
+  console.log("finishes:", JSON.stringify(d.finishes || null), "| W:", d.resultWinner, "| R:", d.resultRunner, "| settle:", JSON.stringify(d.settle || null));
   console.log("queues:", JSON.stringify(Object.fromEntries(Object.entries(d.queues || {}).map(([m, q]) => [m, (q || []).length]))));
   console.log("reactions:", JSON.stringify(d.reactions || {}));
   console.log("notified:", Object.keys(d.notified || {}).join(", "));
