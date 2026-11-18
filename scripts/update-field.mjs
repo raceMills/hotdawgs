@@ -63,7 +63,11 @@ function oddsMap(data) {
     let o = r.odds ?? r.oddsToWin ?? r.currentOdds ?? r.oddsValue ?? r.value;
     if (o && typeof o === "object") o = o.odds ?? o.value ?? o.displayOdds;
     if (typeof o === "number") o = (o > 0 ? "+" : "") + o;
-    if (nm && typeof o === "string" && /^[+-]?\d+(\/\d+)?$/.test(o.trim())) out.set(normName(nm), o.trim());
+    if (typeof o !== "string" || !/^[+-]?\d+(\/\d+)?$/.test(o.trim())) continue;
+    if (nm) out.set(normName(nm), o.trim());
+    // Some weeks the odds list only has PGA Tour player ids, no names
+    const pid = r.playerId || p.playerId || p.id;
+    if (pid) out.set("id:" + pid, o.trim());
   }
   return out;
 }
@@ -141,13 +145,18 @@ for (const t of targets) {
     const players = (field && field.players) || [];
     const name = (p) => `${p.firstName || ""} ${p.lastName || ""}`.trim() || p.displayName || "";
     const rank = (p) => { const n = parseInt(p.owgr, 10); return Number.isFinite(n) ? n : null; };
-    const inField = players.filter(p => !p.withdrawn && !p.alternate).map(p => ({ name: name(p), owgr: rank(p) })).filter(p => p.name);
-    const alternates = players.filter(p => !p.withdrawn && p.alternate).map(p => ({ name: name(p), owgr: rank(p) })).filter(p => p.name);
+    const pidOf = (p) => p.id || p.playerId || (p.player && p.player.id) || null;
+    const inField = players.filter(p => !p.withdrawn && !p.alternate).map(p => ({ name: name(p), owgr: rank(p), pid: pidOf(p) })).filter(p => p.name);
+    const alternates = players.filter(p => !p.withdrawn && p.alternate).map(p => ({ name: name(p), owgr: rank(p), pid: pidOf(p) })).filter(p => p.name);
     let odds = new Map();
     try { odds = await oddsFor(t, get); } catch (e) { console.log(`odds: ${e.message}`); }
-    for (const p of inField.concat(alternates)) { const o = odds.get(normName(p.name)); if (o) p.odds = o; }
+    for (const p of inField.concat(alternates)) {
+      const o = odds.get(normName(p.name)) || (p.pid ? odds.get("id:" + p.pid) : null);
+      if (o) p.odds = o;
+      delete p.pid;
+    }
     events.push({ pgaTourId: t.id, name: t.name, start: t.start, updated: field && field.lastUpdated ? new Date(field.lastUpdated).toISOString() : null, players: inField, alternates, watch, where });
-    console.log(`${t.name} (${t.start}): ${inField.length} in the field, ${alternates.length} alternates, ${odds.size} odds, ${watch.length} TV/stream windows, ${where && where.lat ? `${where.city} ${where.lat},${where.lon}` : "no location"}`);
+    console.log(`${t.name} (${t.start}): ${inField.length} in the field, ${alternates.length} alternates, ${inField.filter(p => p.odds).length} with odds, ${watch.length} TV/stream windows, ${where && where.lat ? `${where.city} ${where.lat},${where.lon}` : "no location"}`);
   } catch (e) {
     console.log(`${t.name} (${t.start}): field not available (${e.message})`);
     events.push({ pgaTourId: t.id, name: t.name, start: t.start, updated: null, players: [], alternates: [], watch, where });
