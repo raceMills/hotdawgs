@@ -456,7 +456,7 @@
     const t = currentTourney();
     const hasOdds = golfers.some(g => g.odds);
     list.innerHTML = (fieldIsLive() ? "" : `<p class="hint" style="background:var(--cream);border:2px dashed var(--bun);border-radius:10px;padding:8px">⏳ The ${t ? splitName(t.name).main : "tournament"} field isn't posted yet, so this is the world top 200. Some of them may not be playing.</p>`)
-      + `<p class="hint">${myTurn ? `Tap a golfer to draft ${proxy ? "for " + who : "them"}.` : need ? "Browse and star golfers for your queue. You can pick when it's your turn." : "You're done this week. Browse the field below."}${hasOdds ? " Teal boxes are odds to win (and the chance they imply)." : " Odds to win show up here once sportsbooks post them, usually Tuesday or Wednesday."}</p>`;
+      + `<p class="hint">${myTurn ? `Tap a golfer to draft ${proxy ? "for " + who : "them"}.` : need ? "Tap any golfer to add him to your queue. You can pick when it's your turn." : "You're done this week. Browse the field below."}${hasOdds ? " Teal boxes are odds to win (and the chance they imply)." : " Odds to win show up here once sportsbooks post them, usually Tuesday or Wednesday."}</p>`;
     golfers.filter(g => (filter === "hot") === g.hot).forEach(g => {
       const key = C.compactKey(g.name);
       const owner = owners[key];
@@ -474,7 +474,9 @@
       if (qb) qb.onclick = (e) => { e.stopPropagation(); toggleQueue(week, g.name); };
       el.onclick = () => {
         if (owner) { if (owner !== who) toast(`${g.name} is already taken by ${owner}`); return; }
-        if (!open) { toast("The draft opens when the field is posted. Star golfers for your queue in the meantime."); return; }
+        // Not your turn (or the draft isn't open): tapping a golfer adds/removes him from your queue
+        if ((!open || !myTurn) && qb) { toggleQueue(week, g.name); return; }
+        if (!open) { toast("The draft opens when the field is posted."); return; }
         if (!myTurn) { toast(st.complete ? "The draft is done for this week." : `Not your turn yet. ${st.onClock} is on the clock.`); return; }
         const kind = g.hot ? "hot" : "dawg";
         if (mine[kind]) { toast(`Already have a ${kind}. Pick a ${kind === "hot" ? "dawg" : "hot"}.`); return; }
