@@ -10,12 +10,20 @@
   style.textContent = `
     html.hd-quiet section.active, html.hd-quiet .hd-hero, html.hd-quiet .slot.filled,
     html.hd-quiet .hd-cam-pop, html.hd-quiet .hd-rpick { animation: none !important; }
+    /* Keep the tab bar and toasts pinned on iPhone while the page scrolls or redraws */
+    .hd-tabbar, .toast, .hd-coachbtn { transform: translateZ(0); -webkit-transform: translateZ(0); will-change: transform; }
   `;
   document.head.appendChild(style);
 
-  let lastTouch = 0;
-  ["pointerdown", "keydown", "touchstart"].forEach(ev => addEventListener(ev, () => { lastTouch = Date.now(); }, true));
-  const userDriven = () => Date.now() - lastTouch < 1200;
+  let lastTouch = 0, lastScroll = 0, touching = false;
+  addEventListener("scroll", () => { lastScroll = Date.now(); }, { passive: true });
+  addEventListener("touchstart", () => { touching = true; }, { passive: true, capture: true });
+  addEventListener("touchend", () => { touching = false; lastScroll = Date.now(); }, { passive: true, capture: true });
+  // Redrawing the page mid-scroll makes iPhone jump the bottom bar around,
+  // so background redraws wait until you've stopped scrolling.
+  const scrolling = () => touching || Date.now() - lastScroll < 900;
+  ["click", "keydown", "change", "submit"].forEach(ev => addEventListener(ev, () => { lastTouch = Date.now(); }, true));
+  const userDriven = () => Date.now() - lastTouch < 1200 && !touching; // taps, not scrolls
 
   const realRender = renderActive;
   let timer = null, quietTimer = null;
@@ -32,7 +40,8 @@
   renderActive = function () {
     if (userDriven()) { clearTimeout(timer); timer = null; return paint(false); }
     if (timer) return;
-    timer = setTimeout(() => { timer = null; paint(true); }, 150);
+    const tryPaint = () => { if (scrolling()) { timer = setTimeout(tryPaint, 400); return; } timer = null; paint(true); };
+    timer = setTimeout(tryPaint, 150);
   };
   window.HD = Object.assign(window.HD || {}, { renderNow: () => { clearTimeout(timer); timer = null; paint(false); } });
 })();
