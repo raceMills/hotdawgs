@@ -5,7 +5,7 @@
       "pgaTourId": "R2026493",
       "name": "The RSM Classic",
       "start": "2026-11-19",
-      "updated": "2026-11-17T15:20:57.802Z",
+      "updated": "2026-11-17T20:50:57.221Z",
       "players": [
         {
           "name": "Matt Atkins",
@@ -86,6 +86,10 @@
         {
           "name": "Pierceson Coody",
           "owgr": 73
+        },
+        {
+          "name": "Austin Cook",
+          "owgr": null
         },
         {
           "name": "Trace Crowe",
@@ -590,10 +594,6 @@
         {
           "name": "Carson Young",
           "owgr": 211
-        },
-        {
-          "name": "Kevin Yu",
-          "owgr": 106
         }
       ],
       "alternates": [],
@@ -695,13 +695,7 @@
           "url": "https://www.golfchannel.com/watch/live"
         }
       ],
-      "where": {
-        "city": "St. Simons Island",
-        "state": "Georgia",
-        "country": "USA",
-        "course": "Sea Island Golf Club - Seaside Course",
-        "tz": "America/New_York"
-      }
+      "where": null
     },
     {
       "pgaTourId": "R2026478",
@@ -845,15 +839,7 @@
           "url": "https://www.peacocktv.com/golf"
         }
       ],
-      "where": {
-        "city": "Albany",
-        "state": "",
-        "country": "BAH",
-        "course": "Albany GC",
-        "tz": "America/New_York",
-        "lat": 42.65258,
-        "lon": -73.75623
-      }
+      "where": null
     }
   ]
 }
