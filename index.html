@@ -251,7 +251,7 @@
 <script>
   // App version. Bump it on every release: files load with it, and open phones notice
   // a new number and reload themselves.
-  const APP_VERSION = "2026-11-16.3";
+  const APP_VERSION = "2026-11-18.1";
   async function checkForUpdate() {
     try {
       const r = await fetch(location.pathname + "?check=" + Date.now(), { cache: "no-store" });
@@ -350,7 +350,9 @@
   }
 
   // Read the latest copy, merge the change, save it back
+  let lastWriteAt = 0;
   async function write(kind, week, patch) {
+    lastWriteAt = Date.now();
     const table = kind === "config" ? "pool_config" : "pool_weeks";
     const key = kind === "config" ? { id: "main" } : { week };
     const { data } = await sb.from(table).select("data").match(key).maybeSingle();
@@ -397,7 +399,7 @@
   }
   let freshening = false;
   async function freshen() {
-    if (!sb || !dataReady || freshening) return;
+    if (!sb || !dataReady || freshening || Date.now() - lastWriteAt < 4000) return; // don't stomp on a save in progress
     freshening = true;
     try {
       const before = JSON.stringify([config, weekDocs[currentWeek()], weekDocs[-currentWeek()]]);

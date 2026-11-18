@@ -283,15 +283,36 @@
   window.HD.autoPickNow = () => autoPickIfDue(true);
 
   // ----- Queue -----
+  // Queue changes run one at a time on the latest saved copy, so quick taps (or a
+  // background refresh landing mid-tap) can't overwrite each other.
+  let queueChain = Promise.resolve();
+  function queueOp(week, change) {
+    // Show it right away
+    const doc = weekDocs[week] = weekDocs[week] || {};
+    doc.queues = Object.assign({}, doc.queues, { [me]: change(queueOf(week, me).slice()) });
+    renderActive();
+    queueChain = queueChain.then(async () => {
+      try {
+        await loadWeek(week);
+        const next = change(queueOf(week, me).slice());
+        await write("week", week, { queues: { [me]: next } });
+      } catch (e) { toast("Couldn't save your queue. Check your connection."); }
+    });
+    return queueChain;
+  }
   async function setQueue(week, list) {
-    await write("week", week, { queues: { [me]: list } });
+    return queueOp(week, () => list.slice());
   }
   function toggleQueue(week, name) {
-    const q = queueOf(week, me).slice();
-    const i = q.findIndex(n => C.compactKey(n) === C.compactKey(name));
-    if (i >= 0) q.splice(i, 1); else q.push(name);
-    setQueue(week, q);
-    toast(i >= 0 ? `Removed ${name} from your queue` : `Added ${name} to your queue (#${q.length})`);
+    const key = C.compactKey(name);
+    const had = queueOf(week, me).some(n => C.compactKey(n) === key);
+    const q = queueOf(week, me);
+    queueOp(week, (cur) => {
+      const i = cur.findIndex(n => C.compactKey(n) === key);
+      if (had && i >= 0) cur.splice(i, 1); else if (!had && i < 0) cur.push(name);
+      return cur;
+    });
+    toast(had ? `Removed ${name} from your queue` : `Added ${name} to your queue (#${q.length + 1})`);
   }
   // "+1300" -> "7%": the chance to win that the odds imply
   const oddsPct = (o) => { const n = parseInt(o, 10); if (!n) return ""; const p = n > 0 ? 100 / (n + 100) : -n / (-n + 100); return p >= 0.095 ? Math.round(p * 100) + "%" : (p * 100).toFixed(1) + "%"; };
