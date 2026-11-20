@@ -35,7 +35,7 @@
         {
           "name": "Chandler Blanchet",
           "owgr": 146,
-          "odds": "+50000"
+          "odds": "+75000"
         },
         {
           "name": "Keegan Bradley",
@@ -69,7 +69,7 @@
         {
           "name": "Ricky Castillo",
           "owgr": 92,
-          "odds": "+6000"
+          "odds": "+4500"
         },
         {
           "name": "Bud Cauley",
@@ -78,8 +78,7 @@
         },
         {
           "name": "Cameron Champ",
-          "owgr": 458,
-          "odds": "+100000"
+          "owgr": 458
         },
         {
           "name": "Davis Chatfield",
@@ -94,7 +93,7 @@
         {
           "name": "Eric Cole",
           "owgr": 87,
-          "odds": "+5500"
+          "odds": "+6000"
         },
         {
           "name": "Tyler Collet",
@@ -109,7 +108,7 @@
         {
           "name": "Austin Cook",
           "owgr": null,
-          "odds": "+75000"
+          "odds": "+100000"
         },
         {
           "name": "Trace Crowe",
@@ -119,7 +118,7 @@
         {
           "name": "Joel Dahmen",
           "owgr": 237,
-          "odds": "+5500"
+          "odds": "+6000"
         },
         {
           "name": "Cam Davis",
@@ -154,12 +153,12 @@
         {
           "name": "Austin Eckroat",
           "owgr": 236,
-          "odds": "+75000"
+          "odds": "+100000"
         },
         {
           "name": "Harris English",
           "owgr": 47,
-          "odds": "+3500"
+          "odds": "+3300"
         },
         {
           "name": "A.J. Ewart",
@@ -169,22 +168,22 @@
         {
           "name": "Tony Finau",
           "owgr": 188,
-          "odds": "+75000"
+          "odds": "+100000"
         },
         {
           "name": "Patrick Fishburn",
           "owgr": 292,
-          "odds": "+15000"
+          "odds": "+17500"
         },
         {
           "name": "Steven Fisk",
           "owgr": 69,
-          "odds": "+100000"
+          "odds": "+75000"
         },
         {
           "name": "David Ford",
           "owgr": 176,
-          "odds": "+7000"
+          "odds": "+8000"
         },
         {
           "name": "Brice Garnett",
@@ -209,7 +208,7 @@
         {
           "name": "Max Greyserman",
           "owgr": 101,
-          "odds": "+1600"
+          "odds": "+1800"
         },
         {
           "name": "Emiliano Grillo",
@@ -239,7 +238,7 @@
         {
           "name": "Brian Harman",
           "owgr": 71,
-          "odds": "+12500"
+          "odds": "+15000"
         },
         {
           "name": "Garrick Higgo",
@@ -259,7 +258,7 @@
         {
           "name": "Kensei Hirata",
           "owgr": 283,
-          "odds": "+22500"
+          "odds": "+25000"
         },
         {
           "name": "Ryo Hisatsune",
@@ -274,7 +273,7 @@
         {
           "name": "Rico Hoey",
           "owgr": 110,
-          "odds": "+35000"
+          "odds": "+100000"
         },
         {
           "name": "Rasmus Højgaard",
@@ -284,7 +283,7 @@
         {
           "name": "Billy Horschel",
           "owgr": 172,
-          "odds": "+75000"
+          "odds": "+35000"
         },
         {
           "name": "Rikuya Hoshino",
@@ -299,7 +298,7 @@
         {
           "name": "Mackenzie Hughes",
           "owgr": 164,
-          "odds": "+12500"
+          "odds": "+15000"
         },
         {
           "name": "Ben James",
@@ -324,12 +323,12 @@
         {
           "name": "Johnny Keefer",
           "owgr": 74,
-          "odds": "+15000"
+          "odds": "+17500"
         },
         {
           "name": "Chris Kirk",
           "owgr": 112,
-          "odds": "+3300"
+          "odds": "+3000"
         },
         {
           "name": "Kevin Kisner",
@@ -344,7 +343,7 @@
         {
           "name": "Brooks Koepka",
           "owgr": 120,
-          "odds": "+4000"
+          "odds": "+3500"
         },
         {
           "name": "Ben Kohles",
@@ -379,7 +378,7 @@
         {
           "name": "Haotong Li",
           "owgr": 137,
-          "odds": "+4500"
+          "odds": "+5000"
         },
         {
           "name": "Nicholas Lindheim",
@@ -424,7 +423,7 @@
         {
           "name": "Denny McCarthy",
           "owgr": 104,
-          "odds": "+12500"
+          "odds": "+15000"
         },
         {
           "name": "Max McGreevy",
@@ -439,7 +438,7 @@
         {
           "name": "Mac Meissner",
           "owgr": 95,
-          "odds": "+25000"
+          "odds": "+35000"
         },
         {
           "name": "Troy Merritt",
@@ -454,7 +453,7 @@
         {
           "name": "Taylor Moore",
           "owgr": 187,
-          "odds": "+17500"
+          "odds": "+15000"
         },
         {
           "name": "Rasmus Neergaard-Petersen",
@@ -489,7 +488,7 @@
         {
           "name": "John Parry",
           "owgr": 111,
-          "odds": "+50000"
+          "odds": "+35000"
         },
         {
           "name": "Jeremy Paul",
@@ -519,17 +518,17 @@
         {
           "name": "Chandler Phillips",
           "owgr": 150,
-          "odds": "+8000"
+          "odds": "+7000"
         },
         {
           "name": "J.T. Poston",
           "owgr": 37,
-          "odds": "+3500"
+          "odds": "+4000"
         },
         {
           "name": "Andrew Putnam",
           "owgr": 127,
-          "odds": "+25000"
+          "odds": "+22500"
         },
         {
           "name": "Chad Ramey",
@@ -544,7 +543,7 @@
         {
           "name": "Patrick Rodgers",
           "owgr": 136,
-          "odds": "+50000"
+          "odds": "+75000"
         },
         {
           "name": "Kevin Roy",
@@ -579,7 +578,7 @@
         {
           "name": "Neal Shipley",
           "owgr": 165,
-          "odds": "+4000"
+          "odds": "+3500"
         },
         {
           "name": "Greyson Sigg",
@@ -589,7 +588,7 @@
         {
           "name": "Ben Silverman",
           "owgr": 233,
-          "odds": "+22500"
+          "odds": "+25000"
         },
         {
           "name": "Webb Simpson",
@@ -604,12 +603,12 @@
         {
           "name": "Alex Smalley",
           "owgr": 48,
-          "odds": "+25000"
+          "odds": "+50000"
         },
         {
           "name": "Jordan Smith",
           "owgr": 65,
-          "odds": "+10000"
+          "odds": "+12500"
         },
         {
           "name": "Austin Smotherman",
@@ -634,7 +633,7 @@
         {
           "name": "Sepp Straka",
           "owgr": 40,
-          "odds": "+3000"
+          "odds": "+3300"
         },
         {
           "name": "Robert Streb",
@@ -664,12 +663,12 @@
         {
           "name": "Davis Thompson",
           "owgr": 149,
-          "odds": "+10000"
+          "odds": "+8000"
         },
         {
           "name": "Michael Thorbjornsen",
           "owgr": 41,
-          "odds": "+600"
+          "odds": "+550"
         },
         {
           "name": "Brendon Todd",
@@ -694,22 +693,21 @@
         {
           "name": "John VanDerLaan",
           "owgr": 295,
-          "odds": "+12500"
+          "odds": "+10000"
         },
         {
           "name": "Kristoffer Ventura",
           "owgr": 135,
-          "odds": "+4500"
+          "odds": "+6000"
         },
         {
           "name": "Karl Vilips",
           "owgr": 254,
-          "odds": "+15000"
+          "odds": "+17500"
         },
         {
           "name": "Camilo Villegas",
-          "owgr": 598,
-          "odds": "+100000"
+          "owgr": 598
         },
         {
           "name": "Danny Walker",
@@ -719,7 +717,7 @@
         {
           "name": "Matt Wallace",
           "owgr": 56,
-          "odds": "+5500"
+          "odds": "+6000"
         },
         {
           "name": "Vince Whaley",
@@ -739,27 +737,11 @@
         {
           "name": "Carson Young",
           "owgr": 211,
-          "odds": "+17500"
+          "odds": "+22500"
         }
       ],
       "alternates": [],
       "watch": [
-        {
-          "round": 1,
-          "start": 1795100400000,
-          "end": 1795122000000,
-          "kind": "Radio",
-          "network": "SiriusXM",
-          "url": "https://sxm.app.link/LB0419510CMPMGfndfdpdd"
-        },
-        {
-          "round": 1,
-          "start": 1795107600000,
-          "end": 1795122000000,
-          "kind": "Featured groups",
-          "network": "ESPN+",
-          "url": "https://espn.smart.link/88r9d3tmo"
-        },
         {
           "round": 2,
           "start": 1795181400000,
@@ -918,7 +900,7 @@
       "watch": [
         {
           "round": 1,
-          "start": 1796322600000,
+          "start": 1796319000000,
           "end": 1796333400000,
           "kind": "TV",
           "network": "GOLF Channel",
@@ -926,7 +908,7 @@
         },
         {
           "round": 2,
-          "start": 1796409000000,
+          "start": 1796405400000,
           "end": 1796419800000,
           "kind": "TV",
           "network": "GOLF Channel",
