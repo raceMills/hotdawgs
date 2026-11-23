@@ -18,7 +18,7 @@
         {
           "name": "Christiaan Bezuidenhout",
           "owgr": 114,
-          "odds": "+17500"
+          "odds": "+100000"
         },
         {
           "name": "Francisco Bidé",
@@ -45,7 +45,7 @@
         {
           "name": "Michael Brennan",
           "owgr": 18,
-          "odds": "+100000"
+          "odds": "+75000"
         },
         {
           "name": "Blades Brown",
@@ -62,7 +62,7 @@
         {
           "name": "Ricky Castillo",
           "owgr": 92,
-          "odds": "+950"
+          "odds": "+5500"
         },
         {
           "name": "Bud Cauley",
@@ -123,7 +123,7 @@
         {
           "name": "Adrien Dumont de Chassart",
           "owgr": 224,
-          "odds": "+3000"
+          "odds": "+3500"
         },
         {
           "name": "Tyler Duncan",
@@ -132,7 +132,7 @@
         {
           "name": "Nick Dunlap",
           "owgr": 484,
-          "odds": "+75000"
+          "odds": "+100000"
         },
         {
           "name": "Austin Eckroat",
@@ -141,7 +141,7 @@
         {
           "name": "Harris English",
           "owgr": 47,
-          "odds": "+15000"
+          "odds": "+10000"
         },
         {
           "name": "A.J. Ewart",
@@ -163,7 +163,7 @@
         {
           "name": "David Ford",
           "owgr": 176,
-          "odds": "+4000"
+          "odds": "+10000"
         },
         {
           "name": "Brice Garnett",
@@ -186,12 +186,12 @@
         {
           "name": "Max Greyserman",
           "owgr": 101,
-          "odds": "+350"
+          "odds": "+550"
         },
         {
           "name": "Emiliano Grillo",
           "owgr": 125,
-          "odds": "+15000"
+          "odds": "+35000"
         },
         {
           "name": "Bill Haas",
@@ -204,7 +204,7 @@
         {
           "name": "Harry Hall",
           "owgr": 71,
-          "odds": "+12500"
+          "odds": "+22500"
         },
         {
           "name": "Nick Hardy",
@@ -241,7 +241,7 @@
         {
           "name": "Lee Hodges",
           "owgr": 159,
-          "odds": "+17500"
+          "odds": "+100000"
         },
         {
           "name": "Rico Hoey",
@@ -250,7 +250,7 @@
         {
           "name": "Rasmus Højgaard",
           "owgr": 86,
-          "odds": "+1000"
+          "odds": "+310"
         },
         {
           "name": "Billy Horschel",
@@ -307,7 +307,7 @@
         {
           "name": "Brooks Koepka",
           "owgr": 120,
-          "odds": "+22500"
+          "odds": "+8000"
         },
         {
           "name": "Ben Kohles",
@@ -339,7 +339,7 @@
         {
           "name": "Haotong Li",
           "owgr": 137,
-          "odds": "+5000"
+          "odds": "+1500"
         },
         {
           "name": "Nicholas Lindheim",
@@ -376,12 +376,12 @@
         {
           "name": "Denny McCarthy",
           "owgr": 104,
-          "odds": "+75000"
+          "odds": "+100000"
         },
         {
           "name": "Max McGreevy",
           "owgr": 151,
-          "odds": "+700"
+          "odds": "+1300"
         },
         {
           "name": "Maverick McNealy",
@@ -399,7 +399,7 @@
         {
           "name": "Keith Mitchell",
           "owgr": 57,
-          "odds": "+75000"
+          "odds": "+100000"
         },
         {
           "name": "Taylor Moore",
@@ -455,7 +455,7 @@
         {
           "name": "Marco Penge",
           "owgr": 61,
-          "odds": "+2200"
+          "odds": "+1300"
         },
         {
           "name": "Paul Peterson",
@@ -464,27 +464,27 @@
         {
           "name": "Chandler Phillips",
           "owgr": 150,
-          "odds": "+75000"
+          "odds": "+100000"
         },
         {
           "name": "J.T. Poston",
           "owgr": 37,
-          "odds": "+15000"
+          "odds": "+17500"
         },
         {
           "name": "Andrew Putnam",
           "owgr": 127,
-          "odds": "+75000"
+          "odds": "+100000"
         },
         {
           "name": "Chad Ramey",
           "owgr": 100,
-          "odds": "+22500"
+          "odds": "+35000"
         },
         {
           "name": "Davis Riley",
           "owgr": 158,
-          "odds": "+15000"
+          "odds": "+100000"
         },
         {
           "name": "Patrick Rodgers",
@@ -517,7 +517,7 @@
         {
           "name": "Neal Shipley",
           "owgr": 165,
-          "odds": "+22500"
+          "odds": "+100000"
         },
         {
           "name": "Greyson Sigg",
@@ -612,12 +612,12 @@
         {
           "name": "Sami Valimaki",
           "owgr": 85,
-          "odds": "+7000"
+          "odds": "+5500"
         },
         {
           "name": "John VanDerLaan",
           "owgr": 295,
-          "odds": "+50000"
+          "odds": "+17500"
         },
         {
           "name": "Kristoffer Ventura",
@@ -658,27 +658,11 @@
         {
           "name": "Carson Young",
           "owgr": 211,
-          "odds": "+50000"
+          "odds": "+22500"
         }
       ],
       "alternates": [],
       "watch": [
-        {
-          "round": 3,
-          "start": 1795363200000,
-          "end": 1795381200000,
-          "kind": "Radio",
-          "network": "SiriusXM",
-          "url": "https://sxm.app.link/LB0419510CMPMGfndfdpdd"
-        },
-        {
-          "round": 3,
-          "start": 1795370400000,
-          "end": 1795381200000,
-          "kind": "TV",
-          "network": "GOLF Channel",
-          "url": "https://www.golfchannel.com/watch/live"
-        },
         {
           "round": 4,
           "start": 1795442400000,
