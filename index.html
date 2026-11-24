@@ -9,6 +9,15 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="manifest" href="manifest.json">
 <title>Hotdawgs Golf Pool</title>
+<!-- Link previews (iMessage etc.) -->
+<meta property="og:title" content="Hotdawgs Golf Pool">
+<meta property="og:description" content="Draft, live scores, payouts and egg beers.">
+<meta property="og:image" content="https://racemills.github.io/hotdawgs/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:url" content="https://racemills.github.io/hotdawgs/">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
 <style>
   :root {
     --cream: #FFF6E3; --paper: #FFFFFF; --red: #D92B2B; --red-dark: #9E1B1B;
@@ -251,7 +260,7 @@
 <script>
   // App version. Bump it on every release: files load with it, and open phones notice
   // a new number and reload themselves.
-  const APP_VERSION = "2026-11-18.3";
+  const APP_VERSION = "2026-11-24.1";
   async function checkForUpdate() {
     try {
       const r = await fetch(location.pathname + "?check=" + Date.now(), { cache: "no-store" });

@@ -74,14 +74,58 @@
     await write("week", week, { reactions: { [name]: { [me]: cur === emo ? null : emo } } });
   }
 
+  // ---------- A picture of the draft board, attached to nudges ----------
+  // Drawn on a canvas: every pick so far, who's on the clock, who's up next.
+  async function boardFile(week) {
+    try {
+      const st = draftState(week), t = currentTourney();
+      const W = 1080, rowH = 82, top = 250, H = top + st.total * rowH + 150;
+      const c = document.createElement("canvas"); c.width = W; c.height = H;
+      const x = c.getContext("2d");
+      const F = (w, s) => `${w} ${s}px -apple-system, "Helvetica Neue", Arial, sans-serif`;
+      x.fillStyle = "#FFF6E3"; x.fillRect(0, 0, W, H);
+      // Awning
+      for (let i = 0; i < 12; i++) { x.fillStyle = i % 2 ? "#FFFFFF" : "#D92B2B"; x.fillRect(i * 90, 0, 90, 34); }
+      x.fillStyle = "#8f1d1d"; x.font = F("900", 64); x.textAlign = "center";
+      x.fillText(`🌭 Hotdawgs · Week ${wk(week)} draft`, W / 2, 120);
+      x.fillStyle = "#3a2a1a"; x.font = F("700", 36);
+      x.fillText(t ? splitName(t.name).main : "", W / 2, 175);
+      x.font = F("600", 30); x.fillStyle = "#7a6a55";
+      x.fillText(st.complete ? "Draft complete" : `Pick ${st.clock + 1} of ${st.total} · ${st.onClock} is on the clock`, W / 2, 222);
+      x.textAlign = "left";
+      st.board.forEach((s, i) => {
+        const y = top + i * rowH, p = s.done ? slotPick(week, s.m, s.nth) : null, now = !st.complete && i === st.clock;
+        if (i === (st.total / 2)) { x.fillStyle = "#c9b48f"; x.fillRect(60, y - 4, W - 120, 3); }
+        x.fillStyle = now ? "#FFC233" : p ? "#FFFFFF" : "#F3E7CF";
+        x.beginPath(); x.roundRect ? x.roundRect(50, y + 6, W - 100, rowH - 12, 18) : x.rect(50, y + 6, W - 100, rowH - 12); x.fill();
+        x.strokeStyle = now ? "#2b1b10" : "#d9c7a5"; x.lineWidth = now ? 5 : 2; x.stroke();
+        x.fillStyle = "#2b1b10"; x.font = F("900", 34); x.fillText(String(i + 1), 78, y + 54);
+        x.font = F("800", 34); x.fillText(s.m, 150, y + 54);
+        x.textAlign = "right";
+        if (p) { x.font = F("600", 34); x.fillText(`${p.kind === "hot" ? "🔥" : "🌭"} ${p.name}`, W - 80, y + 54); }
+        else if (now) { x.font = F("900", 32); x.fillStyle = "#D92B2B"; x.fillText("⏱ ON THE CLOCK", W - 80, y + 54); }
+        else { x.font = F("600", 30); x.fillStyle = "#a8957a"; x.fillText("—", W - 80, y + 54); }
+        x.textAlign = "left";
+      });
+      x.textAlign = "center"; x.fillStyle = "#7a6a55"; x.font = F("600", 28);
+      x.fillText("Draft in the Hotdawgs app 🌭", W / 2, H - 60);
+      const blob = await new Promise(r => c.toBlob(r, "image/png"));
+      return blob ? new File([blob], `hotdawgs-week-${wk(week)}-draft.png`, { type: "image/png" }) : null;
+    } catch (e) { return null; }
+  }
+  window.HD = Object.assign(window.HD || {}, { boardFile: (w) => boardFile(w || currentWeek()) });
+
   async function nudge(who, week, st) {
     const ci = clock(week);
+    // The board picture replaces the bare link (the link comes back if pictures can't be attached)
     const text = who === null
-      ? `🌭 Week ${wk(week)} draft is done! Picks are in: ${appLink()}`
-      : `🌭 ${C.nudgeLine(who)}\nWeek ${wk(week)}, pick ${st.clock + 1} of ${st.total}.${ci && !ci.due && !ci.waiting ? ` Auto-pick in ${fmtLeft(ci.leftMs)}.` : ""} ${appLink()}`;
+      ? `🌭 Week ${wk(week)} draft is done! All ${st.total} picks are in.`
+      : `🌭 ${C.nudgeLine(who)}\nWeek ${wk(week)}, pick ${st.clock + 1} of ${st.total}.${ci && !ci.due && !ci.waiting ? ` Auto-pick in ${fmtLeft(ci.leftMs)}.` : ""}`;
+    const board = await boardFile(week);
     // Their Ketchup Cam photo from this week comes along, if they posted one
     const photo = who && ((weekOf(-week).photos || {})[who]);
-    HD.shareText(photo ? text.replace("\n", `\n📸 Exhibit A: ${who}'s Ketchup Cam dog.\n`) : text, photo ? { photo, photoName: `${who}-ketchup-cam` } : null);
+    HD.shareText(photo ? text.replace("\n", `\n📸 Exhibit A: ${who}'s Ketchup Cam dog.\n`) : text,
+      { files: [board], photo, photoName: `${who}-ketchup-cam`, linkIfNoFiles: appLink() });
   }
 
   // Split "Austin Championship pres. by Compliance Solutions" into name + sponsor
@@ -240,10 +284,13 @@
       ov.remove();
       justPickedWeek = null;
       const ci = clock(week);
-      if (!next) return HD.shareText(`🌭 ${line} ${appLink()}`);
-      const photo = (weekOf(-week).photos || {})[next];
-      const text = `🌭 ${line}\n${photo ? `📸 Exhibit A: ${next}'s Ketchup Cam dog.\n` : ""}Week ${wk(week)}, pick ${st.clock + 1} of ${st.total}.${ci && !ci.due && !ci.waiting ? ` Auto-pick in ${fmtLeft(ci.leftMs)}.` : ""} ${appLink()}`;
-      HD.shareText(text, photo ? { photo, photoName: `${next}-ketchup-cam` } : null);
+      // Make the picture inside the tap so iPhone still allows the share sheet
+      boardFile(week).then(board => {
+        if (!next) return HD.shareText(`🌭 ${line}`, { files: [board], linkIfNoFiles: appLink() });
+        const photo = (weekOf(-week).photos || {})[next];
+        const text = `🌭 ${line}\n${photo ? `📸 Exhibit A: ${next}'s Ketchup Cam dog.\n` : ""}Week ${wk(week)}, pick ${st.clock + 1} of ${st.total}.${ci && !ci.due && !ci.waiting ? ` Auto-pick in ${fmtLeft(ci.leftMs)}.` : ""}`;
+        HD.shareText(text, { files: [board], photo, photoName: `${next}-ketchup-cam`, linkIfNoFiles: appLink() });
+      });
       renderActive();
     };
   }

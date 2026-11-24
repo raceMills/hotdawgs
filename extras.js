@@ -87,10 +87,15 @@
     } catch (e) { return null; }
   }
   async function shareText(text, opts) {
+    const files = [];
+    if (opts && opts.files) files.push(...opts.files.filter(Boolean));
     const photo = opts && opts.photo ? photoFile(opts.photo, opts.photoName) : null;
-    if (photo && navigator.share && navigator.canShare && navigator.canShare({ files: [photo] })) {
-      try { await navigator.share({ files: [photo], text }); return; } catch (e) { if (e && e.name === "AbortError") return; }
+    if (photo) files.push(photo);
+    if (files.length && navigator.share && navigator.canShare && navigator.canShare({ files })) {
+      try { await navigator.share({ files, text }); return; } catch (e) { if (e && e.name === "AbortError") return; }
     }
+    // Couldn't attach pictures: put the link back so people can still get to the app
+    if (opts && opts.linkIfNoFiles && !text.includes(opts.linkIfNoFiles)) text += " " + opts.linkIfNoFiles;
     // Always the iPhone share sheet, so you pick the group chat yourself
     if (navigator.share) { try { await navigator.share({ text }); } catch (e) {} return; }
     location.href = "sms:&body=" + encodeURIComponent(text);
