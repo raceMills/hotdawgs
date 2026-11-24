@@ -343,6 +343,18 @@
     const g = need === "either" ? (pool.find(x => x.hot) || pool[0]) : pool[0];
     return g ? { golfer: g, fromQueue: false } : null;
   }
+  // "Draft from my queue as soon as I'm up": if whoever is on the clock turned that on
+  // and has a queued golfer who fits an open slot, that's the pick. Otherwise null
+  // (and their normal clock runs).
+  function queueAutoPick(weekDoc, week, golfers) {
+    const picks = (weekDoc && weekDoc.picks) || {};
+    const st = draftState(week, picks);
+    if (st.complete) return null;
+    const m = st.onClock;
+    if (!((weekDoc && weekDoc.autoQueue) || {})[m]) return null;
+    const choice = chooseAutoPick(golfers, entriesOf(picks).map(e => e.name), picks[m] || {}, ((weekDoc.queues || {})[m]) || []);
+    return choice && choice.fromQueue ? { m, golfer: choice.golfer } : null;
+  }
   // The write that records one pick (merged into the week's row)
   function pickPatch(weekDoc, week, member, golfer, kind, auto, by, now) {
     const st = draftState(week, (weekDoc && weekDoc.picks) || {});
@@ -406,5 +418,5 @@
 
   return { MEMBERS, RULES, amountFor, isMajor, nameKey, compactKey, rankLookup, matchPickNames, buildField,
     parsePar, parseScoreboard, isoDay, draftOrder, draftState, needOf, activeMs, quietAt, clockFloor, seasonWeek, holeLabel, NUDGES, nudgeLine, PICK_JOKES, pickLine, clockStart, clockInfo,
-    chooseAutoPick, pickPatch, computeWeek, entriesOf, settlePatch };
+    chooseAutoPick, queueAutoPick, pickPatch, computeWeek, entriesOf, settlePatch };
 });

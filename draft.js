@@ -157,6 +157,13 @@
       background: #e3f4ef; color: var(--teal); border: 2px solid var(--teal); font-weight: 900; font-size: 13px; font-variant-numeric: tabular-nums; }
     .hd-oddpill small { font-size: 10px; font-weight: 800; opacity: .8; }
     .hd-qmeta { font-size: 12px; font-weight: 700; opacity: .75; }
+    .hd-autoq { display: flex; align-items: center; gap: 12px; width: 100%; margin: 12px 0 4px; padding: 10px 12px; border-radius: 14px; cursor: pointer;
+      border: 3px solid var(--shadow); background: var(--cream); font: inherit; color: var(--ink); }
+    .hd-autoq.on { background: #fff4c8; border-color: #c48a00; }
+    .hd-autoq .sw { flex: none; width: 48px; height: 28px; border-radius: 999px; background: #cbbda3; position: relative; transition: background .2s; }
+    .hd-autoq .sw i { position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,.3); transition: left .2s; }
+    .hd-autoq.on .sw { background: #1f8a4c; }
+    .hd-autoq.on .sw i { left: 23px; }
     .hd-favbtn { border: 0; background: transparent; font-size: 22px; line-height: 1; padding: 4px; cursor: pointer; color: var(--red); }
     .hd-qdraft { width: auto !important; padding: 0 10px !important; background: var(--red) !important; color: #fff !important; font-weight: 900; }
     .hd-proxy { background: var(--teal); color: #fff; border: 3px solid var(--shadow); border-radius: 12px; padding: 10px 12px;
@@ -317,6 +324,24 @@
       toast(`⏱ ${force ? "Auto-picked" : "Time's up."} ${choice.golfer.name} for ${m === me ? "you" : m}${choice.fromQueue ? " from the queue" : ""}.`);
     } finally { autoBusy = false; }
   }
+  // "Draft from my queue as soon as I'm up": any open phone makes that pick right away
+  let qaBusy = false;
+  async function queueDraftIfReady() {
+    const week = currentWeek();
+    if (qaBusy || !dataReady || !draftOpen(week) || !golfers.length) return;
+    if (!C.queueAutoPick(weekOf(week), week, golfers)) return;
+    qaBusy = true;
+    try {
+      await loadWeek(week); // latest picks first
+      const qa = C.queueAutoPick(weekOf(week), week, golfers);
+      if (!qa) return;
+      await savePick(week, qa.m, qa.golfer, true);
+      toast(`⚡ ${qa.m === me ? "Your queue drafted" : `${qa.m}'s queue drafted`} ${qa.golfer.name}.`);
+    } finally { qaBusy = false; }
+  }
+  setInterval(() => { if (!document.hidden) queueDraftIfReady(); }, 5000);
+  window.HD.queueDraftIfReady = queueDraftIfReady;
+
   // Record when the draft opened (starts the first pick's clock)
   function markOpen(week) {
     if (!dataReady || openingWeek === week || weekOf(week).draftOpenAt || !draftOpen(week) || draftState(week).complete) return;
@@ -420,13 +445,16 @@
           ${(g => {
             const gone = taken.has(C.compactKey(n));
             const noFit = g && !gone && need !== "either" && (need === "hot") !== !!g.hot;
-            return `<span class="nm ${gone ? "gone" : ""}" ${noFit ? `style="opacity:.55"` : ""}>${isFav(n) ? "❤️ " : ""}${n}${g ? `<br><span class="hd-qmeta">${g.hot ? "🔥" : "🌭"} · ${g.rank < 999 ? "World #" + g.rank : "Unranked"}${g.odds ? ` · <span class="hd-odds">${g.odds}</span>` : ""}</span>` : `<br><span class="hd-qmeta">Not in this week's field</span>`}${gone ? `<br><span class="hd-qmeta">Taken</span>` : noFit ? `<br><span class="hd-qmeta">Skipped: you already have a ${g.hot ? "hot" : "dawg"}</span>` : ""}</span>`;
+            return `<span class="nm ${gone ? "gone" : ""}" ${noFit ? `style="opacity:.55"` : ""}>${isFav(n) ? "❤️ " : ""}${n}${g ? `<br><span class="hd-qmeta">${g.hot ? "🔥" : "🌭"} · ${g.rank < 999 ? "World #" + g.rank : "Unranked"}${g.odds ? ` · <span class="hd-odds">${g.odds}</span>` : ""}</span>` : `<br><span class="hd-qmeta">Not in this week's field</span>`}${gone ? `<br><span class="hd-qmeta">${[mine.hot, mine.dawg].some(x => x && C.compactKey(x) === C.compactKey(n)) ? "Your pick ✓" : "Taken"}</span>` : noFit ? `<br><span class="hd-qmeta">Skipped: you already have a ${g.hot ? "hot" : "dawg"}</span>` : ""}</span>`;
           })(golferOf(n))}
           ${myTurn && (g => g && !taken.has(C.compactKey(n)) && (need === "either" || (need === "hot") === !!g.hot))(golferOf(n)) ? `<button class="hd-mini hd-qdraft" data-qpick="${i}">Draft</button>` : ""}
           <button class="hd-mini" data-qup="${i}" ${i === 0 ? "disabled" : ""}>↑</button>
           <button class="hd-mini" data-qdown="${i}" ${i === q.length - 1 ? "disabled" : ""}>↓</button>
           <button class="hd-mini" data-qdel="${i}">✕</button></div>`).join("")
         : `<p class="hint" style="margin:0">Your queue is empty. Tap ☆ next to any golfer below, or ♡ to make him a favorite for every week.</p>`}
+      ${(() => { const on = !!((weekOf(week).autoQueue || {})[me]); return `<button class="hd-autoq ${on ? "on" : ""}" id="qAutoBtn">
+        <span class="sw"><i></i></span><span style="flex:1;text-align:left"><b>⚡ Draft from my queue as soon as I'm up</b><br>
+        <span class="hd-qmeta">${on ? "On: when it's your turn, the first golfer in your queue who fits your open slot is drafted right away. If none fit, you get your normal clock." : "Off: you get your normal pick clock when you're up."}</span></span></button>`; })()}
       ${missingFavs.length ? `<button class="btn ghost" id="qFavBtn" style="margin-top:8px">❤️ Add ${missingFavs.length} favorite${missingFavs.length === 1 ? "" : "s"} playing this week</button>` : ""}
       ${next ? `<p class="hint" style="margin:10px 0 0">Next up for you: <b>${next.golfer.name}</b> (${next.golfer.hot ? "🔥 hot" : "🌭 dawg"}, ${next.golfer.rank < 999 ? "#" + next.golfer.rank : "unranked"}${next.golfer.odds ? `, ${next.golfer.odds}` : ""}) ${next.fromQueue ? "from your queue" : "best-ranked available"}</p>` : ""}
       ${myTurn && next ? `<button class="btn" id="qPickBtn">Draft ${next.golfer.name}</button><p class="hint" style="margin:6px 0 0;text-align:center">Or tap <b>Draft</b> on any golfer in your queue.</p>` : ""}`;
@@ -437,6 +465,13 @@
     card.querySelectorAll("[data-qpick]").forEach(b => b.onclick = () => { const g = golferOf(q[Number(b.dataset.qpick)]); if (g) draftPick(g); });
     const qp = document.getElementById("qPickBtn");
     if (qp) qp.onclick = () => draftPick(next.golfer);
+    const qa = document.getElementById("qAutoBtn");
+    if (qa) qa.onclick = async () => {
+      const on = !((weekOf(week).autoQueue || {})[me]);
+      await write("week", week, { autoQueue: { [me]: on ? true : null } });
+      toast(on ? "⚡ Auto-draft on. Your queue picks the moment you're up." : "Auto-draft off. You'll get your normal clock.");
+      if (on) queueDraftIfReady();
+    };
     const qf = document.getElementById("qFavBtn");
     if (qf) qf.onclick = () => queueOp(week, (cur) => cur.concat(missingFavs.map(g => g.name).filter(n => !cur.some(c => C.compactKey(c) === C.compactKey(n)))));
   }

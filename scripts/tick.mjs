@@ -134,6 +134,20 @@ async function draftTick(w) {
   if (open && !st.complete) {
     once("open", () => notify(C.MEMBERS, `🌭 Week ${C.seasonWeek(w, config)} draft is open`, `The ${ev} field is set. ${st.board[0].m} picks first.`, `open-${w}`));
 
+    // "Draft from my queue as soon as I'm up": make those picks right away, in a row if
+    // several people in a row turned it on
+    for (let n = 0; n < 12 && golfers.length; n++) {
+      const qa = C.queueAutoPick(doc, w, golfers);
+      if (!qa) break;
+      const kind = qa.golfer.hot ? "hot" : "dawg";
+      const pp = C.pickPatch(doc, w, qa.m, qa.golfer.name, kind, true, "queue", Date.now());
+      await saveWeek(w, pp);
+      log(`Week ${C.seasonWeek(w, config)}: drafted ${qa.golfer.name} (${kind}) for ${qa.m} from their queue (auto-draft on).`);
+      doc = await loadWeek(w);
+      st = C.draftState(w, doc.picks || {});
+      once(`qauto-${Object.keys(pp.pickLog)[0]}`, () => notify(qa.m, "⚡ Drafted from your queue", `${qa.golfer.name} is your ${kind}. Your queue did the work.`, `auto-${w}`));
+    }
+
     // Clock ran out: auto-pick (one per tick; the next person's clock starts now)
     const ci = C.clockInfo(doc, config, NOW);
     if (ci && ci.due && golfers.length) {
