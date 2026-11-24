@@ -112,6 +112,17 @@
   }
   const prettyContact = (v) => !v ? "" : v.includes("@") ? v : /^\+1\d{10}$/.test(v) ? `(${v.slice(2, 5)}) ${v.slice(5, 8)}-${v.slice(8)}` : v;
 
+  // ===================== Favorites =====================
+  function favCard() {
+    const favs = HD.favsOf ? HD.favsOf(me) : [];
+    return `<div class="card" id="hdFavs"><h2>❤️ My favorites</h2>
+      <p class="hint">Your go-to golfers. Each week, the ones in the field go straight into your queue so you just put them in order. Add more with the ♡ on any golfer in the Draft tab.</p>
+      ${favs.length ? favs.map((n, i) => `<div class="hd-qrow"><span class="n">${i + 1}</span><span class="nm">${esc(n)}</span>
+        <button class="hd-mini" data-fup="${i}" ${i === 0 ? "disabled" : ""}>↑</button>
+        <button class="hd-mini" data-fdown="${i}" ${i === favs.length - 1 ? "disabled" : ""}>↓</button>
+        <button class="hd-mini" data-fdel="${i}">✕</button></div>`).join("") : `<p class="hint" style="margin:0">No favorites yet.</p>`}</div>`;
+  }
+
   // ===================== Commissioner =====================
   function lastPick(week) {
     const st = HD.draftState(week);
@@ -232,6 +243,10 @@
     if (!wrap) return;
     wrap.querySelectorAll("[data-club]").forEach(b => b.onclick = () => act(b.dataset.club));
     wrap.querySelectorAll("[data-wdswap]").forEach(b => b.onclick = () => { const [who, name] = b.dataset.wdswap.split("|"); HD.openSwap(currentWeek(), who, name); });
+    const favMove = (i, d) => HD.setFavs(cur => { if (cur[i + d] !== undefined) [cur[i], cur[i + d]] = [cur[i + d], cur[i]]; return cur; });
+    wrap.querySelectorAll("[data-fup]").forEach(b => b.onclick = () => favMove(Number(b.dataset.fup), -1));
+    wrap.querySelectorAll("[data-fdown]").forEach(b => b.onclick = () => favMove(Number(b.dataset.fdown), 1));
+    wrap.querySelectorAll("[data-fdel]").forEach(b => b.onclick = () => { const i = Number(b.dataset.fdel); HD.setFavs(cur => { cur.splice(i, 1); return cur; }); });
     wrap.querySelectorAll("[data-quiet]").forEach(b => b.onclick = () => isCommish() && write("config", 0, { quietFrom: Number(b.dataset.quiet) }));
     wrap.querySelectorAll("[data-hours]").forEach(b => b.onclick = () => isCommish() && write("config", 0, { autoPickHours: Number(b.dataset.hours) }));
     wrap.querySelectorAll("[data-reset]").forEach(b => b.onclick = async () => {
@@ -249,7 +264,7 @@
     if (!me || wrap.querySelector("#hdClub")) return; // still being edited
     const box = document.createElement("div");
     box.id = "hdClub";
-    box.innerHTML = pushCard() + (isCommish() ? commishCard() : "");
+    box.innerHTML = favCard() + pushCard() + (isCommish() ? commishCard() : "");
     wrap.insertBefore(box, wrap.children[1] || null);
     wire();
     if (subState === "unknown") refreshSubState();

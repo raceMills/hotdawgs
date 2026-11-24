@@ -157,6 +157,7 @@
       background: #e3f4ef; color: var(--teal); border: 2px solid var(--teal); font-weight: 900; font-size: 13px; font-variant-numeric: tabular-nums; }
     .hd-oddpill small { font-size: 10px; font-weight: 800; opacity: .8; }
     .hd-qmeta { font-size: 12px; font-weight: 700; opacity: .75; }
+    .hd-favbtn { border: 0; background: transparent; font-size: 22px; line-height: 1; padding: 4px; cursor: pointer; color: var(--red); }
     .hd-qdraft { width: auto !important; padding: 0 10px !important; background: var(--red) !important; color: #fff !important; font-weight: 900; }
     .hd-proxy { background: var(--teal); color: #fff; border: 3px solid var(--shadow); border-radius: 12px; padding: 10px 12px;
       margin-bottom: 12px; display: flex; align-items: center; gap: 8px; font-weight: 900; }
@@ -362,6 +363,45 @@
   const oddsPct = (o) => { const n = parseInt(o, 10); if (!n) return ""; const p = n > 0 ? 100 / (n + 100) : -n / (-n + 100); return p >= 0.095 ? Math.round(p * 100) + "%" : (p * 100).toFixed(1) + "%"; };
   const oddsPill = (o) => o ? `<span class="hd-oddpill" title="Odds to win: about ${oddsPct(o)} chance">${o}<small>${oddsPct(o)}</small></span>` : "";
   const golferOf = (n) => golfers.find(g => C.compactKey(g.name) === C.compactKey(n));
+  // ----- Favorites: your go-to golfers, saved on your profile across every week -----
+  const favsOf = (m) => ((config.favorites || {})[m] || []);
+  const isFav = (name) => favsOf(me).some(n => C.compactKey(n) === C.compactKey(name));
+  let favChain = Promise.resolve();
+  function setFavs(change) {
+    config.favorites = Object.assign({}, config.favorites, { [me]: change(favsOf(me).slice()) });
+    renderActive();
+    favChain = favChain.then(async () => {
+      try {
+        const { data } = await sb.from("pool_config").select("data").eq("id", "main").maybeSingle();
+        const cur = (((data && data.data) || {}).favorites || {})[me] || [];
+        await write("config", 0, { favorites: { [me]: change(cur.slice()) } });
+      } catch (e) { toast("Couldn't save your favorites. Check your connection."); }
+    });
+  }
+  function toggleFav(name) {
+    const key = C.compactKey(name), had = isFav(name);
+    setFavs(cur => { const i = cur.findIndex(n => C.compactKey(n) === key); if (had && i >= 0) cur.splice(i, 1); else if (!had && i < 0) cur.push(name); return cur; });
+    toast(had ? `Removed ${name} from favorites` : `❤️ ${name} added to favorites`);
+  }
+  // Favorites in this week's field, in your favorites order
+  function favsInField() {
+    if (!fieldIsLive()) return [];
+    return favsOf(me).map(n => golfers.find(g => C.compactKey(g.name) === C.compactKey(n))).filter(Boolean);
+  }
+  // First look at a new week's draft: your queue starts with your favorites who are playing
+  const seeded = new Set();
+  function seedQueue(week) {
+    const key = week + ":" + me;
+    if (seeded.has(key) || !dataReady) return;
+    if ((weekOf(week).queues || {})[me] !== undefined) { seeded.add(key); return; }
+    const favs = favsInField();
+    if (!favs.length) return;
+    seeded.add(key);
+    queueOp(week, (cur) => cur.length ? cur : favs.map(g => g.name));
+    toast(`❤️ Loaded ${favs.length} favorite${favs.length === 1 ? "" : "s"} into your queue. Drag them into this week's order.`);
+  }
+  window.HD = Object.assign(window.HD || {}, { favsOf, toggleFav, setFavs });
+
   function renderQueue(week, st, beforeEl) {
     const card = ensureCard("queueCard", beforeEl);
     const q = queueOf(week, me);
@@ -372,19 +412,22 @@
     card.hidden = false;
     const myTurn = st.onClock === me && !window.HD_PROXY && draftOpen(week);
     const next = C.chooseAutoPick(golfers, takenNames(week), mine, q);
+    seedQueue(week);
+    const missingFavs = favsInField().filter(g => !q.some(n => C.compactKey(n) === C.compactKey(g.name)) && !taken.has(C.compactKey(g.name)));
     card.innerHTML = `<h2>My queue ⭐</h2>
       <p class="hint">Star golfers to line them up. ${config.autoPickHours === 0 ? "" : "If your clock runs out, auto-pick takes the first one still available that fills a slot you need, or else the best-ranked golfer left."}</p>
       ${q.length ? q.map((n, i) => `<div class="hd-qrow"><span class="n">${i + 1}</span>
           ${(g => {
             const gone = taken.has(C.compactKey(n));
             const noFit = g && !gone && need !== "either" && (need === "hot") !== !!g.hot;
-            return `<span class="nm ${gone ? "gone" : ""}" ${noFit ? `style="opacity:.55"` : ""}>${n}${g ? `<br><span class="hd-qmeta">${g.hot ? "🔥" : "🌭"} · ${g.rank < 999 ? "World #" + g.rank : "Unranked"}${g.odds ? ` · <span class="hd-odds">${g.odds}</span>` : ""}</span>` : `<br><span class="hd-qmeta">Not in this week's field</span>`}${gone ? `<br><span class="hd-qmeta">Taken</span>` : noFit ? `<br><span class="hd-qmeta">Skipped: you already have a ${g.hot ? "hot" : "dawg"}</span>` : ""}</span>`;
+            return `<span class="nm ${gone ? "gone" : ""}" ${noFit ? `style="opacity:.55"` : ""}>${isFav(n) ? "❤️ " : ""}${n}${g ? `<br><span class="hd-qmeta">${g.hot ? "🔥" : "🌭"} · ${g.rank < 999 ? "World #" + g.rank : "Unranked"}${g.odds ? ` · <span class="hd-odds">${g.odds}</span>` : ""}</span>` : `<br><span class="hd-qmeta">Not in this week's field</span>`}${gone ? `<br><span class="hd-qmeta">Taken</span>` : noFit ? `<br><span class="hd-qmeta">Skipped: you already have a ${g.hot ? "hot" : "dawg"}</span>` : ""}</span>`;
           })(golferOf(n))}
           ${myTurn && (g => g && !taken.has(C.compactKey(n)) && (need === "either" || (need === "hot") === !!g.hot))(golferOf(n)) ? `<button class="hd-mini hd-qdraft" data-qpick="${i}">Draft</button>` : ""}
           <button class="hd-mini" data-qup="${i}" ${i === 0 ? "disabled" : ""}>↑</button>
           <button class="hd-mini" data-qdown="${i}" ${i === q.length - 1 ? "disabled" : ""}>↓</button>
           <button class="hd-mini" data-qdel="${i}">✕</button></div>`).join("")
-        : `<p class="hint" style="margin:0">Your queue is empty. Tap ☆ next to any golfer below.</p>`}
+        : `<p class="hint" style="margin:0">Your queue is empty. Tap ☆ next to any golfer below, or ♡ to make him a favorite for every week.</p>`}
+      ${missingFavs.length ? `<button class="btn ghost" id="qFavBtn" style="margin-top:8px">❤️ Add ${missingFavs.length} favorite${missingFavs.length === 1 ? "" : "s"} playing this week</button>` : ""}
       ${next ? `<p class="hint" style="margin:10px 0 0">Next up for you: <b>${next.golfer.name}</b> (${next.golfer.hot ? "🔥 hot" : "🌭 dawg"}, ${next.golfer.rank < 999 ? "#" + next.golfer.rank : "unranked"}${next.golfer.odds ? `, ${next.golfer.odds}` : ""}) ${next.fromQueue ? "from your queue" : "best-ranked available"}</p>` : ""}
       ${myTurn && next ? `<button class="btn" id="qPickBtn">Draft ${next.golfer.name}</button><p class="hint" style="margin:6px 0 0;text-align:center">Or tap <b>Draft</b> on any golfer in your queue.</p>` : ""}`;
     const move = (i, d) => { const a = q.slice(); [a[i], a[i + d]] = [a[i + d], a[i]]; setQueue(week, a); };
@@ -394,6 +437,8 @@
     card.querySelectorAll("[data-qpick]").forEach(b => b.onclick = () => { const g = golferOf(q[Number(b.dataset.qpick)]); if (g) draftPick(g); });
     const qp = document.getElementById("qPickBtn");
     if (qp) qp.onclick = () => draftPick(next.golfer);
+    const qf = document.getElementById("qFavBtn");
+    if (qf) qf.onclick = () => queueOp(week, (cur) => cur.concat(missingFavs.map(g => g.name).filter(n => !cur.some(c => C.compactKey(c) === C.compactKey(n)))));
   }
 
   // ----- Draft screen -----
@@ -511,9 +556,12 @@
       el.innerHTML = `<div><div>${g.name}</div><div class="rank">${g.rank < 999 ? "World #" + g.rank : "Unranked"}</div></div>
         <div style="display:flex;gap:6px;align-items:center">
           ${oddsPill(g.odds)}
+          <button class="hd-favbtn ${isFav(g.name) ? "on" : ""}" data-fav="1" title="Favorite">${isFav(g.name) ? "❤️" : "♡"}</button>
           ${owner ? `<span class="owner">${owner === me ? "You ✓" : owner}</span>`
             : !proxy && C.needOf((weekOf(week).picks || {})[me]) ? `<button class="hd-qbtn ${qi >= 0 ? "on" : ""}" data-q="1">${qi >= 0 ? `★ #${qi + 1}` : "☆"}</button>` : ""}
         </div>`;
+      const fb = el.querySelector("[data-fav]");
+      if (fb) fb.onclick = (e) => { e.stopPropagation(); toggleFav(g.name); };
       const qb = el.querySelector("[data-q]");
       if (qb) qb.onclick = (e) => { e.stopPropagation(); toggleQueue(week, g.name); };
       el.onclick = () => {
