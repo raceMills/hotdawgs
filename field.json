@@ -5,11 +5,15 @@
       "pgaTourId": "R2026478",
       "name": "Hero World Challenge",
       "start": "2026-12-03",
-      "updated": "2026-11-19T00:00:57.129Z",
+      "updated": "2026-11-24T21:00:57.148Z",
       "players": [
         {
           "name": "Akshay Bhatia",
           "owgr": 37
+        },
+        {
+          "name": "Keegan Bradley",
+          "owgr": 61
         },
         {
           "name": "Jacob Bridgeman",
@@ -74,10 +78,6 @@
         {
           "name": "Justin Thomas",
           "owgr": 32
-        },
-        {
-          "name": "Gary Woodland",
-          "owgr": 41
         },
         {
           "name": "Tiger Woods",
