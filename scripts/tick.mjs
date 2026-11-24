@@ -21,7 +21,7 @@ const H = { apikey: KEY, Authorization: `Bearer ${KEY}`, "Content-Type": "applic
 const NOW = Number(process.env.TICK_NOW) || Date.now();
 const DRY = process.env.DRY_RUN === "1";
 const log = (...a) => console.log(...a);
-const QUIET = C.quietAt(NOW); // 11pm–7am Central: notifications wait for morning
+let QUIET = C.quietAt(NOW); // overnight (11pm–7am Central, or earlier if set): notifications wait for morning
 
 // ---------- Database ----------
 const isObj = (o) => o && typeof o === "object" && !Array.isArray(o);
@@ -327,7 +327,8 @@ async function settleTick(w) {
 
 config = ((await getRow("pool_config", "id", "main")) || {}).data || {};
 const cur = config.currentWeek || 1;
-if (QUIET) log("Quiet hours (11pm–7am Central): the pick clock is paused and notifications wait until morning.");
+QUIET = C.quietAt(NOW, config.quietFrom);
+if (QUIET) log("Quiet hours (overnight Central): the pick clock is paused and notifications wait until morning.");
 for (const w of [cur - 1, cur]) {
   if (w < 1) continue;
   try { await settleTick(w); } catch (e) { log(`Week ${C.seasonWeek(w, config)} settle: ${e.message}`); }

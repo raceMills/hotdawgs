@@ -136,7 +136,10 @@
 
       <div class="field"><label>Pick clock</label>
         <div class="chips">${[0, 2, 4, 6, 8, 12].map(h => `<button class="chip ${h === hours ? "on" : ""}" data-hours="${h}">${h ? h + "h" : "Off"}</button>`).join("")}</div>
-        <p class="hint">Time each person gets before auto-pick. The clock starts Wednesday 7am Central of tournament week and pauses 11pm–7am.</p></div>
+        <p class="hint">Time each person gets before auto-pick. The clock starts Wednesday 7am Central of tournament week and never runs before then.</p></div>
+      <div class="field"><label>Clock stops for the night at</label>
+        <div class="chips">${[20, 21, 22, 23].map(h => `<button class="chip ${h === (Number(config.quietFrom) || 23) ? "on" : ""}" data-quiet="${h}">${h - 12}pm</button>`).join("")}</div>
+        <p class="hint">No auto-picks or pings from then until 7am Central. Picks made overnight still count.</p></div>
 
       <div style="display:grid;gap:8px">
         ${!open && !st.complete ? `<button class="btn" data-club="forceOpen">🔓 Open the draft now</button>` : ""}
@@ -229,6 +232,7 @@
     if (!wrap) return;
     wrap.querySelectorAll("[data-club]").forEach(b => b.onclick = () => act(b.dataset.club));
     wrap.querySelectorAll("[data-wdswap]").forEach(b => b.onclick = () => { const [who, name] = b.dataset.wdswap.split("|"); HD.openSwap(currentWeek(), who, name); });
+    wrap.querySelectorAll("[data-quiet]").forEach(b => b.onclick = () => isCommish() && write("config", 0, { quietFrom: Number(b.dataset.quiet) }));
     wrap.querySelectorAll("[data-hours]").forEach(b => b.onclick = () => isCommish() && write("config", 0, { autoPickHours: Number(b.dataset.hours) }));
     wrap.querySelectorAll("[data-reset]").forEach(b => b.onclick = async () => {
       const m = b.dataset.reset;

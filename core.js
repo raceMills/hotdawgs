@@ -205,12 +205,13 @@
     hourFmt = hourFmt || new Intl.DateTimeFormat("en-US", { timeZone: QUIET.tz, hour: "numeric", hourCycle: "h23" });
     return Number(hourFmt.formatToParts(new Date(ms)).find(p => p.type === "hour").value) % 24;
   }
-  const quietAt = (ms) => { const h = chicagoHour(ms); return h >= QUIET.from || h < QUIET.to; };
+  // The overnight pause starts at 11pm by default; the commissioner can make it earlier (cfg.quietFrom)
+  const quietAt = (ms, from) => { const h = chicagoHour(ms); return h >= (from || QUIET.from) || h < QUIET.to; };
   // Clock time that has passed between two moments, not counting quiet hours
-  function activeMs(startMs, endMs) {
+  function activeMs(startMs, endMs, from) {
     const STEP = 5 * 60000;
     let t = startMs, total = 0;
-    while (t < endMs) { const step = Math.min(STEP, endMs - t); if (!quietAt(t)) total += step; t += step; }
+    while (t < endMs) { const step = Math.min(STEP, endMs - t); if (!quietAt(t, from)) total += step; t += step; }
     return total;
   }
   // On-the-clock nudges: original lines riffing on Caddyshack and Happy Gilmore.
@@ -323,8 +324,9 @@
     if (!hours || !start || (weekDoc && weekDoc.clockPaused)) return null;
     const limitMs = hours * 3600000;
     if (now < start) return { limitMs, usedMs: 0, leftMs: limitMs, due: false, quiet: false, waiting: true, startsAt: start };
-    const used = activeMs(start, now);
-    return { limitMs, usedMs: used, leftMs: Math.max(0, limitMs - used), due: used >= limitMs, quiet: quietAt(now), startsAt: start };
+    const from = cfg && cfg.quietFrom ? Number(cfg.quietFrom) : null;
+    const used = activeMs(start, now, from);
+    return { limitMs, usedMs: used, leftMs: Math.max(0, limitMs - used), due: used >= limitMs, quiet: quietAt(now, from), startsAt: start };
   }
   // The golfer auto-pick takes: first available golfer from your queue that fills a
   // slot you still need; otherwise the best-ranked available golfer you can take
