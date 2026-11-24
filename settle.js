@@ -11,7 +11,10 @@
     html.hd-quiet section.active, html.hd-quiet .hd-hero, html.hd-quiet .slot.filled,
     html.hd-quiet .hd-cam-pop, html.hd-quiet .hd-rpick { animation: none !important; }
     /* Keep the tab bar and toasts pinned on iPhone while the page scrolls or redraws */
-    .hd-tabbar, .toast, .hd-coachbtn { transform: translateZ(0); -webkit-transform: translateZ(0); will-change: transform; }
+    .hd-tabbar, .hd-coachbtn { transform: translateZ(0); -webkit-transform: translateZ(0); will-change: transform; }
+    .toast { will-change: transform; } /* its own transform hides it, so leave that alone */
+    .toast:not(.show) { opacity: 0; pointer-events: none; }
+    .toast { transition: transform .4s cubic-bezier(.3,1.5,.5,1), opacity .25s; }
   `;
   document.head.appendChild(style);
 
